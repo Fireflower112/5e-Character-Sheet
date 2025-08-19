@@ -20,8 +20,6 @@ const skillList = [
 });
 const skillLabelMap = new Map(skillList.map(skill => [skill.key, skill.label]));
 
-let itemBonuses = [];
-
 const renderItemDetails = (item) => {
     switch (item.itemType) {
         case 'weapon':
@@ -57,7 +55,7 @@ const renderItems = (items, containers = {}) => {
         let containerControl = '';
         const equipableTypes = ['weapon', 'armor', 'shield', 'wearable'];
         
-        if (!item.equippedSlot && item.itemType !== 'other') {
+        if (!item.equippedSlot) {
             containerControl = `
                 <div class="mt-2">
                     <select data-item-id="${item.id}" data-action="assign-to-container" class="w-full p-1 border rounded-md text-sm bg-gray-50">
@@ -74,6 +72,13 @@ const renderItems = (items, containers = {}) => {
                     <div class="flex items-center space-x-2">
                         <input type="checkbox" id="equip-weapon-${item.id}" data-item-id="${item.id}" data-action="equip-weapon" ${item.equippedSlot ? 'checked' : ''} class="rounded text-indigo-600 h-5 w-5"/>
                         <label for="equip-weapon-${item.id}" class="text-gray-700">Wielded</label>
+                    </div>
+                `;
+            } else if (item.itemType === 'armor' || item.itemType === 'shield') {
+                equipControl = `
+                    <div class="flex items-center space-x-2">
+                        <input type="checkbox" id="equip-${item.itemType}-${item.id}" data-item-id="${item.id}" data-action="equip-armor-shield" data-item-type="${item.itemType}" ${item.equippedSlot ? 'checked' : ''} class="rounded text-indigo-600 h-5 w-5"/>
+                        <label for="equip-${item.itemType}-${item.id}" class="text-gray-700">Equipped</label>
                     </div>
                 `;
             } else {
@@ -109,7 +114,7 @@ const renderItems = (items, containers = {}) => {
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 pointer-events-none" viewBox="0 0 20 20" fill="${item.favorited ? 'currentColor' : 'none'}" stroke="currentColor" style="color: ${item.favorited ? '#FBBF24' : 'inherit'}"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
                         </button>
                         ${equipControl}
-                        <button onclick="window.stores.character.deleteItem('${item.id}')" class="px-3 py-1 bg-red-500 text-white text-sm rounded-md hover:bg-red-600">Delete</button>
+                        <button data-action="delete-item" data-item-id="${item.id}" class="px-3 py-1 bg-red-500 text-white text-sm rounded-md hover:bg-red-600">Delete</button>
                     </div>
                 </div>
                 ${item.description ? `<p class="text-gray-600 text-sm mb-2">${item.description}</p>` : ''}
@@ -198,17 +203,41 @@ window.InventoryPage = (character) => {
 };
 
 window.EquippedItemsPage = (character) => {
+    const allItems = Object.values(character.inventory.items || {});
+    const equippedWeapons = allItems.filter(item => item.equippedSlot === 'Wielded');
+    
     const equippedMap = new Map();
-    Object.values(character.inventory.items || {}).forEach(item => {
-        if (item.equippedSlot) {
+    allItems.forEach(item => {
+        if (item.equippedSlot && item.equippedSlot !== 'Wielded') {
             equippedMap.set(item.equippedSlot, item);
         }
     });
 
+    const renderWeapons = () => {
+        if (equippedWeapons.length === 0) {
+            return `<div class="text-gray-500 italic p-3 bg-white rounded-lg shadow-inner">(no weapons wielded)</div>`;
+        }
+        return equippedWeapons.map(item => `
+            <div 
+                class="font-semibold text-indigo-700 p-3 bg-white rounded-lg shadow-inner cursor-pointer hover:bg-indigo-50"
+                data-action="show-item-details" 
+                data-item-id="${item.id}"
+            >
+                ${item.name}
+            </div>
+        `).join('');
+    };
+
     const renderedSlots = equipmentSlots.map(slot => {
         const item = equippedMap.get(slot.key);
         const itemDisplay = item 
-            ? `<div class="font-semibold text-indigo-700">${item.name}</div>` 
+            ? `<div 
+                class="font-semibold text-indigo-700 cursor-pointer hover:text-indigo-900" 
+                data-action="show-item-details" 
+                data-item-id="${item.id}"
+            >
+                ${item.name}
+            </div>` 
             : `<div class="text-gray-500 italic">(empty)</div>`;
 
         return `
@@ -220,16 +249,30 @@ window.EquippedItemsPage = (character) => {
     }).join('');
 
    return `
-       <div class="bg-gray-50 p-6 rounded-2xl shadow-sm">
-           <h3 class="text-xl font-semibold mb-3">Equipped Items by Slot</h3>
-           <div id="equipped-items-list" class="space-y-2 grid grid-cols-1 md:grid-cols-2 gap-3">
-               ${renderedSlots}
-           </div>
+       <div class="bg-gray-50 p-6 rounded-2xl shadow-sm space-y-6">
+            <div>
+                <h3 class="text-xl font-semibold mb-3">Wielded Items</h3>
+                <div id="wielded-items-list" class="space-y-2">
+                    ${renderWeapons()}
+                </div>
+            </div>
+            <div>
+               <h3 class="text-xl font-semibold mb-3">Equipped Items by Slot</h3>
+               <div id="equipped-items-list" class="space-y-2 grid grid-cols-1 md:grid-cols-2 gap-3">
+                   ${renderedSlots}
+               </div>
+            </div>
        </div>
    `;
 };
 
+// This function now ONLY handles the complex logic for the "Add Item" form.
+// All other inventory event handling is now centralized in app.js
 window.attachInventoryHandlers = () => {
+    const addItemForm = document.getElementById('add-item-form');
+    if (!addItemForm) return; // Exit if the form is not on the current page
+
+    let itemBonuses = []; // Temporary state for bonuses being added
     const addItemBtn = document.getElementById('add-item-btn');
     const itemTypeSelect = document.getElementById('item-type');
     const itemFields = {
@@ -237,17 +280,6 @@ window.attachInventoryHandlers = () => {
         armor: document.getElementById('armor-fields'),
         shield: document.getElementById('shield-fields'),
     };
-    if (itemTypeSelect) {
-        itemTypeSelect.onchange = (e) => {
-            const selectedType = e.target.value;
-            Object.values(itemFields).forEach(field => field?.classList.add('hidden'));
-            if (itemFields[selectedType]) {
-                itemFields[selectedType].classList.remove('hidden');
-            }
-        };
-        itemTypeSelect.dispatchEvent(new Event('change'));
-    }
-
     const bonusCategorySelector = document.getElementById('bonus-category-selector');
     const bonusDetailsArea = document.getElementById('bonus-details-area');
     const abilityBonusSelector = document.getElementById('ability-bonus-selector');
@@ -256,130 +288,109 @@ window.attachInventoryHandlers = () => {
     const bonusesList = document.getElementById('bonuses-list');
     let activeBonusCategory = null;
 
-    if (bonusCategorySelector) {
-        bonusCategorySelector.addEventListener('click', (e) => {
-            if (e.target.classList.contains('bonus-cat-btn')) {
-                const category = e.target.dataset.bonusCategory;
-                activeBonusCategory = category;
+    itemTypeSelect.onchange = (e) => {
+        const selectedType = e.target.value;
+        Object.values(itemFields).forEach(field => field?.classList.add('hidden'));
+        if (itemFields[selectedType]) {
+            itemFields[selectedType].classList.remove('hidden');
+        }
+    };
+    itemTypeSelect.dispatchEvent(new Event('change'));
+
+    bonusCategorySelector.addEventListener('click', (e) => {
+        if (e.target.classList.contains('bonus-cat-btn')) {
+            const category = e.target.dataset.bonusCategory;
+            activeBonusCategory = category;
+            bonusCategorySelector.querySelectorAll('.bonus-cat-btn').forEach(btn => {
+                btn.classList.remove('bg-indigo-600', 'text-white');
+                btn.classList.add('bg-gray-200', 'text-gray-700');
+            });
+            e.target.classList.add('bg-indigo-600', 'text-white');
+            e.target.classList.remove('bg-gray-200', 'text-gray-700');
+            bonusDetailsArea.classList.remove('hidden');
+            bonusDetailsArea.classList.add('flex');
+            abilityBonusSelector.classList.add('hidden');
+            skillBonusSelector.classList.add('hidden');
+
+            if (category === 'ability') {
+                abilityBonusSelector.classList.remove('hidden');
+            } else if (category === 'skill') {
+                skillBonusSelector.classList.remove('hidden');
+            }
+        }
+    });
+
+    addBonusBtn.onclick = () => {
+        const bonusValueInput = document.getElementById('bonus-value');
+        const value = parseInt(bonusValueInput.value, 10);
+        const type = document.querySelector('input[name="bonus-type"]:checked').value;
+        let field = null;
+        let fieldLabel = '';
+
+        if (activeBonusCategory === 'ability') {
+            const selector = document.getElementById('ability-bonus-type');
+            field = selector.value;
+            fieldLabel = selector.options[selector.selectedIndex].text;
+        } else if (activeBonusCategory === 'skill') {
+            const selector = document.getElementById('skill-bonus-type');
+            field = selector.value;
+            fieldLabel = selector.options[selector.selectedIndex].text;
+        } else if (activeBonusCategory === 'concentration') {
+            field = 'concentration';
+            fieldLabel = 'Concentration';
+        }
+
+        if (field && !isNaN(value)) {
+            itemBonuses.push({ field, value, type });
+            const symbol = type === 'override' ? '=' : (value > 0 ? '+' : '');
+            const listItem = document.createElement('li');
+            listItem.textContent = `${fieldLabel}: ${symbol}${value}`;
+            listItem.className = 'inline-block bg-indigo-100 text-indigo-800 text-sm font-semibold px-2.5 py-0.5 rounded-full';
+            bonusesList.appendChild(listItem);
+            bonusValueInput.value = '';
+        }
+    };
+
+    addItemBtn.onclick = () => {
+        const newItemData = {
+            name: document.getElementById('item-name').value,
+            weight: parseFloat(document.getElementById('item-weight').value) || 0,
+            description: document.getElementById('item-description').value,
+            bonuses: [...itemBonuses],
+            itemType: document.getElementById('item-type').value,
+        };
+
+        if (newItemData.itemType === 'weapon') {
+            Object.assign(newItemData, {
+                weaponSize: document.getElementById('weapon-size').value,
+                numDice: parseInt(document.getElementById('weapon-num-dice').value, 10),
+                dieType: parseInt(document.getElementById('weapon-die-type').value, 10),
+                range: parseInt(document.getElementById('weapon-range').value, 10),
+                critMultiplier: parseInt(document.getElementById('weapon-crit').value, 10),
+            });
+        } else if (newItemData.itemType === 'armor') {
+            newItemData.armorType = document.getElementById('armor-type').value;
+            newItemData.acBonus = parseInt(document.getElementById('armor-ac-bonus').value, 10);
+        } else if (newItemData.itemType === 'shield') {
+            newItemData.acBonus = parseInt(document.getElementById('shield-ac-bonus').value, 10);
+        }
+
+        if (newItemData.name) {
+            window.stores.character.addItem(newItemData);
+            window.showMessage('Item added successfully!', 'green');
+            addItemForm.reset();
+            Object.values(itemFields).forEach(field => field?.classList.add('hidden'));
+            bonusesList.innerHTML = '';
+            itemBonuses = [];
+            bonusDetailsArea.classList.add('hidden');
+            bonusDetailsArea.classList.remove('flex');
                 bonusCategorySelector.querySelectorAll('.bonus-cat-btn').forEach(btn => {
-                    btn.classList.remove('bg-indigo-600', 'text-white');
-                    btn.classList.add('bg-gray-200', 'text-gray-700');
-                });
-                e.target.classList.add('bg-indigo-600', 'text-white');
-                e.target.classList.remove('bg-gray-200', 'text-gray-700');
-                bonusDetailsArea.classList.remove('hidden');
-                bonusDetailsArea.classList.add('flex');
-                abilityBonusSelector.classList.add('hidden');
-                skillBonusSelector.classList.add('hidden');
-
-                if (category === 'ability') {
-                    abilityBonusSelector.classList.remove('hidden');
-                } else if (category === 'skill') {
-                    skillBonusSelector.classList.remove('hidden');
-                }
-            }
-        });
-    }
-
-    if (addBonusBtn) {
-        addBonusBtn.onclick = () => {
-            const bonusValueInput = document.getElementById('bonus-value');
-            const value = parseInt(bonusValueInput.value, 10);
-            const type = document.querySelector('input[name="bonus-type"]:checked').value;
-            let field = null;
-            let fieldLabel = '';
-
-            if (activeBonusCategory === 'ability') {
-                const selector = document.getElementById('ability-bonus-type');
-                field = selector.value;
-                fieldLabel = selector.options[selector.selectedIndex].text;
-            } else if (activeBonusCategory === 'skill') {
-                const selector = document.getElementById('skill-bonus-type');
-                field = selector.value;
-                fieldLabel = selector.options[selector.selectedIndex].text;
-            } else if (activeBonusCategory === 'concentration') {
-                field = 'concentration';
-                fieldLabel = 'Concentration';
-            }
-
-            if (field && !isNaN(value)) {
-                itemBonuses.push({ field, value, type });
-                const symbol = type === 'override' ? '=' : (value > 0 ? '+' : '');
-                const listItem = document.createElement('li');
-                listItem.textContent = `${fieldLabel}: ${symbol}${value}`;
-                listItem.className = 'inline-block bg-indigo-100 text-indigo-800 text-sm font-semibold px-2.5 py-0.5 rounded-full';
-                bonusesList.appendChild(listItem);
-                bonusValueInput.value = '';
-            }
-        };
-    }
-
-    if (addItemBtn) {
-        addItemBtn.onclick = () => {
-            const newItemData = {
-                name: document.getElementById('item-name').value,
-                weight: parseFloat(document.getElementById('item-weight').value) || 0,
-                description: document.getElementById('item-description').value,
-                bonuses: [...itemBonuses],
-                itemType: document.getElementById('item-type').value,
-            };
-
-            if (newItemData.itemType === 'weapon') {
-                Object.assign(newItemData, {
-                    weaponSize: document.getElementById('weapon-size').value,
-                    numDice: parseInt(document.getElementById('weapon-num-dice').value, 10),
-                    dieType: parseInt(document.getElementById('weapon-die-type').value, 10),
-                    range: parseInt(document.getElementById('weapon-range').value, 10),
-                    critMultiplier: parseInt(document.getElementById('weapon-crit').value, 10),
-                });
-            } else if (newItemData.itemType === 'armor') {
-                newItemData.armorType = document.getElementById('armor-type').value;
-                newItemData.acBonus = parseInt(document.getElementById('armor-ac-bonus').value, 10);
-            } else if (newItemData.itemType === 'shield') {
-                newItemData.acBonus = parseInt(document.getElementById('shield-ac-bonus').value, 10);
-            }
-
-            if (newItemData.name) {
-                window.stores.character.addItem(newItemData);
-                window.showMessage('Item added successfully!', 'green');
-                document.getElementById('add-item-form').reset();
-                Object.values(itemFields).forEach(field => field?.classList.add('hidden'));
-                bonusesList.innerHTML = '';
-                itemBonuses = [];
-                bonusDetailsArea.classList.add('hidden');
-                bonusDetailsArea.classList.remove('flex');
-                 bonusCategorySelector.querySelectorAll('.bonus-cat-btn').forEach(btn => {
-                    btn.classList.remove('bg-indigo-600', 'text-white');
-                    btn.classList.add('bg-gray-200', 'text-gray-700');
-                });
-                activeBonusCategory = null;
-            } else {
-                window.showMessage('Please enter an item name.', 'red');
-            }
-        };
-    }
-    
-    const contentArea = document.getElementById('content-area');
-    if (contentArea) {
-        contentArea.addEventListener('click', (e) => {
-            const button = e.target.closest('button');
-            if (button && button.dataset.action === 'toggle-favorite') {
-                window.stores.character.toggleFavorite(button.dataset.itemId);
-            }
-        });
-
-        contentArea.addEventListener('change', (e) => {
-            const { itemId, action, field } = e.target.dataset;
-            if (action === 'assign-to-container') {
-                window.stores.character.assignItemToContainer(itemId, e.target.value);
-            } else if (action === 'equip-to-slot') {
-                window.stores.character.equipItemToSlot(itemId, e.target.value);
-            } else if (action === 'equip-weapon') {
-                const slot = e.target.checked ? 'Wielded' : 'none';
-                window.stores.character.equipItemToSlot(itemId, slot);
-            } else if (field) {
-                window.stores.character.updateItem(itemId, field, e.target.value);
-            }
-        });
-    }
+                btn.classList.remove('bg-indigo-600', 'text-white');
+                btn.classList.add('bg-gray-200', 'text-gray-700');
+            });
+            activeBonusCategory = null;
+        } else {
+            window.showMessage('Please enter an item name.', 'red');
+        }
+    };
 };

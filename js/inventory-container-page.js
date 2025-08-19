@@ -13,7 +13,6 @@ window.InventoryContainerPage = (character, subPage) => {
             subContent = window.EquippedItemsPage(character);
             break;
         case 'stored':
-            // MODIFIED: This now calls the new page function for containers
             subContent = window.StoredItemsPage(character);
             break;
         case 'all':
@@ -25,9 +24,9 @@ window.InventoryContainerPage = (character, subPage) => {
         <div>
             <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">Inventory</h2>
             <div class="flex space-x-2 border-b mb-4">
-                <button data-subpage="equipped" class="sub-tab-button ${isEquippedActive ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-gray-500'} px-4 py-2 font-medium">Equipped Items</button>
-                <button data-subpage="stored" class="sub-tab-button ${isStoredActive ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-gray-500'} px-4 py-2 font-medium">Stored Items</button>
-                <button data-subpage="all" class="sub-tab-button ${isAllActive ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-gray-500'} px-4 py-2 font-medium">All Items</button>
+                <button data-action="sub-tab" data-subpage="equipped" class="sub-tab-button ${isEquippedActive ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-gray-500'} px-4 py-2 font-medium">Equipped Items</button>
+                <button data-action="sub-tab" data-subpage="stored" class="sub-tab-button ${isStoredActive ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-gray-500'} px-4 py-2 font-medium">Stored Items</button>
+                <button data-action="sub-tab" data-subpage="all" class="sub-tab-button ${isAllActive ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-gray-500'} px-4 py-2 font-medium">All Items</button>
             </div>
 
             <div id="sub-content-area">

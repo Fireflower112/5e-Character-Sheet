@@ -30,10 +30,10 @@ window.NotesPage = (character, subPage) => {
         <div>
             <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">Notes</h2>
             <div class="flex space-x-2 border-b mb-4">
-                <button data-subpage="character" class="sub-tab-button ${isCharacterActive ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-gray-500'} px-4 py-2 font-medium">Character</button>
-                <button data-subpage="npcs" class="sub-tab-button ${isNpcsActive ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-gray-500'} px-4 py-2 font-medium">NPCs</button>
-                <button data-subpage="campaign" class="sub-tab-button ${isCampaignActive ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-gray-500'} px-4 py-2 font-medium">Campaign</button>
-                <button data-subpage="combat" class="sub-tab-button ${isCombatActive ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-gray-500'} px-4 py-2 font-medium">Combat</button>
+                <button data-action="sub-tab" data-subpage="character" class="sub-tab-button ${isCharacterActive ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-gray-500'} px-4 py-2 font-medium">Character</button>
+                <button data-action="sub-tab" data-subpage="npcs" class="sub-tab-button ${isNpcsActive ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-gray-500'} px-4 py-2 font-medium">NPCs</button>
+                <button data-action="sub-tab" data-subpage="campaign" class="sub-tab-button ${isCampaignActive ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-gray-500'} px-4 py-2 font-medium">Campaign</button>
+                <button data-action="sub-tab" data-subpage="combat" class="sub-tab-button ${isCombatActive ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-gray-500'} px-4 py-2 font-medium">Combat</button>
             </div>
 
             <div id="sub-content-area">

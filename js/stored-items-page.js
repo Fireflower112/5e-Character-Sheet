@@ -22,7 +22,13 @@ window.StoredItemsPage = (character) => {
                     <div class="pl-4 border-l-2 border-gray-200 space-y-1">
                         ${itemsInContainer.length > 0
                             ? itemsInContainer.map(item => `
-                                <div class="text-sm text-gray-800">${item.name} (${item.weight || 0} lbs)</div>
+                                <div 
+                                    class="text-sm text-gray-800 cursor-pointer hover:text-indigo-600"
+                                    data-action="show-item-details"
+                                    data-item-id="${item.id}"
+                                >
+                                    ${item.name} (${item.weight || 0} lbs)
+                                </div>
                             `).join('')
                             : `<p class="text-sm text-gray-400 italic">Container is empty.</p>`
                         }

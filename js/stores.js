@@ -118,6 +118,15 @@ window.stores.character = (function() {
     }
 
     function getInitialState() {
+        // Generate unique IDs for all default objects
+        const backpackId = uuid();
+        const bagOfHoldingId = uuid();
+        const bouncyBallId = uuid();
+        const shortSwordId = uuid();
+        const beltId = uuid();
+        const leatherArmorId = uuid();
+        const shieldId = uuid();
+
         const defaultState = {
             name: 'Valerius',
             race: 'Human',
@@ -181,9 +190,52 @@ window.stores.character = (function() {
                 useMagicDevice: { ability: 'cha', ranks: 0, racial: 0, feat: 0, misc: 0 },
             },
             inventory: {
-                items: {},
+                items: {
+                    [bouncyBallId]: {
+                        id: bouncyBallId, name: 'Bouncy Ball', itemType: 'other', weight: 0.2,
+                        description: 'A super bouncy ball.',
+                        bonuses: [{ field: 'acrobatics', value: 20, type: 'enhancement' }],
+                        equippedSlot: null, favorited: false, containerId: null, bonusesAlwaysActive: true
+                    },
+                    [shortSwordId]: {
+                        id: shortSwordId, name: 'Short Sword', itemType: 'weapon', weight: 5,
+                        description: 'A standard short sword.',
+                        bonuses: [{ field: 'str', value: 2, type: 'enhancement' }],
+                        numDice: 1, dieType: 4, range: 0, critMultiplier: 2,
+                        equippedSlot: null, favorited: false, containerId: null
+                    },
+                    [beltId]: {
+                        id: beltId, name: 'Belt of Hill Giant Strength', itemType: 'wearable', weight: 10,
+                        description: 'This belt grants the wearer immense strength.',
+                        bonuses: [{ field: 'str', value: 25, type: 'override' }],
+                        equippedSlot: null, favorited: false, containerId: null
+                    },
+                    [leatherArmorId]: {
+                        id: leatherArmorId, name: 'Leather Armor', itemType: 'armor', weight: 40,
+                        description: 'A suit of hardened leather armor.',
+                        armorType: 'medium', acBonus: 3,
+                        equippedSlot: null, favorited: false, containerId: null
+                    },
+                    [shieldId]: {
+                        id: shieldId, name: 'Shield (+3)', itemType: 'shield', weight: 20,
+                        description: 'A sturdy shield with a magical enhancement.',
+                        acBonus: 2,
+                        equippedSlot: null, favorited: false, containerId: null
+                    }
+                },
                 currency: { cp: 0, sp: 0, gp: 0 },
-                containers: {}
+                containers: {
+                    [backpackId]: {
+                        id: backpackId, name: 'Backpack',
+                        description: 'A standard adventurer\'s backpack.',
+                        capacity: 50, weight: 2
+                    },
+                    [bagOfHoldingId]: {
+                        id: bagOfHoldingId, name: 'Bag of Holding',
+                        description: 'This bag appears to be a common cloth sack of about 2 feet by 4 feet in size.',
+                        capacity: 200, weight: 20
+                    }
+                }
             },
             feats: {},
             abilities: {},

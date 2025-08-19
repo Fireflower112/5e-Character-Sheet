@@ -30,3 +30,13 @@ input[type=number]::-webkit-outer-spin-button {
 input[type=number] {
     -moz-appearance: textfield;
 }
+
+/* ADDED FOR MODAL */
+#item-modal {
+    display: none; /* Initially hidden */
+    align-items: center;
+    justify-content: center;
+}
+#item-modal.show {
+    display: flex; /* Show the modal */
+}
