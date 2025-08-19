@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pathfinder Character Sheet v2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-gray-100 p-4">
+    <div class="bg-white shadow-xl rounded-2xl p-8 max-w-4xl mx-auto">
+        <h1 class="text-4xl font-bold text-gray-900 mb-6 text-center">Pathfinder Character Sheet</h1>
+
+        <div class="flex space-x-4 mb-8 justify-center">
+            <button id="dashboard-tab" class="px-6 py-2 rounded-full font-semibold text-lg transition-colors">
+                Dashboard
+            </button>
+            <button id="editor-tab" class="px-6 py-2 rounded-full font-semibold text-lg transition-colors">
+                Character Editor
+            </button>
+            <button id="inventory-tab" class="px-6 py-2 rounded-full font-semibold text-lg transition-colors">
+                Inventory
+            </button>
+            <button id="spells-tab" class="px-6 py-2 rounded-full font-semibold text-lg transition-colors">
+                Spellbook
+            </button>
+            <button id="notes-tab" class="px-6 py-2 rounded-full font-semibold text-lg transition-colors">
+                Notes
+            </button>
+        </div>
+
+        <div id="content-area">
+            </div>
+
+        <div class="flex justify-center mt-8 space-x-4">
+            <button id="save-button" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors">Save</button>
+            <button id="load-button" class="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors">Load</button>
+        </div>
+
+        <div id="message-box" class="message-box"></div>
+    </div>
+
+    <script src="js/stores.js"></script>
+    <script src="js/components.js"></script>
+    
+    <script src="js/main-page.js"></script>
+    <script src="js/skills-page.js"></script>
+    <script src="js/info-page.js"></script>
+    <script src="js/inventory-page.js"></script>
+    <script src="js/spells-page.js"></script>
+    
+    <script src="js/dashboard-page.js"></script>
+    <script src="js/character-editor-page.js"></script>
+    <script src="js/inventory-container-page.js"></script>
+    <script src="js/notes-page.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const contentArea = document.getElementById('content-area');
+            const saveButton = document.getElementById('save-button');
+            const loadButton = document.getElementById('load-button');
+
+            let currentPage = 'dashboard';
+            let currentSubPage = 'basic'; // Default sub-page
+
+            const mainTabs = ['dashboard', 'editor', 'inventory', 'spells', 'notes'];
+
+            function updateActiveTab() {
+                mainTabs.forEach(tabId => {
+                    const tab = document.getElementById(`${tabId}-tab`);
+                    if (tab) {
+                        if (tabId === currentPage) {
+                            tab.classList.add('bg-indigo-600', 'text-white', 'shadow-md');
+                            tab.classList.remove('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+                        } else {
+                            tab.classList.remove('bg-indigo-600', 'text-white', 'shadow-md');
+                            tab.classList.add('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+                        }
+                    }
+                });
+            }
+
+            function handleSubPageClick(e) {
+                if (e.target.matches('.sub-tab-button')) {
+                    const subPage = e.target.dataset.subpage;
+                    renderPage(currentPage, subPage);
+                }
+            }
+
+            contentArea.addEventListener('click', handleSubPageClick);
+
+            function attachContentHandlers() {
+                if (window.attachMainPageHandlers) window.attachMainPageHandlers();
+                if (window.attachInfoPageHandlers) window.attachInfoPageHandlers();
+                if (window.attachSkillsPageHandlers) window.attachSkillsPageHandlers();
+                if (window.attachInventoryHandlers) window.attachInventoryHandlers();
+                if (window.attachSpellsPageHandlers) window.attachSpellsPageHandlers();
+                if (window.attachNotesPageHandlers) window.attachNotesPageHandlers();
+            }
+            
+            function renderPage(page, subPage) {
+                // If the main page is changing, reset the sub-page to its default
+                if (page !== currentPage) {
+                    if (page === 'dashboard') currentSubPage = 'basic';
+                    else if (page === 'editor') currentSubPage = 'basic';
+                    else if (page === 'inventory') currentSubPage = 'all';
+                    else if (page === 'notes') currentSubPage = 'character';
+                    else currentSubPage = null; // Spells page has no sub-page
+                } else if (subPage) {
+                    // If only the sub-page is changing, update it
+                    currentSubPage = subPage;
+                }
+
+                currentPage = page;
+                updateActiveTab();
+
+                let htmlContent = '';
+                const character = window.stores.character.get();
+                switch (currentPage) {
+                    case 'dashboard':
+                        htmlContent = window.DashboardPage(character, currentSubPage);
+                        break;
+                    case 'editor':
+                        htmlContent = window.CharacterEditorPage(character, currentSubPage);
+                        break;
+                    case 'inventory':
+                        htmlContent = window.InventoryContainerPage(character, currentSubPage);
+                        break;
+                    case 'spells':
+                        htmlContent = window.SpellsPage(character); // This page is standalone
+                        break;
+                    case 'notes':
+                        htmlContent = window.NotesPage(character, currentSubPage);
+                        break;
+                }
+                contentArea.innerHTML = htmlContent;
+                attachContentHandlers();
+            }
+
+            mainTabs.forEach(tabId => {
+                const tabElement = document.getElementById(`${tabId}-tab`);
+                if (tabElement) {
+                    tabElement.addEventListener('click', () => renderPage(tabId));
+                }
+            });
+
+            saveButton.addEventListener('click', window.handleSave);
+            loadButton.addEventListener('click', window.handleLoad);
+
+            window.stores.character.subscribe(() => {
+                renderPage(currentPage, currentSubPage);
+            });
+
+            window.stores.character.init(); // This will trigger the first render
+        });
+    </script>
+</body>
+</html>
