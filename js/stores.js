@@ -17,7 +17,7 @@ window.stores.character = (function() {
         if (!character.inventory || !character.inventory.items) return;
         for (const itemId in character.inventory.items) {
             const item = character.inventory.items[itemId];
-            if (item.equipped) {
+            if (item.equippedSlot) {
                 newEquippedItems[itemId] = item;
             }
         }
@@ -26,13 +26,15 @@ window.stores.character = (function() {
     
     function calculateItemBonusesForAbility(ability) {
         let totalBonus = 0;
-        if (!character.equippedItems) return 0;
-        for (const itemId in character.equippedItems) {
-            const item = character.equippedItems[itemId];
-            if (item.bonuses) {
-                for (const bonus of item.bonuses) {
-                    if (bonus.field === ability) {
-                        totalBonus += parseInt(bonus.value, 10) || 0;
+        if (!character.inventory || !character.inventory.items) return 0;
+        for (const itemId in character.inventory.items) {
+            const item = character.inventory.items[itemId];
+            if (item.equippedSlot || item.bonusesAlwaysActive) {
+                if (item.bonuses) {
+                    for (const bonus of item.bonuses) {
+                        if (bonus.field === ability) {
+                            totalBonus += parseInt(bonus.value, 10) || 0;
+                        }
                     }
                 }
             }
@@ -42,18 +44,62 @@ window.stores.character = (function() {
 
     function calculateItemBonusesForField(fieldName) {
         let totalBonus = 0;
-        if (!character.equippedItems) return 0;
-        for (const itemId in character.equippedItems) {
-            const item = character.equippedItems[itemId];
-            if (item.bonuses) {
-                for (const bonus of item.bonuses) {
-                    if (bonus.field === fieldName) {
-                        totalBonus += parseInt(bonus.value, 10) || 0;
+        if (!character.inventory || !character.inventory.items) return 0;
+        for (const itemId in character.inventory.items) {
+            const item = character.inventory.items[itemId];
+            if (item.equippedSlot || item.bonusesAlwaysActive) {
+                if (item.bonuses) {
+                    for (const bonus of item.bonuses) {
+                        if (bonus.field === fieldName) {
+                            totalBonus += parseInt(bonus.value, 10) || 0;
+                        }
                     }
                 }
             }
         }
         return totalBonus;
+    }
+    
+    function calculateItemBonusesForSkill(skillName) {
+        let totalBonus = 0;
+        if (!character.inventory || !character.inventory.items) return 0;
+        for (const itemId in character.inventory.items) {
+            const item = character.inventory.items[itemId];
+            if (item.equippedSlot || item.bonusesAlwaysActive) {
+                if (item.bonuses) {
+                    for (const bonus of item.bonuses) {
+                        if (bonus.field === skillName) {
+                            totalBonus += parseInt(bonus.value, 10) || 0;
+                        }
+                    }
+                }
+            }
+        }
+        return totalBonus;
+    }
+
+    function processItemBonusesForAbility(ability) {
+        let enhancement = 0;
+        const overrides = [];
+        if (!character.inventory || !character.inventory.items) return { enhancement, overrides };
+
+        for (const itemId in character.inventory.items) {
+            const item = character.inventory.items[itemId];
+            if (item.equippedSlot || item.bonusesAlwaysActive) {
+                if (item.bonuses) {
+                    for (const bonus of item.bonuses) {
+                        if (bonus.field === ability) {
+                            if (bonus.type === 'override') {
+                                overrides.push(parseInt(bonus.value, 10) || 0);
+                            } else {
+                                enhancement += parseInt(bonus.value, 10) || 0;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return { enhancement, overrides };
     }
 
     function calculateACBonuses() {
@@ -72,18 +118,7 @@ window.stores.character = (function() {
     }
 
     function getInitialState() {
-        const savedCharacter = localStorage.getItem('pathfinderCharacterSheet');
-        if (savedCharacter) {
-            try {
-                const parsed = JSON.parse(savedCharacter);
-                window.showMessage('Character loaded successfully!', 'green');
-                return parsed;
-            } catch (e) {
-                console.error("Failed to parse saved character data:", e);
-            }
-        }
-
-        return {
+        const defaultState = {
             name: 'Valerius',
             race: 'Human',
             class1: 'Fighter',
@@ -110,48 +145,45 @@ window.stores.character = (function() {
             },
             savingThrows: { fortitude: { base: 0, other: 0 }, reflex: { base: 0, other: 0 }, will: { base: 0, other: 0 } },
             skills: {
-                acrobatics: { ability: 'dex', ranks: 0, racial: 0, feat: 0, item: 0, status: 0, misc: 0 },
-                appraise: { ability: 'int', ranks: 0, racial: 0, feat: 0, item: 0, status: 0, misc: 0 },
-                bluff: { ability: 'cha', ranks: 0, racial: 0, feat: 0, item: 0, status: 0, misc: 0 },
-                climb: { ability: 'str', ranks: 0, racial: 0, feat: 0, item: 0, status: 0, misc: 0 },
-                diplomacy: { ability: 'cha', ranks: 0, racial: 0, feat: 0, item: 0, status: 0, misc: 0 },
-                disableDevice: { ability: 'dex', ranks: 0, racial: 0, feat: 0, item: 0, status: 0, misc: 0 },
-                disguise: { ability: 'cha', ranks: 0, racial: 0, feat: 0, item: 0, status: 0, misc: 0 },
-                escapeArtist: { ability: 'dex', ranks: 0, racial: 0, feat: 0, item: 0, status: 0, misc: 0 },
-                fly: { ability: 'dex', ranks: 0, racial: 0, feat: 0, item: 0, status: 0, misc: 0 },
-                handleAnimal: { ability: 'cha', ranks: 0, racial: 0, feat: 0, item: 0, status: 0, misc: 0 },
-                heal: { ability: 'wis', ranks: 0, racial: 0, feat: 0, item: 0, status: 0, misc: 0 },
-                intimidate: { ability: 'cha', ranks: 0, racial: 0, feat: 0, item: 0, status: 0, misc: 0 },
-                knowledgeArcana: { ability: 'int', ranks: 0, racial: 0, feat: 0, item: 0, status: 0, misc: 0 },
-                knowledgeDungeoneering: { ability: 'int', ranks: 0, racial: 0, feat: 0, item: 0, status: 0, misc: 0 },
-                knowledgeEngineering: { ability: 'int', ranks: 0, racial: 0, feat: 0, item: 0, status: 0, misc: 0 },
-                knowledgeGeography: { ability: 'int', ranks: 0, racial: 0, feat: 0, item: 0, status: 0, misc: 0 },
-                knowledgeHistory: { ability: 'int', ranks: 0, racial: 0, feat: 0, item: 0, status: 0, misc: 0 },
-                knowledgeLocal: { ability: 'int', ranks: 0, racial: 0, feat: 0, item: 0, status: 0, misc: 0 },
-                knowledgeNature: { ability: 'int', ranks: 0, racial: 0, feat: 0, item: 0, status: 0, misc: 0 },
-                knowledgeNobility: { ability: 'int', ranks: 0, racial: 0, feat: 0, item: 0, status: 0, misc: 0 },
-                knowledgePlanes: { ability: 'int', ranks: 0, racial: 0, feat: 0, item: 0, status: 0, misc: 0 },
-                knowledgeReligion: { ability: 'int', ranks: 0, racial: 0, feat: 0, item: 0, status: 0, misc: 0 },
-                linguistics: { ability: 'int', ranks: 0, racial: 0, feat: 0, item: 0, status: 0, misc: 0 },
-                perception: { ability: 'wis', ranks: 0, racial: 0, feat: 0, item: 0, status: 0, misc: 0 },
-                perform: { ability: 'cha', ranks: 0, racial: 0, feat: 0, item: 0, status: 0, misc: 0 },
-                profession: { ability: 'wis', ranks: 0, racial: 0, feat: 0, item: 0, status: 0, misc: 0 },
-                ride: { ability: 'dex', ranks: 0, racial: 0, feat: 0, item: 0, status: 0, misc: 0 },
-                senseMotive: { ability: 'wis', ranks: 0, racial: 0, feat: 0, item: 0, status: 0, misc: 0 },
-                sleightOfHand: { ability: 'dex', ranks: 0, racial: 0, feat: 0, item: 0, status: 0, misc: 0 },
-                spellcraft: { ability: 'int', ranks: 0, racial: 0, feat: 0, item: 0, status: 0, misc: 0 },
-                stealth: { ability: 'dex', ranks: 0, racial: 0, feat: 0, item: 0, status: 0, misc: 0 },
-                survival: { ability: 'wis', ranks: 0, racial: 0, feat: 0, item: 0, status: 0, misc: 0 },
-                swim: { ability: 'str', ranks: 0, racial: 0, feat: 0, item: 0, status: 0, misc: 0 },
-                useMagicDevice: { ability: 'cha', ranks: 0, racial: 0, feat: 0, item: 0, status: 0, misc: 0 },
+                acrobatics: { ability: 'dex', ranks: 0, racial: 0, feat: 0, misc: 0 },
+                appraise: { ability: 'int', ranks: 0, racial: 0, feat: 0, misc: 0 },
+                bluff: { ability: 'cha', ranks: 0, racial: 0, feat: 0, misc: 0 },
+                climb: { ability: 'str', ranks: 0, racial: 0, feat: 0, misc: 0 },
+                diplomacy: { ability: 'cha', ranks: 0, racial: 0, feat: 0, misc: 0 },
+                disableDevice: { ability: 'dex', ranks: 0, racial: 0, feat: 0, misc: 0 },
+                disguise: { ability: 'cha', ranks: 0, racial: 0, feat: 0, misc: 0 },
+                escapeArtist: { ability: 'dex', ranks: 0, racial: 0, feat: 0, misc: 0 },
+                fly: { ability: 'dex', ranks: 0, racial: 0, feat: 0, misc: 0 },
+                handleAnimal: { ability: 'cha', ranks: 0, racial: 0, feat: 0, misc: 0 },
+                heal: { ability: 'wis', ranks: 0, racial: 0, feat: 0, misc: 0 },
+                intimidate: { ability: 'cha', ranks: 0, racial: 0, feat: 0, misc: 0 },
+                knowledgeArcana: { ability: 'int', ranks: 0, racial: 0, feat: 0, misc: 0 },
+                knowledgeDungeoneering: { ability: 'int', ranks: 0, racial: 0, feat: 0, misc: 0 },
+                knowledgeEngineering: { ability: 'int', ranks: 0, racial: 0, feat: 0, misc: 0 },
+                knowledgeGeography: { ability: 'int', ranks: 0, racial: 0, feat: 0, misc: 0 },
+                knowledgeHistory: { ability: 'int', ranks: 0, racial: 0, feat: 0, misc: 0 },
+                knowledgeLocal: { ability: 'int', ranks: 0, racial: 0, feat: 0, misc: 0 },
+                knowledgeNature: { ability: 'int', ranks: 0, racial: 0, feat: 0, misc: 0 },
+                knowledgeNobility: { ability: 'int', ranks: 0, racial: 0, feat: 0, misc: 0 },
+                knowledgePlanes: { ability: 'int', ranks: 0, racial: 0, feat: 0, misc: 0 },
+                knowledgeReligion: { ability: 'int', ranks: 0, racial: 0, feat: 0, misc: 0 },
+                linguistics: { ability: 'int', ranks: 0, racial: 0, feat: 0, misc: 0 },
+                perception: { ability: 'wis', ranks: 0, racial: 0, feat: 0, misc: 0 },
+                perform: { ability: 'cha', ranks: 0, racial: 0, feat: 0, misc: 0 },
+                profession: { ability: 'wis', ranks: 0, racial: 0, feat: 0, misc: 0 },
+                ride: { ability: 'dex', ranks: 0, racial: 0, feat: 0, misc: 0 },
+                senseMotive: { ability: 'wis', ranks: 0, racial: 0, feat: 0, misc: 0 },
+                sleightOfHand: { ability: 'dex', ranks: 0, racial: 0, feat: 0, misc: 0 },
+                spellcraft: { ability: 'int', ranks: 0, racial: 0, feat: 0, misc: 0 },
+                stealth: { ability: 'dex', ranks: 0, racial: 0, feat: 0, misc: 0 },
+                survival: { ability: 'wis', ranks: 0, racial: 0, feat: 0, misc: 0 },
+                swim: { ability: 'str', ranks: 0, racial: 0, feat: 0, misc: 0 },
+                useMagicDevice: { ability: 'cha', ranks: 0, racial: 0, feat: 0, misc: 0 },
             },
             inventory: {
                 items: {},
                 currency: { cp: 0, sp: 0, gp: 0 },
-                containers: {
-                    backpack: { name: 'Backpack', capacity: 100, items: [] },
-                    bagOfHolding: { name: 'Bag of Holding', capacity: 500, items: [] }
-                }
+                containers: {}
             },
             feats: {},
             abilities: {},
@@ -169,6 +201,22 @@ window.stores.character = (function() {
             spells: {},
             equippedItems: {},
         };
+        
+        const savedCharacter = localStorage.getItem('pathfinderCharacterSheet');
+        if (savedCharacter) {
+            try {
+                const parsed = JSON.parse(savedCharacter);
+                if (parsed.inventory) {
+                    parsed.inventory = { ...defaultState.inventory, ...parsed.inventory };
+                }
+                const finalState = { ...defaultState, ...parsed };
+                window.showMessage('Character loaded successfully!', 'green');
+                return finalState;
+            } catch (e) {
+                console.error("Failed to parse saved character data:", e);
+            }
+        }
+        return defaultState;
     }
 
     function notifySubscribers() {
@@ -190,28 +238,63 @@ window.stores.character = (function() {
         subscribe: (callback) => subscribers.push(callback),
         addItem: (itemData) => {
             const newItemId = uuid();
-            const newItem = { id: newItemId, ...itemData, equipped: false, favorited: false };
+            const newItem = { id: newItemId, ...itemData, equippedSlot: null, favorited: false, containerId: null };
+            newItem.bonusesAlwaysActive = (itemData.itemType === 'other');
             if(!character.inventory.items) character.inventory.items = {};
             character.inventory.items[newItemId] = newItem;
             notifySubscribers();
         },
+        addContainer: (containerData) => {
+            const newContainerId = uuid();
+            const newContainer = { id: newContainerId, ...containerData };
+            if (!character.inventory.containers) character.inventory.containers = {};
+            character.inventory.containers[newContainerId] = newContainer;
+            notifySubscribers();
+        },
+        assignItemToContainer: (itemId, containerId) => {
+            const item = character.inventory.items[itemId];
+            if (item) {
+                item.containerId = (containerId === 'none' || !containerId) ? null : containerId;
+                notifySubscribers();
+            }
+        },
         updateItem: (itemId, field, value) => {
             if (character.inventory.items[itemId]) {
-                const numericFields = ['numDice', 'dieType', 'range', 'critMultiplier', 'acBonus'];
+                const numericFields = ['numDice', 'dieType', 'range', 'critMultiplier', 'acBonus', 'weight'];
                 if (numericFields.includes(field)) {
-                    character.inventory.items[itemId][field] = parseInt(value, 10) || 0;
+                    character.inventory.items[itemId][field] = parseFloat(value) || 0;
                 } else {
                     character.inventory.items[itemId][field] = value;
                 }
                 notifySubscribers();
             }
         },
-        toggleEquip: (itemId) => {
-            if (character.inventory.items[itemId]) {
-                character.inventory.items[itemId].equipped = !character.inventory.items[itemId].equipped;
-                _syncEquippedItems();
-                notifySubscribers();
+        equipItemToSlot: (itemId, slot) => {
+            const items = character.inventory.items;
+            const targetItem = items[itemId];
+            if (!targetItem) return;
+            const newSlot = (slot === 'none' || !slot) ? null : slot;
+
+            if (newSlot) {
+                targetItem.containerId = null; 
+                for (const otherItemId in items) {
+                    if (otherItemId !== itemId && items[otherItemId].equippedSlot === newSlot) {
+                        items[otherItemId].equippedSlot = null;
+                    }
+                }
             }
+            if (targetItem.itemType === 'armor' && newSlot && newSlot !== 'Armor') {
+                window.showMessage('Armor can only be equipped to the Armor slot.', 'red');
+                return;
+            }
+            if (targetItem.itemType === 'shield' && newSlot && newSlot !== 'Shield') {
+                window.showMessage('Shields can only be equipped to the Shield slot.', 'red');
+                return;
+            }
+
+            targetItem.equippedSlot = newSlot;
+            _syncEquippedItems();
+            notifySubscribers();
         },
         toggleFavorite: (itemId) => {
             if (character.inventory.items[itemId]) {
@@ -255,6 +338,8 @@ window.stores.character = (function() {
         },
         calculateItemBonusesForAbility,
         calculateItemBonusesForField,
+        calculateItemBonusesForSkill,
+        processItemBonusesForAbility,
         calculateACBonuses,
     };
 })();

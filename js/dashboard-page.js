@@ -10,7 +10,7 @@ const renderCombatInfo = (character) => {
     const concentrationBonus = casterLevel + castingStatMod + concentrationItemBonus;
 
     const renderFavoritedWeapons = () => {
-        const favoritedWeapons = Object.values(character.inventory.items).filter(item => item.itemType === 'weapon' && item.favorited && item.equipped);
+        const favoritedWeapons = Object.values(character.inventory.items).filter(item => item.itemType === 'weapon' && item.favorited && item.equippedSlot);
         if (favoritedWeapons.length === 0) {
             return '<p class="text-gray-500 italic text-center">No favorited weapons are equipped.</p>';
         }

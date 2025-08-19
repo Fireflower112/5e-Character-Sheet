@@ -45,7 +45,7 @@ window.NotesPage = (character, subPage) => {
 
 // This function saves the notes as you type
 window.attachNotesPageHandlers = () => {
-    const notesArea = document.querySelector('#sub-content-area textarea');
+    const notesArea = document.querySelector('#sub-content-area textarea[data-note]');
     if (notesArea) {
         notesArea.addEventListener('input', (e) => {
             const noteType = e.target.dataset.note;

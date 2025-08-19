@@ -9,7 +9,9 @@ window.SkillsPage = (character) => {
                         const finalAbilityScore = window.getFinalAbilityScore(character, skillData.ability);
                         const abilityMod = window.getAbilityModifier(finalAbilityScore);
                         const sizeMod = (skillName === 'stealth' || skillName === 'acrobatics' || skillName === 'fly') ? window.getSizeModifier(character.size) : 0;
-                        const totalBonus = skillData.ranks + abilityMod + sizeMod + (skillData.racial || 0) + (skillData.feat || 0) + (skillData.item || 0) + (skillData.status || 0);
+                        // MODIFIED: Calculate item bonus automatically
+                        const itemBonus = window.stores.character.calculateItemBonusesForSkill(skillName);
+                        const totalBonus = skillData.ranks + abilityMod + sizeMod + (skillData.racial || 0) + (skillData.feat || 0) + itemBonus + (skillData.status || 0) + (skillData.misc || 0);
                         const displayName = skillName.replace(/([A-Z])/g, ' $1').trim().replace(/knowledge/g, 'Knowledge (');
                         const displayNameFinal = displayName.includes('Knowledge') ? displayName + ')' : displayName;
     
@@ -27,53 +29,23 @@ window.SkillsPage = (character) => {
                                 <div class="grid grid-cols-5 gap-2 text-center text-sm">
                                     <div class="flex flex-col items-center">
                                         <label class="font-medium">Ranks</label>
-                                        <input
-                                            type="number"
-                                            data-skill="${skillName}"
-                                            data-field="ranks"
-                                            value="${skillData.ranks}"
-                                            class="w-16 p-1 text-center bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                        />
+                                        <input type="number" data-skill="${skillName}" data-field="ranks" value="${skillData.ranks}" class="w-16 p-1 text-center bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
                                     </div>
                                     <div class="flex flex-col items-center">
                                         <label class="font-medium">Feats</label>
-                                        <input
-                                            type="number"
-                                            data-skill="${skillName}"
-                                            data-field="feat"
-                                            value="${skillData.feat || 0}"
-                                            class="w-16 p-1 text-center bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                        />
+                                        <input type="number" data-skill="${skillName}" data-field="feat" value="${skillData.feat || 0}" class="w-16 p-1 text-center bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
                                     </div>
                                     <div class="flex flex-col items-center">
                                         <label class="font-medium">Racial</label>
-                                        <input
-                                            type="number"
-                                            data-skill="${skillName}"
-                                            data-field="racial"
-                                            value="${skillData.racial || 0}"
-                                            class="w-16 p-1 text-center bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                        />
+                                        <input type="number" data-skill="${skillName}" data-field="racial" value="${skillData.racial || 0}" class="w-16 p-1 text-center bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
                                     </div>
                                     <div class="flex flex-col items-center">
                                         <label class="font-medium">Item</label>
-                                        <input
-                                            type="number"
-                                            data-skill="${skillName}"
-                                            data-field="item"
-                                            value="${skillData.item || 0}"
-                                            class="w-16 p-1 text-center bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                        />
+                                        <input type="number" value="${itemBonus}" class="w-16 p-1 text-center bg-gray-200 border rounded-md" readonly />
                                     </div>
                                     <div class="flex flex-col items-center">
-                                        <label class="font-medium">Status</label>
-                                        <input
-                                            type="number"
-                                            data-skill="${skillName}"
-                                            data-field="status"
-                                            value="${skillData.status || 0}"
-                                            class="w-16 p-1 text-center bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                        />
+                                        <label class="font-medium">Misc</label>
+                                        <input type="number" data-skill="${skillName}" data-field="misc" value="${skillData.misc || 0}" class="w-16 p-1 text-center bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
                                     </div>
                                 </div>
                             </div>

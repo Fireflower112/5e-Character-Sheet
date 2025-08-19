@@ -1,68 +1,159 @@
 // js/inventory-page.js
-window.InventoryPage = (character) => {
-    const abilityScores = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
-    const bonusFields = [...abilityScores, 'concentration'];
 
-    const renderItemDetails = (item) => {
-        switch (item.itemType) {
-            case 'weapon':
-                return `
-                    <div class="mt-2 text-sm text-gray-700 space-y-2">
-                        <div class="flex items-center justify-between">
-                            <span><strong>Damage:</strong> <input type="number" value="${item.numDice || 1}" data-item-id="${item.id}" data-field="numDice" class="w-12 text-center p-1 border rounded-md"> D <input type="number" value="${item.dieType || 6}" data-item-id="${item.id}" data-field="dieType" class="w-12 text-center p-1 border rounded-md"></span>
-                            <span><strong>Crit:</strong> x<input type="number" value="${item.critMultiplier || 2}" data-item-id="${item.id}" data-field="critMultiplier" class="w-12 text-center p-1 border rounded-md"></span>
-                        </div>
-                        <div><strong>Range:</strong> <input type="number" value="${item.range || 0}" data-item-id="${item.id}" data-field="range" class="w-16 text-center p-1 border rounded-md"> ft</div>
-                    </div>`;
-            case 'armor':
-                return `
-                    <div class="mt-2 text-sm text-gray-700 space-y-2">
-                        <div><strong>Type:</strong> <select data-item-id="${item.id}" data-field="armorType" class="p-1 border rounded-md"><option value="light" ${item.armorType === 'light' ? 'selected' : ''}>Light</option><option value="medium" ${item.armorType === 'medium' ? 'selected' : ''}>Medium</option><option value="heavy" ${item.armorType === 'heavy' ? 'selected' : ''}>Heavy</option></select></div>
-                        <div><strong>AC Bonus:</strong> +<input type="number" value="${item.acBonus || 0}" data-item-id="${item.id}" data-field="acBonus" class="w-12 text-center p-1 border rounded-md"></div>
-                    </div>`;
-            case 'shield':
-                return `
-                    <div class="mt-2 text-sm text-gray-700">
-                        <strong>AC Bonus:</strong> +<input type="number" value="${item.acBonus || 0}" data-item-id="${item.id}" data-field="acBonus" class="w-12 text-center p-1 border rounded-md">
-                    </div>`;
-            default: return '';
+const equipmentSlots = [
+    { key: 'Armor', label: 'Armor' }, { key: 'Belt', label: 'Belt' }, { key: 'Body', label: 'Body' },
+    { key: 'Chest', label: 'Chest' }, { key: 'Eyes', label: 'Eyes' }, { key: 'Feet', label: 'Feet' },
+    { key: 'Hands', label: 'Hands' }, { key: 'Head', label: 'Head' }, { key: 'Headband', label: 'Headband' },
+    { key: 'Neck', label: 'Neck' }, { key: 'Ring1', label: 'Ring 1' }, { key: 'Ring2', label: 'Ring 2' },
+    { key: 'Shield', label: 'Shield' }, { key: 'Shoulders', label: 'Shoulders' }, { key: 'Wrists', label: 'Wrists' },
+];
+
+const skillList = [
+    "Acrobatics", "Appraise", "Bluff", "Climb", "Diplomacy", "Disable Device", "Disguise", "Escape Artist",
+    "Fly", "Handle Animal", "Heal", "Intimidate", "Knowledge (Arcana)", "Knowledge (Dungeoneering)", "Knowledge (Engineering)",
+    "Knowledge (Geography)", "Knowledge (History)", "Knowledge (Local)", "Knowledge (Nature)", "Knowledge (Nobility)",
+    "Knowledge (Planes)", "Knowledge (Religion)", "Linguistics", "Perception", "Perform", "Profession", "Ride",
+    "Sense Motive", "Sleight of Hand", "Spellcraft", "Stealth", "Survival", "Swim", "Use Magic Device"
+].map(name => {
+    const key = name.toLowerCase().replace(' (', '').replace(')', '').replace(/ /g, '-').replace(/-(\w)/g, (match, letter) => letter.toUpperCase());
+    return { key: key.replace(/Knowledge(\w)/, (_, c) => `knowledge${c.toUpperCase()}`), label: name };
+});
+const skillLabelMap = new Map(skillList.map(skill => [skill.key, skill.label]));
+
+let itemBonuses = [];
+
+const renderItemDetails = (item) => {
+    switch (item.itemType) {
+        case 'weapon':
+            return `
+                <div class="mt-2 text-sm text-gray-700 space-y-2 border-t pt-2">
+                    <div class="flex items-center justify-between">
+                        <span><strong>Damage:</strong> <input type="number" value="${item.numDice || 1}" data-item-id="${item.id}" data-field="numDice" class="w-12 text-center p-1 border rounded-md"> D <input type="number" value="${item.dieType || 6}" data-item-id="${item.id}" data-field="dieType" class="w-12 text-center p-1 border rounded-md"></span>
+                        <span><strong>Crit:</strong> x<input type="number" value="${item.critMultiplier || 2}" data-item-id="${item.id}" data-field="critMultiplier" class="w-12 text-center p-1 border rounded-md"></span>
+                    </div>
+                    <div><strong>Range:</strong> <input type="number" value="${item.range || 0}" data-item-id="${item.id}" data-field="range" class="w-16 text-center p-1 border rounded-md"> ft</div>
+                </div>`;
+        case 'armor':
+            return `
+                <div class="mt-2 text-sm text-gray-700 space-y-2 border-t pt-2">
+                    <div><strong>Type:</strong> <select data-item-id="${item.id}" data-field="armorType" class="p-1 border rounded-md"><option value="light" ${item.armorType === 'light' ? 'selected' : ''}>Light</option><option value="medium" ${item.armorType === 'medium' ? 'selected' : ''}>Medium</option><option value="heavy" ${item.armorType === 'heavy' ? 'selected' : ''}>Heavy</option></select></div>
+                    <div><strong>AC Bonus:</strong> +<input type="number" value="${item.acBonus || 0}" data-item-id="${item.id}" data-field="acBonus" class="w-12 text-center p-1 border rounded-md"></div>
+                </div>`;
+        case 'shield':
+            return `
+                <div class="mt-2 text-sm text-gray-700 border-t pt-2">
+                    <strong>AC Bonus:</strong> +<input type="number" value="${item.acBonus || 0}" data-item-id="${item.id}" data-field="acBonus" class="w-12 text-center p-1 border rounded-md">
+                </div>`;
+        default: return '';
+    }
+};
+
+const renderItems = (items, containers = {}) => {
+    const itemArray = Object.values(items);
+    if (itemArray.length === 0) return '<p class="text-gray-500 italic">No items to display.</p>';
+
+    return itemArray.map(item => {
+        let equipControl = '';
+        let containerControl = '';
+        const equipableTypes = ['weapon', 'armor', 'shield', 'wearable'];
+        
+        if (!item.equippedSlot && item.itemType !== 'other') {
+            containerControl = `
+                <div class="mt-2">
+                    <select data-item-id="${item.id}" data-action="assign-to-container" class="w-full p-1 border rounded-md text-sm bg-gray-50">
+                        <option value="none" ${!item.containerId ? 'selected' : ''}>Not Stored</option>
+                        ${Object.values(containers).map(c => `<option value="${c.id}" ${item.containerId === c.id ? 'selected' : ''}>${c.name}</option>`).join('')}
+                    </select>
+                </div>
+            `;
         }
-    };
+        
+        if (equipableTypes.includes(item.itemType)) {
+            if (item.itemType === 'weapon') {
+                 equipControl = `
+                    <div class="flex items-center space-x-2">
+                        <input type="checkbox" id="equip-weapon-${item.id}" data-item-id="${item.id}" data-action="equip-weapon" ${item.equippedSlot ? 'checked' : ''} class="rounded text-indigo-600 h-5 w-5"/>
+                        <label for="equip-weapon-${item.id}" class="text-gray-700">Wielded</label>
+                    </div>
+                `;
+            } else {
+                const selectedSlot = item.equippedSlot || 'none';
+                equipControl = `
+                    <select data-item-id="${item.id}" data-action="equip-to-slot" class="p-1 border rounded-md text-sm">
+                        <option value="none" ${selectedSlot === 'none' ? 'selected' : ''}>Not Equipped</option>
+                        ${equipmentSlots.map(slot => `<option value="${slot.key}" ${selectedSlot === slot.key ? 'selected' : ''}>${slot.label}</option>`).join('')}
+                    </select>
+                `;
+            }
+        }
+        
+        const bonusesHtml = (item.bonuses && item.bonuses.length > 0)
+            ? `<div class="mt-2 pt-2 border-t flex flex-wrap gap-2">
+                ${item.bonuses.map(bonus => {
+                    const label = skillLabelMap.get(bonus.field) || bonus.field.toUpperCase();
+                    const symbol = bonus.type === 'override' ? '=' : (bonus.value > 0 ? '+' : '');
+                    return `<span class="inline-block bg-indigo-100 text-indigo-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">${label}: ${symbol}${bonus.value}</span>`;
+                }).join('')}
+            </div>`
+            : '';
 
-    const renderItems = (items) => {
-        const itemArray = Object.values(items);
-        if (itemArray.length === 0) return '<p class="text-gray-500 italic">No items to display.</p>';
-
-        return itemArray.map(item => `
+        return `
             <div id="item-${item.id}" class="bg-white p-4 rounded-lg shadow-sm">
-                <div class="flex items-center justify-between mb-2">
-                    <h4 class="font-semibold text-lg">${item.name}</h4>
+                <div class="flex items-center justify-between mb-2 gap-2">
+                    <div class="flex-grow">
+                        <h4 class="font-semibold text-lg">${item.name}</h4>
+                        <div class="text-xs text-gray-500">Weight: <input type="number" value="${item.weight || 0}" data-item-id="${item.id}" data-field="weight" class="w-16 p-0 text-center border-gray-200 border rounded-md"> lbs</div>
+                    </div>
                     <div class="flex items-center space-x-3">
                         <button data-action="toggle-favorite" data-item-id="${item.id}" class="text-gray-400 hover:text-yellow-500 transition-colors" title="Favorite">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 pointer-events-none" viewBox="0 0 20 20" fill="${item.favorited ? 'currentColor' : 'none'}" stroke="currentColor" style="color: ${item.favorited ? '#FBBF24' : 'inherit'}"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
                         </button>
-                        <input type="checkbox" id="equipped-${item.id}" data-item-id="${item.id}" data-action="toggle-equip" ${item.equipped ? 'checked' : ''} class="rounded text-indigo-600 h-5 w-5"/>
-                        <label for="equipped-${item.id}" class="text-gray-700">Equipped</label>
+                        ${equipControl}
                         <button onclick="window.stores.character.deleteItem('${item.id}')" class="px-3 py-1 bg-red-500 text-white text-sm rounded-md hover:bg-red-600">Delete</button>
                     </div>
                 </div>
                 ${item.description ? `<p class="text-gray-600 text-sm mb-2">${item.description}</p>` : ''}
+                ${bonusesHtml}
                 ${renderItemDetails(item)}
+                ${containerControl}
             </div>
-        `).join('');
-    };
+        `;
+    }).join('');
+};
 
+window.InventoryPage = (character) => {
+    const abilityScores = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
+    
     return `
         <div>
-            <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">Inventory</h2>
             <div class="space-y-6">
-                <div class="bg-gray-50 p-6 rounded-2xl shadow-sm"><h3 class="text-xl font-semibold mb-3">All Items</h3><div id="all-items" class="space-y-2">${renderItems(character.inventory.items)}</div></div>
+                <div class="bg-gray-50 p-6 rounded-2xl shadow-sm">
+                    <h3 class="text-xl font-semibold mb-3">Currency</h3>
+                    <div class="grid grid-cols-3 gap-4 text-center">
+                        <div class="flex flex-col"><label for="gp-currency" class="font-medium text-gray-700 mb-1">Gold (GP)</label><input type="number" id="gp-currency" value="${character.inventory.currency.gp || 0}" data-field="inventory" data-subfield="currency.gp" class="p-2 border rounded-md text-center"></div>
+                        <div class="flex flex-col"><label for="sp-currency" class="font-medium text-gray-700 mb-1">Silver (SP)</label><input type="number" id="sp-currency" value="${character.inventory.currency.sp || 0}" data-field="inventory" data-subfield="currency.sp" class="p-2 border rounded-md text-center"></div>
+                        <div class="flex flex-col"><label for="cp-currency" class="font-medium text-gray-700 mb-1">Copper (CP)</label><input type="number" id="cp-currency" value="${character.inventory.currency.cp || 0}" data-field="inventory" data-subfield="currency.cp" class="p-2 border rounded-md text-center"></div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 p-6 rounded-2xl shadow-sm"><h3 class="text-xl font-semibold mb-3">All Items</h3><div id="all-items" class="space-y-2">${renderItems(character.inventory.items, character.inventory.containers)}</div></div>
                 <div class="bg-gray-100 p-6 rounded-2xl shadow-inner">
                     <h3 class="text-lg font-semibold mb-3">Add New Item</h3>
                     <form id="add-item-form" class="space-y-4">
-                        <input type="text" id="item-name" placeholder="Item Name" required class="w-full p-2 border rounded-md">
+                        <div class="grid grid-cols-3 gap-4">
+                            <div class="col-span-2"><label for="item-name" class="block text-sm font-medium">Item Name</label><input type="text" id="item-name" required class="w-full p-2 border rounded-md"></div>
+                            <div><label for="item-weight" class="block text-sm font-medium">Weight (lbs)</label><input type="number" id="item-weight" value="0" step="0.01" class="w-full p-2 border rounded-md"></div>
+                        </div>
                         <textarea id="item-description" placeholder="Item Description (Optional)" class="w-full p-2 border rounded-md"></textarea>
-                        <div><label for="item-type" class="block text-sm font-medium text-gray-700 mb-1">Item Type</label><select id="item-type" class="w-full p-2 border rounded-md"><option value="other">Other</option><option value="weapon">Weapon</option><option value="armor">Armor</option><option value="shield">Shield</option></select></div>
+                        <div>
+                            <label for="item-type" class="block text-sm font-medium text-gray-700 mb-1">Item Type</label>
+                            <select id="item-type" class="w-full p-2 border rounded-md">
+                                <option value="other">Other (Passive)</option>
+                                <option value="wearable">Wearable Item</option>
+                                <option value="weapon">Weapon</option>
+                                <option value="armor">Armor</option>
+                                <option value="shield">Shield</option>
+                            </select>
+                        </div>
                         <div id="weapon-fields" class="hidden space-y-3 border-t pt-4">
                             <h4 class="font-medium text-gray-700">Weapon Stats:</h4>
                             <div class="grid grid-cols-2 gap-4">
@@ -75,7 +166,29 @@ window.InventoryPage = (character) => {
                         </div>
                         <div id="armor-fields" class="hidden space-y-3 border-t pt-4"><h4 class="font-medium text-gray-700">Armor Stats:</h4><label for="armor-type" class="block text-sm font-medium">Armor Type</label><select id="armor-type" class="w-full p-2 border rounded-md"><option value="light">Light</option><option value="medium">Medium</option><option value="heavy">Heavy</option></select><label for="armor-ac-bonus" class="block text-sm font-medium">Armor Bonus</label><input type="number" id="armor-ac-bonus" value="0" class="w-full p-2 border rounded-md"></div>
                         <div id="shield-fields" class="hidden space-y-3 border-t pt-4"><h4 class="font-medium text-gray-700">Shield Stats:</h4><label for="shield-ac-bonus" class="block text-sm font-medium">AC Bonus</label><input type="number" id="shield-ac-bonus" value="0" class="w-full p-2 border rounded-md"></div>
-                        <div id="bonuses-container" class="space-y-2 border-t pt-4 hidden"><h4 class="font-medium text-gray-700">Bonuses:</h4><div class="flex items-center space-x-2"><select id="bonus-type" class="p-2 border rounded-md"><option value="">Select Bonus Type</option>${bonusFields.map(field => `<option value="${field}">${field.charAt(0).toUpperCase() + field.slice(1)}</option>`).join('')}</select><input type="number" id="bonus-value" placeholder="Value" class="w-24 p-2 border rounded-md"><button type="button" id="add-bonus-btn" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">Add Bonus</button></div><ul id="bonuses-list" class="space-y-2"></ul></div>
+                        
+                        <div id="bonuses-container" class="space-y-3 border-t pt-4">
+                            <h4 class="font-medium text-gray-700">Bonuses:</h4>
+                            <div id="bonus-category-selector" class="flex flex-wrap gap-2">
+                                <button type="button" data-bonus-category="ability" class="bonus-cat-btn px-3 py-1 text-sm font-medium rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300">Ability Score</button>
+                                <button type="button" data-bonus-category="skill" class="bonus-cat-btn px-3 py-1 text-sm font-medium rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300">Skill</button>
+                                <button type="button" data-bonus-category="concentration" class="bonus-cat-btn px-3 py-1 text-sm font-medium rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300">Concentration</button>
+                            </div>
+                            <div id="bonus-details-area" class="hidden items-center gap-4">
+                                <div id="ability-bonus-selector" class="hidden flex-grow"><label for="ability-bonus-type" class="block text-sm font-medium">Ability</label><select id="ability-bonus-type" class="w-full p-2 border rounded-md">${abilityScores.map(score => `<option value="${score}">${score.toUpperCase()}</option>`).join('')}</select></div>
+                                <div id="skill-bonus-selector" class="hidden flex-grow"><label for="skill-bonus-type" class="block text-sm font-medium">Skill</label><select id="skill-bonus-type" class="w-full p-2 border rounded-md">${skillList.map(skill => `<option value="${skill.key}">${skill.label}</option>`).join('')}</select></div>
+                                <div class="flex items-end space-x-2">
+                                    <div class="flex items-center space-x-2 pr-2">
+                                       <input type="radio" id="bonus-type-enhance" name="bonus-type" value="enhancement" checked><label for="bonus-type-enhance" class="text-sm">Augment (+)</label>
+                                       <input type="radio" id="bonus-type-override" name="bonus-type" value="override"><label for="bonus-type-override" class="text-sm">Set (=)</label>
+                                    </div>
+                                    <div class="flex-grow"><label for="bonus-value" class="block text-sm font-medium">Value</label><input type="number" id="bonus-value" placeholder="+1" class="w-24 p-2 border rounded-md"></div>
+                                    <button type="button" id="add-bonus-btn" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 h-10">Add</button>
+                                </div>
+                            </div>
+                            <ul id="bonuses-list" class="flex flex-wrap gap-2 pt-2"></ul>
+                        </div>
+                        
                         <button type="button" id="add-item-btn" class="w-full px-4 py-2 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700">Add Item</button>
                     </form>
                 </div>
@@ -84,21 +197,46 @@ window.InventoryPage = (character) => {
     `;
 };
 
+window.EquippedItemsPage = (character) => {
+    const equippedMap = new Map();
+    Object.values(character.inventory.items || {}).forEach(item => {
+        if (item.equippedSlot) {
+            equippedMap.set(item.equippedSlot, item);
+        }
+    });
+
+    const renderedSlots = equipmentSlots.map(slot => {
+        const item = equippedMap.get(slot.key);
+        const itemDisplay = item 
+            ? `<div class="font-semibold text-indigo-700">${item.name}</div>` 
+            : `<div class="text-gray-500 italic">(empty)</div>`;
+
+        return `
+            <div class="flex items-center justify-between p-3 bg-white rounded-lg shadow-inner">
+                <div class="font-bold text-gray-800">${slot.label}</div>
+                ${itemDisplay}
+            </div>
+        `;
+    }).join('');
+
+   return `
+       <div class="bg-gray-50 p-6 rounded-2xl shadow-sm">
+           <h3 class="text-xl font-semibold mb-3">Equipped Items by Slot</h3>
+           <div id="equipped-items-list" class="space-y-2 grid grid-cols-1 md:grid-cols-2 gap-3">
+               ${renderedSlots}
+           </div>
+       </div>
+   `;
+};
+
 window.attachInventoryHandlers = () => {
     const addItemBtn = document.getElementById('add-item-btn');
-    const allItemsContainer = document.getElementById('all-items');
     const itemTypeSelect = document.getElementById('item-type');
-    const bonusesContainer = document.getElementById('bonuses-container');
-    const addBonusBtn = document.getElementById('add-bonus-btn');
-    const bonusesList = document.getElementById('bonuses-list');
-    let itemBonuses = [];
-
     const itemFields = {
         weapon: document.getElementById('weapon-fields'),
         armor: document.getElementById('armor-fields'),
         shield: document.getElementById('shield-fields'),
     };
-
     if (itemTypeSelect) {
         itemTypeSelect.onchange = (e) => {
             const selectedType = e.target.value;
@@ -106,23 +244,71 @@ window.attachInventoryHandlers = () => {
             if (itemFields[selectedType]) {
                 itemFields[selectedType].classList.remove('hidden');
             }
-            bonusesContainer.classList.toggle('hidden', selectedType === 'other');
         };
+        itemTypeSelect.dispatchEvent(new Event('change'));
     }
 
-    if(addBonusBtn) {
+    const bonusCategorySelector = document.getElementById('bonus-category-selector');
+    const bonusDetailsArea = document.getElementById('bonus-details-area');
+    const abilityBonusSelector = document.getElementById('ability-bonus-selector');
+    const skillBonusSelector = document.getElementById('skill-bonus-selector');
+    const addBonusBtn = document.getElementById('add-bonus-btn');
+    const bonusesList = document.getElementById('bonuses-list');
+    let activeBonusCategory = null;
+
+    if (bonusCategorySelector) {
+        bonusCategorySelector.addEventListener('click', (e) => {
+            if (e.target.classList.contains('bonus-cat-btn')) {
+                const category = e.target.dataset.bonusCategory;
+                activeBonusCategory = category;
+                bonusCategorySelector.querySelectorAll('.bonus-cat-btn').forEach(btn => {
+                    btn.classList.remove('bg-indigo-600', 'text-white');
+                    btn.classList.add('bg-gray-200', 'text-gray-700');
+                });
+                e.target.classList.add('bg-indigo-600', 'text-white');
+                e.target.classList.remove('bg-gray-200', 'text-gray-700');
+                bonusDetailsArea.classList.remove('hidden');
+                bonusDetailsArea.classList.add('flex');
+                abilityBonusSelector.classList.add('hidden');
+                skillBonusSelector.classList.add('hidden');
+
+                if (category === 'ability') {
+                    abilityBonusSelector.classList.remove('hidden');
+                } else if (category === 'skill') {
+                    skillBonusSelector.classList.remove('hidden');
+                }
+            }
+        });
+    }
+
+    if (addBonusBtn) {
         addBonusBtn.onclick = () => {
-            const bonusTypeInput = document.getElementById('bonus-type');
             const bonusValueInput = document.getElementById('bonus-value');
-            const field = bonusTypeInput.value;
             const value = parseInt(bonusValueInput.value, 10);
+            const type = document.querySelector('input[name="bonus-type"]:checked').value;
+            let field = null;
+            let fieldLabel = '';
+
+            if (activeBonusCategory === 'ability') {
+                const selector = document.getElementById('ability-bonus-type');
+                field = selector.value;
+                fieldLabel = selector.options[selector.selectedIndex].text;
+            } else if (activeBonusCategory === 'skill') {
+                const selector = document.getElementById('skill-bonus-type');
+                field = selector.value;
+                fieldLabel = selector.options[selector.selectedIndex].text;
+            } else if (activeBonusCategory === 'concentration') {
+                field = 'concentration';
+                fieldLabel = 'Concentration';
+            }
+
             if (field && !isNaN(value)) {
-                itemBonuses.push({ field, value });
+                itemBonuses.push({ field, value, type });
+                const symbol = type === 'override' ? '=' : (value > 0 ? '+' : '');
                 const listItem = document.createElement('li');
-                listItem.textContent = `${field.toUpperCase()}: ${value > 0 ? '+' : ''}${value}`;
-                listItem.className = 'inline-block bg-indigo-100 text-indigo-800 text-xs font-semibold px-2.5 py-0.5 rounded-full mr-2';
+                listItem.textContent = `${fieldLabel}: ${symbol}${value}`;
+                listItem.className = 'inline-block bg-indigo-100 text-indigo-800 text-sm font-semibold px-2.5 py-0.5 rounded-full';
                 bonusesList.appendChild(listItem);
-                bonusTypeInput.value = '';
                 bonusValueInput.value = '';
             }
         };
@@ -130,15 +316,15 @@ window.attachInventoryHandlers = () => {
 
     if (addItemBtn) {
         addItemBtn.onclick = () => {
-            const itemType = itemTypeSelect.value;
             const newItemData = {
                 name: document.getElementById('item-name').value,
+                weight: parseFloat(document.getElementById('item-weight').value) || 0,
                 description: document.getElementById('item-description').value,
                 bonuses: [...itemBonuses],
-                itemType: itemType,
+                itemType: document.getElementById('item-type').value,
             };
 
-            if (itemType === 'weapon') {
+            if (newItemData.itemType === 'weapon') {
                 Object.assign(newItemData, {
                     weaponSize: document.getElementById('weapon-size').value,
                     numDice: parseInt(document.getElementById('weapon-num-dice').value, 10),
@@ -146,10 +332,10 @@ window.attachInventoryHandlers = () => {
                     range: parseInt(document.getElementById('weapon-range').value, 10),
                     critMultiplier: parseInt(document.getElementById('weapon-crit').value, 10),
                 });
-            } else if (itemType === 'armor') {
+            } else if (newItemData.itemType === 'armor') {
                 newItemData.armorType = document.getElementById('armor-type').value;
                 newItemData.acBonus = parseInt(document.getElementById('armor-ac-bonus').value, 10);
-            } else if (itemType === 'shield') {
+            } else if (newItemData.itemType === 'shield') {
                 newItemData.acBonus = parseInt(document.getElementById('shield-ac-bonus').value, 10);
             }
 
@@ -158,31 +344,41 @@ window.attachInventoryHandlers = () => {
                 window.showMessage('Item added successfully!', 'green');
                 document.getElementById('add-item-form').reset();
                 Object.values(itemFields).forEach(field => field?.classList.add('hidden'));
-                bonusesContainer.classList.add('hidden');
                 bonusesList.innerHTML = '';
                 itemBonuses = [];
+                bonusDetailsArea.classList.add('hidden');
+                bonusDetailsArea.classList.remove('flex');
+                 bonusCategorySelector.querySelectorAll('.bonus-cat-btn').forEach(btn => {
+                    btn.classList.remove('bg-indigo-600', 'text-white');
+                    btn.classList.add('bg-gray-200', 'text-gray-700');
+                });
+                activeBonusCategory = null;
             } else {
                 window.showMessage('Please enter an item name.', 'red');
             }
         };
     }
-
-    if (allItemsContainer) {
-        allItemsContainer.addEventListener('click', (e) => {
+    
+    const contentArea = document.getElementById('content-area');
+    if (contentArea) {
+        contentArea.addEventListener('click', (e) => {
             const button = e.target.closest('button');
             if (button && button.dataset.action === 'toggle-favorite') {
                 window.stores.character.toggleFavorite(button.dataset.itemId);
             }
         });
 
-        allItemsContainer.addEventListener('change', (e) => {
-            const { itemId, action, field, bonusIndex } = e.target.dataset;
-            if (action === 'toggle-equip') {
-                window.stores.character.toggleEquip(itemId);
+        contentArea.addEventListener('change', (e) => {
+            const { itemId, action, field } = e.target.dataset;
+            if (action === 'assign-to-container') {
+                window.stores.character.assignItemToContainer(itemId, e.target.value);
+            } else if (action === 'equip-to-slot') {
+                window.stores.character.equipItemToSlot(itemId, e.target.value);
+            } else if (action === 'equip-weapon') {
+                const slot = e.target.checked ? 'Wielded' : 'none';
+                window.stores.character.equipItemToSlot(itemId, slot);
             } else if (field) {
                 window.stores.character.updateItem(itemId, field, e.target.value);
-            } else if (bonusIndex) {
-                window.stores.character.updateItemBonus(itemId, bonusIndex, e.target.value);
             }
         });
     }

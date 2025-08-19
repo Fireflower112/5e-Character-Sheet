@@ -3,11 +3,18 @@ window.getAbilityModifier = (score) => Math.floor((score - 10) / 2);
 
 window.getFinalAbilityScore = (character, ability) => {
     const scores = character.abilityScores[ability];
-    const equippedItemBonus = window.stores.character.calculateItemBonusesForAbility(ability);
-    if (scores.override > 0) {
-        return scores.override;
+    
+    // MODIFIED: Get processed bonuses (both enhancement and overrides)
+    const { enhancement, overrides } = window.stores.character.processItemBonusesForAbility(ability);
+    
+    // Check for the highest override from items or a manual character override
+    const highestOverride = Math.max(scores.override || 0, ...overrides);
+    if (highestOverride > 0) {
+        return highestOverride;
     }
-    return (scores.base || 0) + (scores.racial || 0) + (scores.feat || 0) + (equippedItemBonus || 0) + (scores.status || 0);
+    
+    // If no override, calculate the score by adding all components
+    return (scores.base || 0) + (scores.racial || 0) + (scores.feat || 0) + (enhancement || 0) + (scores.status || 0);
 };
 
 window.getSizeModifier = (size) => {
