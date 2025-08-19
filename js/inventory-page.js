@@ -1,9 +1,9 @@
-// js/app.js
+// js/inventory-page.js (Main App Logic)
 
 document.addEventListener('DOMContentLoaded', () => {
     const contentArea = document.getElementById('content-area');
     const mainNavButtons = document.querySelectorAll('.main-nav-button');
-
+    
     let currentPage = 'dashboard';
     let currentSubPage = 'basic';
 
@@ -62,18 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- Event Listeners ---
-
-    mainNavButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            currentPage = button.dataset.page;
-            currentSubPage = 'basic'; 
-            if (currentPage === 'inventory') currentSubPage = 'equipped';
-            if (currentPage === 'notes') currentSubPage = 'character';
-            renderApp();
-        });
-    });
-
+    // --- Main Click Handler for the entire app ---
     contentArea.addEventListener('click', (e) => {
         const actionTarget = e.target.closest('[data-action]');
         if (!actionTarget) return;
@@ -91,16 +80,94 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
                 break;
-
             case 'toggle-favorite':
                 window.stores.character.toggleFavorite(itemId);
                 break;
-            
             case 'delete-item':
                 if (confirm('Are you sure you want to delete this item?')) {
                     window.stores.character.deleteItem(itemId);
                 }
                 break;
+            
+            case 'toggle-edit-item': {
+                document.getElementById(`item-display-${itemId}`).classList.toggle('hidden');
+                document.getElementById(`item-edit-area-${itemId}`).classList.toggle('hidden');
+                break;
+            }
+            
+            case 'cancel-edit': {
+                document.getElementById(`item-display-${itemId}`).classList.remove('hidden');
+                document.getElementById(`item-edit-area-${itemId}`).classList.add('hidden');
+                break;
+            }
+
+            case 'save-item-changes': {
+                const editArea = document.getElementById(`item-edit-area-${itemId}`);
+                const character = window.stores.character.get();
+                const item = character.inventory.items[itemId];
+                
+                const newBonuses = Array.from(editArea.querySelectorAll('.edit-bonuses-list li')).map(li => {
+                    return {
+                        field: li.dataset.field,
+                        value: parseInt(li.dataset.value, 10),
+                        type: li.dataset.type
+                    };
+                });
+                
+                const updates = {
+                    name: editArea.querySelector('.edit-item-name').value,
+                    description: editArea.querySelector('.edit-item-description').value,
+                    bonuses: newBonuses
+                };
+
+                // Add item-specific fields to the updates object
+                if (item.itemType === 'weapon') {
+                    updates.numDice = parseInt(editArea.querySelector('.edit-item-numDice').value, 10);
+                    updates.dieType = parseInt(editArea.querySelector('.edit-item-dieType').value, 10);
+                    updates.critMultiplier = parseInt(editArea.querySelector('.edit-item-critMultiplier').value, 10);
+                    updates.range = parseInt(editArea.querySelector('.edit-item-range').value, 10);
+                }
+                if (item.itemType === 'armor') {
+                    updates.acBonus = parseInt(editArea.querySelector('.edit-item-acBonus').value, 10);
+                    updates.armorType = editArea.querySelector('.edit-item-armorType').value;
+                }
+                 if (item.itemType === 'shield') {
+                    updates.acBonus = parseInt(editArea.querySelector('.edit-item-acBonus').value, 10);
+                }
+                
+                window.stores.character.updateItem(itemId, updates);
+                window.showMessage('Item updated!', 'green');
+                break;
+            }
+
+            case 'add-bonus-to-edit': {
+                 const editArea = document.getElementById(`item-edit-area-${itemId}`);
+                 const list = editArea.querySelector('.edit-bonuses-list');
+                 const fieldSelect = editArea.querySelector('.edit-bonus-field');
+                 const field = fieldSelect.value;
+                 const label = fieldSelect.options[fieldSelect.selectedIndex].text;
+                 const type = editArea.querySelector('.edit-bonus-type').value;
+                 const valueInput = editArea.querySelector('.edit-bonus-value');
+                 const value = parseInt(valueInput.value, 10);
+
+                 if (field && !isNaN(value)) {
+                    const symbol = type === 'override' ? '=' : (value > 0 ? '+' : '');
+                    const newLi = document.createElement('li');
+                    newLi.className = 'flex items-center justify-between bg-gray-200 px-2 py-0.5 rounded-full text-xs';
+                    newLi.dataset.field = field;
+                    newLi.dataset.value = value;
+                    newLi.dataset.type = type;
+                    newLi.innerHTML = `<span>${label}: ${symbol}${value}</span><button type="button" data-action="remove-bonus-from-edit" class="ml-2 text-red-500 hover:text-red-700 font-bold">x</button>`;
+                    list.appendChild(newLi);
+                    valueInput.value = '';
+                 }
+                break;
+            }
+            
+            case 'remove-bonus-from-edit': {
+                actionTarget.parentElement.remove();
+                break;
+            }
 
             case 'sub-tab':
                 if (subpage) {
@@ -128,11 +195,21 @@ document.addEventListener('DOMContentLoaded', () => {
             const slot = target.checked ? (itemType === 'armor' ? 'Armor' : 'Shield') : 'none';
             window.stores.character.equipItemToSlot(itemId, slot);
         } else if (field) {
-            window.stores.character.updateItem(itemId, field, target.value);
+            window.stores.character.updateItem(itemId, { [field]: target.value });
         }
     });
 
     // --- Initialization ---
+    mainNavButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            currentPage = button.dataset.page;
+            currentSubPage = 'basic'; 
+            if (currentPage === 'inventory') currentSubPage = 'equipped';
+            if (currentPage === 'notes') currentSubPage = 'character';
+            renderApp();
+        });
+    });
+
     window.stores.character.subscribe(renderApp);
     window.stores.character.init();
 });

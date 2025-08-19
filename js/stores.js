@@ -118,7 +118,6 @@ window.stores.character = (function() {
     }
 
     function getInitialState() {
-        // Generate unique IDs for all default objects
         const backpackId = uuid();
         const bagOfHoldingId = uuid();
         const bouncyBallId = uuid();
@@ -310,14 +309,11 @@ window.stores.character = (function() {
                 notifySubscribers();
             }
         },
-        updateItem: (itemId, field, value) => {
+        // --- UPDATED: This function can now take an object of updates ---
+        updateItem: (itemId, updates) => {
             if (character.inventory.items[itemId]) {
-                const numericFields = ['numDice', 'dieType', 'range', 'critMultiplier', 'acBonus', 'weight'];
-                if (numericFields.includes(field)) {
-                    character.inventory.items[itemId][field] = parseFloat(value) || 0;
-                } else {
-                    character.inventory.items[itemId][field] = value;
-                }
+                // Merge the updates into the existing item
+                Object.assign(character.inventory.items[itemId], updates);
                 notifySubscribers();
             }
         },
