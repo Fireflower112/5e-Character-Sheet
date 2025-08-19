@@ -9,50 +9,60 @@
 </head>
 <body class="bg-gray-100">
 
-    <div id="app-container" class="min-h-screen flex">
-        <nav class="bg-indigo-600 w-56 p-4 flex flex-col">
-            <h1 class="text-white text-2xl font-bold mb-6">Pathfinder Sheet</h1>
-            <ul class="space-y-2">
-                <li><button data-page="dashboard" class="main-nav-button w-full text-left px-3 py-2 rounded-md font-medium">Dashboard</button></li>
-                <li><button data-page="character-editor" class="main-nav-button w-full text-left px-3 py-2 rounded-md font-medium">Character Editor</button></li>
-                <li><button data-page="inventory" class="main-nav-button w-full text-left px-3 py-2 rounded-md font-medium">Inventory</button></li>
-                <li><button data-page="spells" class="main-nav-button w-full text-left px-3 py-2 rounded-md font-medium">Spells</button></li>
-                <li><button data-page="notes" class="main-nav-button w-full text-left px-3 py-2 rounded-md font-medium">Notes</button></li>
-            </ul>
-            <div class="mt-auto space-y-2">
-                <button onclick="window.handleSave()" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">Save Character</button>
-                <button onclick="window.handleLoad()" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">Load Character</button>
+    <div id="app-container" class="min-h-screen flex flex-col">
+        <nav class="bg-indigo-600 shadow-lg">
+            <div class="max-w-7xl mx-auto px-4">
+                <div class="flex justify-between items-center h-16">
+                    <div class="flex items-center space-x-8">
+                        <h1 class="text-white text-2xl font-bold">Pathfinder Sheet</h1>
+                        <ul class="flex items-baseline space-x-4">
+                            <li><button data-page="dashboard" class="main-nav-button text-gray-300 hover:bg-indigo-500 hover:text-white px-3 py-2 rounded-md font-medium">Dashboard</button></li>
+                            <li><button data-page="character-editor" class="main-nav-button text-gray-300 hover:bg-indigo-500 hover:text-white px-3 py-2 rounded-md font-medium">Character Editor</button></li>
+                            <li><button data-page="inventory" class="main-nav-button text-gray-300 hover:bg-indigo-500 hover:text-white px-3 py-2 rounded-md font-medium">Inventory</button></li>
+                            <li><button data-page="spells" class="main-nav-button text-gray-300 hover:bg-indigo-500 hover:text-white px-3 py-2 rounded-md font-medium">Spells</button></li>
+                            <li><button data-page="notes" class="main-nav-button text-gray-300 hover:bg-indigo-500 hover:text-white px-3 py-2 rounded-md font-medium">Notes</button></li>
+                        </ul>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="window.handleSave()" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">Save</button>
+                        <button onclick="window.handleLoad()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">Load</button>
+                    </div>
+                </div>
             </div>
         </nav>
 
         <main class="flex-1 p-8">
             <div id="content-area">
-                </div>
-        </main>
-    </div>
-
-    <div id="item-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
-        <div id="item-modal-content" class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+                <!-- App content will be rendered here -->
             </div>
+        </main>
     </div>
 
     <div id="message-box" class="message-box"></div>
 
+    <!-- Core Scripts -->
     <script src="js/stores.js"></script>
     <script src="js/components.js"></script>
     
+    <!-- Page Component Scripts -->
     <script src="js/main-page.js"></script>
     <script src="js/dashboard-page.js"></script>
     <script src="js/info-page.js"></script>
     <script src="js/skills-page.js"></script>
     <script src="js/character-editor-page.js"></script>
-    <script src="js/inventory-page.js"></script>
-    <script src="js/stored-items-page.js"></script>
-    <script src="js/inventory-container-page.js"></script>
     <script src="js/spells-page.js"></script>
     <script src="js/notes-page.js"></script>
+    
+    <!-- Inventory Page Scripts (Order is important here) -->
+    <script src="js/equipped-items-page.js"></script> 
+    <script src="js/stored-items-page.js"></script>
+    <script src="js/all-items-page.js"></script>
+    
+    <!-- Container/Manager Scripts -->
+    <script src="js/inventory-container-page.js"></script>
 
-    <script src="js/app.js"></script>
+    <!-- Main App Logic (Using the correct file now) -->
+    <script src="js/inventory-page.js"></script>
 
 </body>
 </html>

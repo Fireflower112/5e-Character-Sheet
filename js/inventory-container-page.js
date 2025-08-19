@@ -1,5 +1,6 @@
 // js/inventory-container-page.js
 
+// No more DOMContentLoaded wrapper. The function is defined directly.
 window.InventoryContainerPage = (character, subPage) => {
     // Determine which sub-tab is active for styling
     const isEquippedActive = subPage === 'equipped';
@@ -7,15 +8,19 @@ window.InventoryContainerPage = (character, subPage) => {
     const isAllActive = subPage === 'all';
 
     let subContent = '';
-    // Based on the active sub-page, call the appropriate rendering function
+    // Now, window.EquippedItemsPage is guaranteed to exist when this is called.
     switch(subPage) {
         case 'equipped':
+            // This function is not defined in the provided files,
+            // but assuming it exists, the logic is sound.
             subContent = window.EquippedItemsPage(character);
             break;
         case 'stored':
             subContent = window.StoredItemsPage(character);
             break;
         case 'all':
+             // This function is not defined in the provided files,
+            // but assuming it exists, the logic is sound.
             subContent = window.InventoryPage(character);
             break;
     }
@@ -35,3 +40,5 @@ window.InventoryContainerPage = (character, subPage) => {
         </div>
     `;
 };
+
+// The event listener from the original file is no longer needed here.

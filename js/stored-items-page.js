@@ -4,6 +4,41 @@ window.StoredItemsPage = (character) => {
     const containers = Object.values(character.inventory.containers || {});
     const allItems = Object.values(character.inventory.items || {});
 
+    // We can reuse the helper function from inventory-page.js if it's made global,
+    // but for simplicity, we'll just define it here as well.
+    const renderAccordionDetails = (item) => {
+        const skillLabelMap = new Map([
+            ["acrobatics", "Acrobatics"], ["appraise", "Appraise"], ["bluff", "Bluff"], ["climb", "Climb"],
+            ["diplomacy", "Diplomacy"], ["disableDevice", "Disable Device"], ["disguise", "Disguise"],
+            ["escapeArtist", "Escape Artist"], ["fly", "Fly"], ["handleAnimal", "Handle Animal"], ["heal", "Heal"],
+            ["intimidate", "Intimidate"], ["knowledgeArcana", "Knowledge (Arcana)"], ["knowledgeDungeoneering", "Knowledge (Dungeoneering)"],
+            ["knowledgeEngineering", "Knowledge (Engineering)"], ["knowledgeGeography", "Knowledge (Geography)"],
+            ["knowledgeHistory", "Knowledge (History)"], ["knowledgeLocal", "Knowledge (Local)"], ["knowledgeNature", "Knowledge (Nature)"],
+            ["knowledgeNobility", "Knowledge (Nobility)"], ["knowledgePlanes", "Knowledge (Planes)"], ["knowledgeReligion", "Knowledge (Religion)"],
+            ["linguistics", "Linguistics"], ["perception", "Perception"], ["perform", "Perform"], ["profession", "Profession"],
+            ["ride", "Ride"], ["senseMotive", "Sense Motive"], ["sleightOfHand", "Sleight of Hand"],
+            ["spellcraft", "Spellcraft"], ["stealth", "Stealth"], ["survival", "Survival"], ["swim", "Swim"],
+            ["useMagicDevice", "Use Magic Device"], ["concentration", "Concentration"]
+        ]);
+        const bonusesHtml = (item.bonuses && item.bonuses.length > 0)
+            ? `<div class="mt-2 pt-2 border-t">
+                <h4 class="font-semibold text-gray-700 mb-1 text-sm">Bonuses:</h4>
+                <div class="flex flex-wrap gap-1">
+                    ${item.bonuses.map(bonus => {
+                        const label = skillLabelMap.get(bonus.field) || bonus.field.toUpperCase();
+                        const symbol = bonus.type === 'override' ? '=' : (bonus.value > 0 ? '+' : '');
+                        return `<span class="inline-block bg-indigo-100 text-indigo-800 text-xs font-semibold px-2 py-0.5 rounded-full">${label}: ${symbol}${bonus.value}</span>`;
+                    }).join('')}
+                </div>
+            </div>`
+            : '';
+
+        return `
+            <p class="text-gray-600 text-sm italic">${item.description || 'No description.'}</p>
+            ${bonusesHtml}
+        `;
+    }
+
     const renderContainers = () => {
         if (containers.length === 0) {
             return `<p class="text-gray-500 italic">No containers created yet.</p>`;
@@ -22,12 +57,14 @@ window.StoredItemsPage = (character) => {
                     <div class="pl-4 border-l-2 border-gray-200 space-y-1">
                         ${itemsInContainer.length > 0
                             ? itemsInContainer.map(item => `
-                                <div 
-                                    class="text-sm text-gray-800 cursor-pointer hover:text-indigo-600"
-                                    data-action="show-item-details"
-                                    data-item-id="${item.id}"
-                                >
-                                    ${item.name} (${item.weight || 0} lbs)
+                                <div>
+                                    <button data-action="toggle-accordion" class="w-full flex justify-between items-center text-sm text-gray-800 hover:text-indigo-600">
+                                        <span>${item.name} (${item.weight || 0} lbs)</span>
+                                        <span class="accordion-icon text-gray-400 font-mono">[+]</span>
+                                    </button>
+                                    <div class="accordion-details hidden p-2 mt-1 border-t bg-gray-50 rounded-md space-y-2">
+                                        ${renderAccordionDetails(item)}
+                                    </div>
                                 </div>
                             `).join('')
                             : `<p class="text-sm text-gray-400 italic">Container is empty.</p>`
