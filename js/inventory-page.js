@@ -1,6 +1,7 @@
 // js/inventory-page.js (Main App Logic)
 
 document.addEventListener('DOMContentLoaded', () => {
+    // This line MUST be inside the DOMContentLoaded wrapper
     const contentArea = document.getElementById('content-area');
     const mainNavButtons = document.querySelectorAll('.main-nav-button');
     
@@ -48,6 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (window.attachSpellsPageHandlers) window.attachSpellsPageHandlers();
         if (window.attachNotesPageHandlers) window.attachNotesPageHandlers();
         if (window.attachStoredItemsPageHandlers) window.attachStoredItemsPageHandlers();
+        if (window.attachAbilitiesEditorHandlers) window.attachAbilitiesEditorHandlers();
     }
 
     function updateNavStyles() {
@@ -62,12 +64,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- Main Click Handler for the entire app ---
+    // This event handler MUST be inside the DOMContentLoaded wrapper
     contentArea.addEventListener('click', (e) => {
         const actionTarget = e.target.closest('[data-action]');
         if (!actionTarget) return;
 
-        const { action, itemId, subpage } = actionTarget.dataset;
+        const { action, itemId, subpage, abilityId } = actionTarget.dataset;
 
         switch (action) {
             case 'toggle-accordion':
@@ -88,31 +90,24 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.stores.character.deleteItem(itemId);
                 }
                 break;
-            
-            case 'toggle-edit-item': {
+            case 'toggle-edit-item': 
                 document.getElementById(`item-display-${itemId}`).classList.toggle('hidden');
                 document.getElementById(`item-edit-area-${itemId}`).classList.toggle('hidden');
                 break;
-            }
-            
-            case 'cancel-edit': {
+            case 'cancel-edit':
                 document.getElementById(`item-display-${itemId}`).classList.remove('hidden');
                 document.getElementById(`item-edit-area-${itemId}`).classList.add('hidden');
                 break;
-            }
-
-            case 'save-item-changes': {
+            case 'save-item-changes':
                 const editArea = document.getElementById(`item-edit-area-${itemId}`);
                 const character = window.stores.character.get();
                 const item = character.inventory.items[itemId];
                 
-                const newBonuses = Array.from(editArea.querySelectorAll('.edit-bonuses-list li')).map(li => {
-                    return {
-                        field: li.dataset.field,
-                        value: parseInt(li.dataset.value, 10),
-                        type: li.dataset.type
-                    };
-                });
+                const newBonuses = Array.from(editArea.querySelectorAll('.edit-bonuses-list li')).map(li => ({
+                    field: li.dataset.field,
+                    value: parseInt(li.dataset.value, 10),
+                    type: li.dataset.type
+                }));
                 
                 const updates = {
                     name: editArea.querySelector('.edit-item-name').value,
@@ -120,7 +115,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     bonuses: newBonuses
                 };
 
-                // Add item-specific fields to the updates object
                 if (item.itemType === 'weapon') {
                     updates.numDice = parseInt(editArea.querySelector('.edit-item-numDice').value, 10);
                     updates.dieType = parseInt(editArea.querySelector('.edit-item-dieType').value, 10);
@@ -138,16 +132,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.stores.character.updateItem(itemId, updates);
                 window.showMessage('Item updated!', 'green');
                 break;
-            }
-
-            case 'add-bonus-to-edit': {
-                 const editArea = document.getElementById(`item-edit-area-${itemId}`);
-                 const list = editArea.querySelector('.edit-bonuses-list');
-                 const fieldSelect = editArea.querySelector('.edit-bonus-field');
+            case 'add-bonus-to-edit':
+                 const bonusEditArea = document.getElementById(`item-edit-area-${itemId}`);
+                 const list = bonusEditArea.querySelector('.edit-bonuses-list');
+                 const fieldSelect = bonusEditArea.querySelector('.edit-bonus-field');
                  const field = fieldSelect.value;
                  const label = fieldSelect.options[fieldSelect.selectedIndex].text;
-                 const type = editArea.querySelector('.edit-bonus-type').value;
-                 const valueInput = editArea.querySelector('.edit-bonus-value');
+                 const type = bonusEditArea.querySelector('.edit-bonus-type').value;
+                 const valueInput = bonusEditArea.querySelector('.edit-bonus-value');
                  const value = parseInt(valueInput.value, 10);
 
                  if (field && !isNaN(value)) {
@@ -162,13 +154,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     valueInput.value = '';
                  }
                 break;
-            }
-            
-            case 'remove-bonus-from-edit': {
+            case 'remove-bonus-from-edit':
                 actionTarget.parentElement.remove();
                 break;
-            }
-
+            case 'delete-ability':
+                if (confirm('Are you sure you want to delete this ability?')) {
+                    window.stores.character.deleteAbility(abilityId);
+                }
+                break;
             case 'sub-tab':
                 if (subpage) {
                     currentSubPage = subpage;
@@ -178,6 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // This event handler MUST be inside the DOMContentLoaded wrapper
     contentArea.addEventListener('change', (e) => {
         const target = e.target;
         const { itemId, action, field, itemType } = target.dataset;
@@ -203,6 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
     mainNavButtons.forEach(button => {
         button.addEventListener('click', () => {
             currentPage = button.dataset.page;
+            // Set default sub-pages
             currentSubPage = 'basic'; 
             if (currentPage === 'inventory') currentSubPage = 'equipped';
             if (currentPage === 'notes') currentSubPage = 'character';

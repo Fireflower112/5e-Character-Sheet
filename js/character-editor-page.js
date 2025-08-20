@@ -12,15 +12,14 @@ document.addEventListener('DOMContentLoaded', () => {
         // Based on the active sub-page, call your OLD rendering functions!
         switch(subPage) {
             case 'basic':
-                // Reusing your existing "Character Info" page code!
                 subContent = window.InfoPage(character); 
                 break;
             case 'skills':
-                // Reusing your existing "Skills" page code!
                 subContent = window.SkillsPage(character);
                 break;
             case 'abilities':
-                subContent = `<h3 class="text-xl font-semibold">Racial & Class Abilities</h3><p>This is where you'll add and view class and racial abilities.</p>`;
+                // UPDATED: Calls the new abilities editor page
+                subContent = window.AbilitiesEditorPage(character);
                 break;
             case 'feats':
                 subContent = `<h3 class="text-xl font-semibold">Feats</h3><p>This is where you'll add and view feats.</p>`;
