@@ -1,49 +1,10 @@
 // js/info-page.js
 window.InfoPage = (character) => {
-    const dndSizes = ['Tiny', 'Small', 'Medium', 'Large', 'Huge', 'Gargantuan'];
     const dndAlignments = [ 'Lawful Good', 'Neutral Good', 'Chaotic Good', 'Lawful Neutral', 'True Neutral', 'Chaotic Neutral', 'Lawful Evil', 'Neutral Evil', 'Chaotic Evil' ];
-    const abilityScores = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
     
     const raceNames = Object.keys(window.dndData.races || {});
     const selectedRaceData = window.dndData.races[character.race];
     const subraces = selectedRaceData?.subraces || [];
-
-    const renderAbilityScoreRow = (ability) => {
-        const scores = character.abilityScores[ability];
-        const finalScore = window.getFinalAbilityScore(character, ability);
-        const modifier = window.getAbilityModifier(finalScore);
-
-        return `
-            <div class="p-4 bg-gray-50 rounded-lg shadow-sm text-center">
-                <div class="text-2xl font-bold uppercase">${ability}</div>
-                <div class="text-5xl font-extrabold text-indigo-600 my-2">${modifier >= 0 ? '+' : ''}${modifier}</div>
-                <div class="font-semibold text-gray-800">${finalScore}</div>
-                <div class="grid grid-cols-3 gap-1 mt-3 text-sm">
-                    <div><label class="text-xs font-medium">Base</label><input type="number" data-field="abilityScores" data-subfield="${ability}.base" value="${scores.base}" class="w-full p-1 border rounded text-center" /></div>
-                    <div><label class="text-xs font-medium">Racial</label><input type="number" data-field="abilityScores" data-subfield="${ability}.racial" value="${scores.racial || 0}" class="w-full p-1 border rounded text-center" /></div>
-                    <div><label class="text-xs font-medium">Other</label><input type="number" data-field="abilityScores" data-subfield="${ability}.other" value="${scores.other || 0}" class="w-full p-1 border rounded text-center" /></div>
-                </div>
-            </div>
-        `;
-    };
-
-    const renderSavingThrows = () => {
-        return abilityScores.map(ability => {
-            const abilityMod = window.getAbilityModifier(window.getFinalAbilityScore(character, ability));
-            const isProficient = character.savingThrows[ability]?.proficient || false;
-            const totalBonus = abilityMod + (isProficient ? character.proficiencyBonus : 0);
-
-            return `
-                <div class="flex items-center justify-between p-2 border-b">
-                    <div class="flex items-center space-x-2">
-                        <input type="checkbox" id="save-prof-${ability}" data-save="${ability}" ${isProficient ? 'checked' : ''} class="h-5 w-5 rounded text-indigo-600"/>
-                        <label for="save-prof-${ability}" class="font-medium capitalize">${ability}</label>
-                    </div>
-                    <span class="font-bold text-lg">${totalBonus >= 0 ? '+' : ''}${totalBonus}</span>
-                </div>
-            `;
-        }).join('');
-    };
     
     return `
         <div>
@@ -63,10 +24,10 @@ window.InfoPage = (character) => {
                     <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
                          <div class="flex items-center space-x-2">
                             <label for="race" class="font-medium text-gray-700">Race:</label>
-                            <input id="race" list="race-options" value="${character.race}" data-field="race" class="flex-1 p-2 bg-white border rounded-md"/>
-                            <datalist id="race-options">
-                                ${raceNames.map(name => `<option value="${name}"></option>`).join('')}
-                            </datalist>
+                            <select id="race" data-field="race" class="flex-1 p-2 bg-white border rounded-md">
+                                <option value="">-- Select a Race --</option>
+                                ${raceNames.map(name => `<option value="${name}" ${character.race === name ? 'selected' : ''}>${name}</option>`).join('')}
+                            </select>
                             <button data-action="open-homebrew-modal" class="px-3 py-2 bg-gray-200 text-sm font-medium rounded-md hover:bg-gray-300">Homebrew</button>
                         </div>
                         <div class="flex items-center space-x-2">
@@ -82,18 +43,20 @@ window.InfoPage = (character) => {
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    ${abilityScores.map(renderAbilityScoreRow).join('')}
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="bg-gray-50 p-4 rounded-2xl shadow-sm">
-                        <h3 class="text-xl font-semibold mb-2 text-center">Saving Throws</h3>
-                        ${renderSavingThrows()}
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <label for="language-input" class="font-medium text-gray-700">Languages</label>
+                    <div id="language-tags-container" class="flex flex-wrap gap-2 mt-2 mb-2">
+                        ${(character.languages || []).map(lang => `
+                            <span class="inline-flex items-center bg-indigo-100 text-indigo-800 text-sm font-medium px-2.5 py-0.5 rounded-full">
+                                ${lang}
+                                <button data-action="remove-language" data-lang="${lang}" class="ml-1.5 text-indigo-500 hover:text-indigo-700">&times;</button>
+                            </span>
+                        `).join('')}
                     </div>
-                    <div class="bg-gray-50 p-4 rounded-2xl shadow-sm">
-                        <h3 class="text-xl font-semibold mb-2 text-center">General</h3>
-                        <div class="flex items-center space-x-2"><label class="font-medium">Proficiency Bonus:</label><input type="number" data-field="proficiencyBonus" value="${character.proficiencyBonus}" class="w-20 p-1 border rounded text-center" /></div>
-                    </div>
+                    <input id="language-input" list="language-options" class="w-full p-2 bg-white border rounded-md" placeholder="Type or select a language..."/>
+                    <datalist id="language-options">
+                        ${(window.dndData.languages || []).map(lang => `<option value="${lang}"></option>`).join('')}
+                    </datalist>
                 </div>
                 
                 <h3 class="text-xl font-semibold text-gray-800 border-b pb-1">Class & Level</h3>
@@ -121,7 +84,7 @@ window.attachInfoPageHandlers = () => {
             if (e.target.tagName !== 'INPUT') return;
             const field = e.target.dataset.field;
             const subField = e.target.dataset.subfield;
-            if (field) {
+            if (field && field !== 'languages') {
                 window.stores.character.updateCharacterProperty(field, e.target.value, subField);
             }
         });
@@ -135,27 +98,34 @@ window.attachInfoPageHandlers = () => {
                 window.stores.character.applySubrace(e.target.value);
             } else if (e.target.tagName === 'SELECT' && field) {
                 window.updateCharacterInfo(field, e.target.value);
-            } else if (e.target.dataset.save) {
-                const character = window.stores.character.get();
-                const newSaves = { ...character.savingThrows };
-                newSaves[e.target.dataset.save].proficient = e.target.checked;
-                window.stores.character.set({ savingThrows: newSaves });
             }
         });
 
         infoContainer.addEventListener('click', (e) => {
-            const openHomebrewBtn = e.target.closest('[data-action="open-homebrew-modal"]');
-            const openSubraceBtn = e.target.closest('[data-action="open-homebrew-subrace-modal"]');
-            const modalContainer = document.getElementById('modal-container');
+            const actionTarget = e.target.closest('[data-action]');
+            if (!actionTarget) return;
+            
+            const { action, lang } = actionTarget.dataset;
 
-            if (openHomebrewBtn) {
+            if (action === 'open-homebrew-modal') {
+                const modalContainer = document.getElementById('modal-container');
                 modalContainer.innerHTML = window.renderHomebrewRaceModal();
                 window.attachHomebrewRaceModalHandlers();
-            }
-            if (openSubraceBtn) {
+            } else if (action === 'open-homebrew-subrace-modal') {
+                const modalContainer = document.getElementById('modal-container');
                 modalContainer.innerHTML = window.renderHomebrewSubraceModal();
                 window.attachHomebrewSubraceModalHandlers();
+            } else if (action === 'remove-language') {
+                window.stores.character.removeLanguage(lang);
             }
         });
+        
+        const langInput = document.getElementById('language-input');
+        if (langInput) {
+            langInput.addEventListener('change', (e) => {
+                window.stores.character.addLanguage(e.target.value);
+                e.target.value = '';
+            });
+        }
     }
 };
