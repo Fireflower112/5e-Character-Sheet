@@ -4,20 +4,24 @@ window.DashboardPage = (character, subPage) => {
     const isCombatActive = subPage === 'combat';
     const isBackgroundActive = subPage === 'background';
     const isSkillsActive = subPage === 'skills';
+    const isSpellsActive = subPage === 'spells'; // New
 
     let subContent = '';
     switch (subPage) {
         case 'basic':
-            subContent = window.MainPage(character); // This function is in main-page.js
+            subContent = window.MainPage(character);
             break;
         case 'combat':
-            subContent = window.DashboardCombatPage(character); // Calls new function
+            subContent = window.DashboardCombatPage(character);
             break;
         case 'background':
-            subContent = window.DashboardBackgroundPage(character); // Calls new function
+            subContent = window.DashboardBackgroundPage(character);
             break;
         case 'skills':
-            subContent = window.DashboardSkillsPage(character); // Calls new function
+            subContent = window.DashboardSkillsPage(character);
+            break;
+        case 'spells': // New
+            subContent = window.SpellsPage(character); // Renders the main spellbook view
             break;
     }
     
@@ -28,6 +32,7 @@ window.DashboardPage = (character, subPage) => {
                 <button data-action="sub-tab" data-subpage="combat" class="sub-tab-button ${isCombatActive ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-gray-500'} px-4 py-2 font-medium">Combat</button>
                 <button data-action="sub-tab" data-subpage="background" class="sub-tab-button ${isBackgroundActive ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-gray-500'} px-4 py-2 font-medium">Background</button>
                 <button data-action="sub-tab" data-subpage="skills" class="sub-tab-button ${isSkillsActive ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-gray-500'} px-4 py-2 font-medium">Skills</button>
+                <button data-action="sub-tab" data-subpage="spells" class="sub-tab-button ${isSpellsActive ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-gray-500'} px-4 py-2 font-medium">Spells</button>
             </div>
             <div id="sub-content-area">
                 ${subContent}
