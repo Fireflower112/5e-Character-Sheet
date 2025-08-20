@@ -121,7 +121,6 @@ window.stores.character = (function() {
         return enhancement;
     }
     
-    // --- NEW: Calculates bonuses for a skill ONLY from ITEMS ---
     function calculateItemBonusesForSkill(skillName) {
         let totalBonus = 0;
         if (character.inventory && character.inventory.items) {
@@ -139,7 +138,6 @@ window.stores.character = (function() {
         return totalBonus;
     }
 
-    // --- NEW: Calculates bonuses for a skill ONLY from RACIAL abilities ---
     function calculateRacialAbilityBonusesForSkill(skillName) {
         let totalBonus = 0;
         if (character.abilities) {
@@ -180,7 +178,7 @@ window.stores.character = (function() {
         const beltId = uuid();
         const leatherArmorId = uuid();
         const shieldId = uuid();
-        const humanAbilityId = uuid();
+        const humanAbilityId = 'default-human-racial-bonus';
 
         const defaultState = {
             name: 'Valerius',
@@ -295,7 +293,9 @@ window.stores.character = (function() {
             feats: {},
             abilities: {
                 [humanAbilityId]: {
-                    id: humanAbilityId, name: 'Human Racial Bonus', type: 'Racial',
+                    id: humanAbilityId,
+                    name: 'Human Racial Bonus', 
+                    type: 'Racial',
                     description: 'Humans select one ability score to increase by 2 at creation to represent their varied nature.',
                     bonuses: [{ field: 'str', value: 2, type: 'enhancement' }]
                 }

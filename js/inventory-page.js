@@ -4,8 +4,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const contentArea = document.getElementById('content-area');
     const mainNavButtons = document.querySelectorAll('.main-nav-button');
     
+    // UPDATED: Default subPage for the dashboard is now 'skills'
     let currentPage = 'dashboard';
-    let currentSubPage = 'basic';
+    let currentSubPage = 'skills';
 
     const renderApp = () => {
         const character = window.stores.character.get();
@@ -25,9 +26,6 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'inventory':
                 pageHtml = window.InventoryContainerPage(character, currentSubPage);
                 break;
-            case 'spells':
-                pageHtml = window.SpellsPage(character);
-                break;
             case 'notes':
                 pageHtml = window.NotesPage(character, currentSubPage);
                 break;
@@ -41,7 +39,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     function attachContentHandlers() {
-        if (window.attachMainPageHandlers) window.attachMainPageHandlers();
+        // UPDATED: Removed main page handlers, added combat handlers
+        if (window.attachDashboardCombatHandlers) window.attachDashboardCombatHandlers();
         if (window.attachInfoPageHandlers) window.attachInfoPageHandlers();
         if (window.attachSkillsPageHandlers) window.attachSkillsPageHandlers();
         if (window.attachInventoryHandlers) window.attachInventoryHandlers();
@@ -194,7 +193,8 @@ document.addEventListener('DOMContentLoaded', () => {
     mainNavButtons.forEach(button => {
         button.addEventListener('click', () => {
             currentPage = button.dataset.page;
-            currentSubPage = 'basic'; 
+            // Set default sub-pages
+            if (currentPage === 'dashboard') currentSubPage = 'skills';
             if (currentPage === 'inventory') currentSubPage = 'equipped';
             if (currentPage === 'notes') currentSubPage = 'character';
             if (currentPage === 'character-editor') currentSubPage = 'basic';

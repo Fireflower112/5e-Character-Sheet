@@ -1,0 +1,15 @@
+[
+  {
+    "name": "Ability Score Increase",
+    "description": "You can increase one ability score of your choice by 2, or you can increase two ability scores of your choice by 1."
+  },
+  {
+    "name": "Grappler",
+    "prerequisite": { "ability_score": "Strength 13" },
+    "description": "You have advantage on attack rolls against a creature you are grappling."
+  },
+  {
+    "name": "Healer",
+    "description": "You can use a healer’s kit to stabilize a dying creature without a check. When you use a healer's kit to tend to a creature, the creature also regains 1 hit point."
+  }
+]

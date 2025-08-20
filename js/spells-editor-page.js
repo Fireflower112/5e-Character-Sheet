@@ -11,6 +11,40 @@ window.SpellsEditorPage = (character) => {
     const durations = ['Instantaneous', '1 round/level', '1 min/level', '10 min/level', '1 hour/level', '24 hours', 'Permanent'];
     const spellShapes = ['None', 'Cone', 'Sphere', 'Cylinder', 'Line', 'Burst'];
 
+    // --- NEW: Helper function to render the spell list (moved from spells-page.js) ---
+    const renderSpells = (spells) => {
+        const spellArray = Object.values(spells);
+        if (spellArray.length === 0) return '<p class="text-gray-500 italic">No spells learned yet.</p>';
+        return spellArray.map(spell => {
+            let rangeString;
+            const rawRange = spell.range;
+            if (rawRange && !isNaN(parseInt(rawRange, 10))) {
+                rangeString = `${rawRange} ft.`;
+            } else {
+                rangeString = rawRange || 'N/A';
+            }
+
+            return `
+                <div id="spell-${spell.id}" class="bg-white p-4 rounded-lg shadow-sm">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center gap-2"><h4 class="font-semibold text-lg">${spell.name}</h4><span class="text-sm text-gray-500">(Lvl ${spell.level})</span></div>
+                        <div class="flex items-center space-x-3">
+                            <button data-action="toggle-favorite-spell" data-spell-id="${spell.id}" class="text-gray-400 hover:text-yellow-500 transition-colors" title="Favorite"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 pointer-events-none" viewBox="0 0 20 20" fill="${spell.favorited ? 'currentColor' : 'none'}" stroke="currentColor" style="color: ${spell.favorited ? '#FBBF24' : 'inherit'}"><path d="M9.049 2.2927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg></button>
+                            <button onclick="window.stores.character.deleteSpell('${spell.id}')" class="px-3 py-1 bg-red-500 text-white text-sm rounded-md hover:bg-red-600">Delete</button>
+                        </div>
+                    </div>
+                    <div class="text-sm text-gray-600 space-y-1">
+                        <p><strong>School:</strong> ${spell.school} | <strong>Damage:</strong> ${spell.damageNumDice || 0}d${spell.damageDieType || 0}</p>
+                        <p><strong>Cast Time:</strong> ${spell.castingTime} | <strong>Duration:</strong> ${spell.duration}</p>
+                        <p><strong>Range:</strong> ${rangeString} | <strong>Shape:</strong> ${spell.shape || 'N/A'}</p>
+                    </div>
+                    ${spell.description ? `<p class="text-gray-700 text-sm mt-2 pt-2 border-t">${spell.description}</p>` : ''}
+                </div>
+            `;
+        }).join('');
+    };
+
+
     return `
         <div>
             <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">Spellcasting Settings</h2>
@@ -75,6 +109,11 @@ window.SpellsEditorPage = (character) => {
                         <button type="button" id="add-spell-btn" class="w-full px-4 py-2 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700">Add Spell</button>
                     </form>
                 </div>
+
+                <div class="bg-gray-50 p-6 rounded-2xl shadow-sm">
+                    <h3 class="text-xl font-semibold mb-3">Known Spells</h3>
+                    <div id="all-spells-editor-list" class="space-y-2">${renderSpells(character.spells || {})}</div>
+                </div>
             </div>
         </div>
     `;
@@ -86,18 +125,29 @@ window.attachSpellsEditorHandlers = () => {
 
     // Handler for updating spell slots
     editorContainer.addEventListener('input', (e) => {
-        if (e.target.tagName !== 'INPUT' || e.target.dataset.action !== 'update-spell-slot') return;
-        
-        const level = e.target.dataset.level;
-        window.stores.character.updateSpellSlot(level, 'total', e.target.value);
+        if (e.target.tagName === 'INPUT' && e.target.dataset.action === 'update-spell-slot') {
+            const level = e.target.dataset.level;
+            window.stores.character.updateSpellSlot(level, 'total', e.target.value);
+        }
     });
 
     // Handler for updating casting stat
     editorContainer.addEventListener('change', (e) => {
-        if (e.target.tagName !== 'SELECT' || e.target.dataset.field !== 'spellcasting') return;
-
-        window.updateCharacterInfo(e.target.dataset.field, e.target.value, e.target.dataset.subfield);
+        if (e.target.tagName === 'SELECT' && e.target.dataset.field === 'spellcasting') {
+            window.updateCharacterInfo(e.target.dataset.field, e.target.value, e.target.dataset.subfield);
+        }
     });
+
+    // Handler for toggling favorite on this page's list
+    const allSpellsList = document.getElementById('all-spells-editor-list');
+    if (allSpellsList) {
+        allSpellsList.addEventListener('click', (e) => {
+             const button = e.target.closest('button');
+            if (button && button.dataset.action === 'toggle-favorite-spell') {
+                window.stores.character.toggleFavoriteSpell(button.dataset.spellId);
+            }
+        });
+    }
 
     // Handlers for the "Add New Spell" form
     const addSpellBtn = document.getElementById('add-spell-btn');

@@ -1,0 +1,86 @@
+[
+  {
+    "name": "Barbarian",
+    "hit_dice": "1d12",
+    "primary_ability": ["Strength"],
+    "proficiencies": ["Light armor", "Medium armor", "Shields", "Simple weapons", "Martial weapons"],
+    "saving_throws": ["Strength", "Constitution"]
+  },
+  {
+    "name": "Bard",
+    "hit_dice": "1d8",
+    "primary_ability": ["Charisma"],
+    "proficiencies": ["Light armor", "Simple weapons", "Hand crossbows", "Longswords", "Rapiers", "Shortswords"],
+    "saving_throws": ["Dexterity", "Charisma"]
+  },
+  {
+    "name": "Cleric",
+    "hit_dice": "1d8",
+    "primary_ability": ["Wisdom"],
+    "proficiencies": ["Light armor", "Medium armor", "Shields", "Simple weapons"],
+    "saving_throws": ["Wisdom", "Charisma"]
+  },
+  {
+    "name": "Druid",
+    "hit_dice": "1d8",
+    "primary_ability": ["Wisdom"],
+    "proficiencies": ["Light armor", "Medium armor", "Shields", "Clubs", "Daggers", "Javelins"],
+    "saving_throws": ["Intelligence", "Wisdom"]
+  },
+  {
+    "name": "Fighter",
+    "hit_dice": "1d10",
+    "primary_ability": ["Strength", "Dexterity"],
+    "proficiencies": ["All armor", "Shields", "Simple weapons", "Martial weapons"],
+    "saving_throws": ["Strength", "Constitution"]
+  },
+  {
+    "name": "Monk",
+    "hit_dice": "1d8",
+    "primary_ability": ["Dexterity", "Wisdom"],
+    "proficiencies": ["Simple weapons", "Shortswords"],
+    "saving_throws": ["Strength", "Dexterity"]
+  },
+  {
+    "name": "Paladin",
+    "hit_dice": "1d10",
+    "primary_ability": ["Strength", "Charisma"],
+    "proficiencies": ["All armor", "Shields", "Simple weapons", "Martial weapons"],
+    "saving_throws": ["Wisdom", "Charisma"]
+  },
+  {
+    "name": "Ranger",
+    "hit_dice": "1d10",
+    "primary_ability": ["Dexterity", "Wisdom"],
+    "proficiencies": ["Light armor", "Medium armor", "Shields", "Simple weapons", "Martial weapons"],
+    "saving_throws": ["Strength", "Dexterity"]
+  },
+  {
+    "name": "Rogue",
+    "hit_dice": "1d8",
+    "primary_ability": ["Dexterity"],
+    "proficiencies": ["Light armor", "Simple weapons", "Hand crossbows", "Longswords", "Rapiers", "Shortswords"],
+    "saving_throws": ["Dexterity", "Intelligence"]
+  },
+  {
+    "name": "Sorcerer",
+    "hit_dice": "1d6",
+    "primary_ability": ["Charisma"],
+    "proficiencies": ["Daggers", "Darts", "Slings", "Quarterstaffs", "Light crossbows"],
+    "saving_throws": ["Constitution", "Charisma"]
+  },
+  {
+    "name": "Warlock",
+    "hit_dice": "1d8",
+    "primary_ability": ["Charisma"],
+    "proficiencies": ["Light armor", "Simple weapons"],
+    "saving_throws": ["Wisdom", "Charisma"]
+  },
+  {
+    "name": "Wizard",
+    "hit_dice": "1d6",
+    "primary_ability": ["Intelligence"],
+    "proficiencies": ["Daggers", "Darts", "Slings", "Quarterstaffs", "Light crossbows"],
+    "saving_throws": ["Intelligence", "Wisdom"]
+  }
+]
