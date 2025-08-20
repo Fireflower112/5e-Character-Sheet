@@ -31,7 +31,7 @@ input[type=number] {
     -moz-appearance: textfield;
 }
 
-/* --- NEW: Modal Styles --- */
+/* --- Styles for the Homebrew Modal --- */
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -50,7 +50,7 @@ input[type=number] {
     border-radius: 0.75rem;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
     width: 90%;
-    max-width: 500px;
+    max-width: 600px;
     max-height: 90vh;
     overflow-y: auto;
 }

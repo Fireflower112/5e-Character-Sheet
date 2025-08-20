@@ -175,6 +175,7 @@ window.stores.character = (function() {
         const defaultState = {
             name: 'Valerius',
             race: 'Human',
+            subrace: '',
             class1: 'Fighter',
             class2: '',
             level1: 1,
@@ -263,6 +264,9 @@ window.stores.character = (function() {
             equippedItems: {},
         };
         
+        const homebrewRaces = JSON.parse(localStorage.getItem('homebrewRaces') || '{}');
+        window.dndData.races = { ...window.dndData.races, ...homebrewRaces };
+        
         const savedCharacter = localStorage.getItem('pathfinderCharacterSheet');
         if (savedCharacter) {
             try {
@@ -302,52 +306,138 @@ window.stores.character = (function() {
         
         updateCharacterProperty: (field, value, subField) => {
             const newValue = isNaN(parseInt(value, 10)) || !isFinite(value) ? value : parseInt(value, 10);
-            if (subField) {
-                if (!character[field]) character[field] = {};
-                if (subField.includes('.')) {
-                    const [key, subKey] = subField.split('.');
-                    if (!character[field][key]) character[field][key] = {};
-                    character[field][key][subKey] = newValue;
+            if (field) {
+                 if (subField) {
+                    if (!character[field]) character[field] = {};
+                    if (subField.includes('.')) {
+                        const [key, subKey] = subField.split('.');
+                        if (!character[field][key]) character[field][key] = {};
+                        character[field][key][subKey] = newValue;
+                    } else {
+                        character[field][subField] = newValue;
+                    }
                 } else {
-                    character[field][subField] = newValue;
+                    character[field] = newValue;
                 }
-            } else {
-                character[field] = newValue;
             }
         },
         
-        applyRace: (raceName) => {
-            const raceData = window.dndData.races[raceName];
-            if (!raceData) return;
+        saveHomebrewRace: (raceData) => {
+            const homebrewRaces = JSON.parse(localStorage.getItem('homebrewRaces') || '{}');
+            homebrewRaces[raceData.name] = raceData;
+            localStorage.setItem('homebrewRaces', JSON.stringify(homebrewRaces));
+            
+            window.dndData.races = { ...window.dndData.races, ...homebrewRaces };
+            window.stores.character.applyRace(raceData.name);
+            
+            window.showMessage('Homebrew race saved!', 'green');
+        },
 
+        saveHomebrewSubrace: (baseRaceName, subraceData) => {
+            const homebrewRaces = JSON.parse(localStorage.getItem('homebrewRaces') || '{}');
+            const baseRace = homebrewRaces[baseRaceName] || window.dndData.races[baseRaceName];
+
+            if (baseRace) {
+                if (!baseRace.subraces) {
+                    baseRace.subraces = [];
+                }
+                
+                const existingSubraceIndex = baseRace.subraces.findIndex(sr => sr.name === subraceData.name);
+                if (existingSubraceIndex > -1) {
+                    baseRace.subraces[existingSubraceIndex] = subraceData;
+                } else {
+                    baseRace.subraces.push(subraceData);
+                }
+                
+                homebrewRaces[baseRaceName] = baseRace;
+                localStorage.setItem('homebrewRaces', JSON.stringify(homebrewRaces));
+
+                window.dndData.races = { ...window.dndData.races, ...homebrewRaces };
+                
+                window.stores.character.applyRace(baseRaceName);
+                window.stores.character.applySubrace(subraceData.name);
+                
+                window.showMessage('Homebrew subrace saved!', 'green');
+            } else {
+                window.showMessage(`Base race "${baseRaceName}" not found.`, 'red');
+            }
+        },
+
+        applyRace: (raceName) => {
+            character.race = raceName;
+            character.subrace = ''; 
             const newAbilities = { ...character.abilities };
+            const newScores = { ...character.abilityScores };
+
             for (const abilityId in newAbilities) {
-                if (newAbilities[abilityId].source === 'Racial Trait') {
+                if (newAbilities[abilityId].source?.startsWith('Racial')) {
                     delete newAbilities[abilityId];
                 }
             }
-            const newScores = { ...character.abilityScores };
             for (const ability in newScores) {
                 newScores[ability].racial = 0;
             }
 
+            character.abilities = newAbilities;
+            character.abilityScores = newScores;
+            
+            const raceData = window.dndData.races[raceName];
+            if (!raceData) {
+                notifySubscribers();
+                return;
+            }
+
             for (const [stat, value] of Object.entries(raceData.abilityScoreIncrease)) {
                 if (newScores[stat]) {
-                    newScores[stat].racial = value;
+                    newScores[stat].racial = (newScores[stat].racial || 0) + value;
                 }
             }
 
             if (raceData.traits) {
                 raceData.traits.forEach(trait => {
-                    const newTrait = {
-                        ...trait,
-                        id: uuid(),
-                        source: 'Racial Trait'
-                    };
+                    const newTrait = { ...trait, id: uuid(), source: 'Racial Trait' };
                     newAbilities[newTrait.id] = newTrait;
                 });
             }
 
+            character.abilities = newAbilities;
+            character.abilityScores = newScores;
+            notifySubscribers();
+        },
+
+        applySubrace: (subraceName) => {
+            character.subrace = subraceName;
+            const raceData = window.dndData.races[character.race];
+            if (!raceData || !raceData.subraces) return;
+
+            const subraceData = raceData.subraces.find(sub => sub.name === subraceName);
+            const newAbilities = { ...character.abilities };
+            const newScores = { ...character.abilityScores };
+
+            for (const abilityId in newAbilities) {
+                if (newAbilities[abilityId].source === 'Racial Subrace Trait') {
+                    delete newAbilities[abilityId];
+                }
+            }
+            for (const ability in newScores) { newScores[ability].racial = 0; }
+            for (const [stat, value] of Object.entries(raceData.abilityScoreIncrease)) {
+                if (newScores[stat]) { newScores[stat].racial = value; }
+            }
+            
+            if (subraceData) {
+                for (const [stat, value] of Object.entries(subraceData.abilityScoreIncrease)) {
+                    if (newScores[stat]) {
+                        newScores[stat].racial = (newScores[stat].racial || 0) + value;
+                    }
+                }
+                if (subraceData.traits) {
+                    subraceData.traits.forEach(trait => {
+                        const newTrait = { ...trait, id: uuid(), source: 'Racial Subrace Trait' };
+                        newAbilities[newTrait.id] = newTrait;
+                    });
+                }
+            }
+            
             character.abilities = newAbilities;
             character.abilityScores = newScores;
             notifySubscribers();
