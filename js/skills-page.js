@@ -45,7 +45,6 @@ window.SkillsPage = (character) => {
                                     </div>
                                     <div class="flex flex-col items-center">
                                         <label class="font-medium">Item</label>
-                                        {/* --- UPDATED: Uses the new bonus calculation function --- */}
                                         <input type="number" value="${window.stores.character.calculateBonusesForSkill(skillName)}" class="w-16 p-1 text-center bg-gray-200 border rounded-md" readonly />
                                     </div>
                                     <div class="flex flex-col items-center">

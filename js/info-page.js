@@ -6,15 +6,19 @@ window.InfoPage = (character) => {
 
     const renderAbilityScoreRow = (ability) => {
         const scores = character.abilityScores[ability];
-        // --- UPDATED: Uses the new bonus processing function ---
-        const { enhancement: itemBonus } = window.stores.character.processBonusesForAbility(ability);
+        
+        const itemBonus = window.stores.character.calculateItemBonusesForAbility(ability);
+        const abilityBonus = window.stores.character.calculateAbilityBonusesForAbility(ability);
+        const totalRacialBonus = (scores.racial || 0) + abilityBonus;
+        
         return `
             <div class="grid grid-cols-7 gap-2 items-center">
                 <span class="font-medium text-left col-span-1">${ability.toUpperCase()}:</span>
                 <input type="number" data-field="abilityScores" data-subfield="${ability}.base" value="${scores.base}" class="p-1 border rounded text-center" />
-                <input type="number" data-field="abilityScores" data-subfield="${ability}.racial" value="${scores.racial}" class="p-1 border rounded text-center" />
-                <input type="number" data-field="abilityScores" data-subfield="${ability}.feat" value="${scores.feat}" class="p-1 border rounded text-center" />
-                {/* This field now correctly shows bonuses from items AND abilities */}
+                
+                <input type="number" value="${totalRacialBonus}" class="p-1 border rounded bg-gray-200 text-center" readonly title="Base Racial: ${scores.racial} + Ability Bonuses: ${abilityBonus}" />
+                
+                <input type="number" data-field="abilityScores" data-subfield="${ability}.feat" value="${scores.feat || 0}" class="p-1 border rounded text-center" />
                 <input type="number" value="${itemBonus}" class="p-1 border rounded bg-gray-200 text-center" readonly />
                 <input type="number" data-field="abilityScores" data-subfield="${ability}.status" value="${scores.status}" class="p-1 border rounded text-center" />
                 <input type="number" data-field="abilityScores" data-subfield="${ability}.override" value="${scores.override}" class="p-1 border rounded text-center" />
@@ -104,4 +108,23 @@ window.InfoPage = (character) => {
     `;
 };
 
-// ... attachInfoPageHandlers function is unchanged ...
+window.attachInfoPageHandlers = () => {
+    const infoContainer = document.querySelector('#content-area');
+    if (infoContainer) {
+        infoContainer.addEventListener('input', (e) => {
+            if (e.target.tagName !== 'INPUT') return;
+            const field = e.target.dataset.field;
+            const subField = e.target.dataset.subfield;
+            if (field) {
+                window.stores.character.updateCharacterProperty(field, e.target.value, subField);
+            }
+        });
+         infoContainer.addEventListener('change', (e) => {
+            if (e.target.tagName !== 'SELECT') return;
+            const field = e.target.dataset.field;
+            if (field) {
+                window.updateCharacterInfo(field, e.target.value);
+            }
+        });
+    }
+};

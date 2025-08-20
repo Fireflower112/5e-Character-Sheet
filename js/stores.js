@@ -24,11 +24,9 @@ window.stores.character = (function() {
         character.equippedItems = newEquippedItems;
     }
 
-    // --- NEW: Central function to gather all active bonuses from items and abilities ---
     function _collectAllActiveBonuses() {
         const allBonuses = [];
         
-        // Collect bonuses from equipped or always-active items
         if (character.inventory && character.inventory.items) {
             for (const itemId in character.inventory.items) {
                 const item = character.inventory.items[itemId];
@@ -38,7 +36,6 @@ window.stores.character = (function() {
             }
         }
 
-        // Collect bonuses from abilities
         if (character.abilities) {
             for (const abilityId in character.abilities) {
                 const ability = character.abilities[abilityId];
@@ -51,7 +48,6 @@ window.stores.character = (function() {
         return allBonuses;
     }
 
-    // --- REFACTORED: Processes bonuses for a specific ability score ---
     function processBonusesForAbility(ability) {
         const allBonuses = _collectAllActiveBonuses();
         let enhancement = 0;
@@ -61,7 +57,7 @@ window.stores.character = (function() {
             if (bonus.field === ability) {
                 if (bonus.type === 'override') {
                     overrides.push(parseInt(bonus.value, 10) || 0);
-                } else { // 'enhancement' or other additive types
+                } else {
                     enhancement += parseInt(bonus.value, 10) || 0;
                 }
             }
@@ -69,7 +65,6 @@ window.stores.character = (function() {
         return { enhancement, overrides };
     }
 
-    // --- REFACTORED: Calculates total bonus for a specific skill ---
     function calculateBonusesForSkill(skillName) {
         const allBonuses = _collectAllActiveBonuses();
         let totalBonus = 0;
@@ -81,7 +76,6 @@ window.stores.character = (function() {
         return totalBonus;
     }
 
-    // --- REFACTORED: Calculates total bonus for any generic field (like 'concentration') ---
     function calculateBonusesForField(fieldName) {
         const allBonuses = _collectAllActiveBonuses();
         let totalBonus = 0;
@@ -93,6 +87,42 @@ window.stores.character = (function() {
         return totalBonus;
     }
     
+    // --- NEW: Calculates enhancement bonuses for an ability score ONLY from ITEMS ---
+    function calculateItemBonusesForAbility(ability) {
+        let enhancement = 0;
+        if (character.inventory && character.inventory.items) {
+            for (const itemId in character.inventory.items) {
+                const item = character.inventory.items[itemId];
+                if ((item.equippedSlot || item.bonusesAlwaysActive) && item.bonuses) {
+                    for (const bonus of item.bonuses) {
+                        if (bonus.field === ability && bonus.type !== 'override') {
+                            enhancement += parseInt(bonus.value, 10) || 0;
+                        }
+                    }
+                }
+            }
+        }
+        return enhancement;
+    }
+
+    // --- NEW: Calculates enhancement bonuses for an ability score ONLY from ABILITIES ---
+    function calculateAbilityBonusesForAbility(ability) {
+        let enhancement = 0;
+        if (character.abilities) {
+            for (const abilityId in character.abilities) {
+                const charAbility = character.abilities[abilityId];
+                if (charAbility.bonuses) {
+                    for (const bonus of charAbility.bonuses) {
+                        if (bonus.field === ability && bonus.type !== 'override') {
+                            enhancement += parseInt(bonus.value, 10) || 0;
+                        }
+                    }
+                }
+            }
+        }
+        return enhancement;
+    }
+
     function calculateACBonuses() {
         let armorBonus = 0;
         let shieldBonus = 0;
@@ -255,9 +285,12 @@ window.stores.character = (function() {
         if (savedCharacter) {
             try {
                 const parsed = JSON.parse(savedCharacter);
+                
                 if (parsed.inventory) {
                     parsed.inventory = { ...defaultState.inventory, ...parsed.inventory };
                 }
+                parsed.abilities = { ...(defaultState.abilities || {}), ...(parsed.abilities || {}) };
+
                 const finalState = { ...defaultState, ...parsed };
                 window.showMessage('Character loaded successfully!', 'green');
                 return finalState;
@@ -300,7 +333,6 @@ window.stores.character = (function() {
             } else {
                 character[field] = newValue;
             }
-            // Note: We DON'T call notifySubscribers() here for performance.
         },
         
         addItem: (itemData) => {
@@ -398,7 +430,6 @@ window.stores.character = (function() {
                 notifySubscribers();
             }
         },
-        // --- NEW functions for managing abilities ---
         addAbility: (abilityData) => {
             const newAbilityId = uuid();
             const newAbility = { id: newAbilityId, ...abilityData };
@@ -413,12 +444,46 @@ window.stores.character = (function() {
             }
         },
         
-        // Expose the refactored bonus calculation functions
         processBonusesForAbility,
         calculateBonusesForField,
         calculateBonusesForSkill,
         calculateACBonuses,
+        calculateItemBonusesForAbility,
+        calculateAbilityBonusesForAbility,
     };
 })();
 
-// ... (rest of the file is unchanged)
+window.handleSave = () => {
+    localStorage.setItem('pathfinderCharacterSheet', JSON.stringify(window.stores.character.get()));
+    window.showMessage('Character saved!', 'green');
+};
+
+window.handleLoad = () => {
+    window.stores.character.init();
+};
+
+window.showMessage = (message, type) => {
+    const msgBox = document.getElementById('message-box');
+    msgBox.textContent = message;
+    msgBox.className = `message-box show bg-${type}-500`;
+    setTimeout(() => msgBox.classList.remove('show'), 3000);
+};
+
+window.updateCharacterInfo = (field, value, subField) => {
+    const newCharacter = { ...window.stores.character.get() };
+    const newValue = isNaN(parseInt(value, 10)) || !isFinite(value) ? value : parseInt(value, 10);
+
+    if (subField) {
+        if (!newCharacter[field]) newCharacter[field] = {};
+        if (subField.includes('.')) {
+            const [key, subKey] = subField.split('.');
+            if (!newCharacter[field][key]) newCharacter[field][key] = {};
+            newCharacter[field][key][subKey] = newValue;
+        } else {
+            newCharacter[field][subField] = newValue;
+        }
+    } else {
+        newCharacter[field] = newValue;
+    }
+    window.stores.character.set(newCharacter);
+};
