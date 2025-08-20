@@ -8,14 +8,23 @@ window.SkillsPage = (character) => {
         const modifier = window.getAbilityModifier(finalScore);
 
         return `
-            <div class="p-4 bg-white rounded-lg shadow-inner text-center">
-                <div class="text-2xl font-bold uppercase">${ability}</div>
-                <div class="text-5xl font-extrabold text-indigo-600 my-2">${modifier >= 0 ? '+' : ''}${modifier}</div>
-                <div class="font-semibold text-gray-800">${finalScore}</div>
-                <div class="grid grid-cols-3 gap-1 mt-3 text-sm">
-                    <div><label class="text-xs font-medium">Base</label><input type="number" data-field="abilityScores" data-subfield="${ability}.base" value="${scores.base}" class="w-full p-1 border rounded text-center" /></div>
-                    <div><label class="text-xs font-medium">Racial</label><input type="number" data-field="abilityScores" data-subfield="${ability}.racial" value="${scores.racial || 0}" class="w-full p-1 border rounded text-center" /></div>
-                    <div><label class="text-xs font-medium">Other</label><input type="number" data-field="abilityScores" data-subfield="${ability}.other" value="${scores.other || 0}" class="w-full p-1 border rounded text-center" /></div>
+            <div class="p-3 bg-white rounded-lg shadow-inner text-center">
+                <div class="font-bold text-lg uppercase">${ability}</div>
+                <div class="font-extrabold text-3xl text-indigo-600">${modifier >= 0 ? '+' : ''}${modifier}</div>
+                <div class="text-sm font-semibold">${finalScore}</div>
+                <div class="flex gap-1 mt-2 text-left">
+                    <div>
+                        <label class="text-xs font-medium text-gray-500">Base</label>
+                        <input type="number" data-field="abilityScores" data-subfield="${ability}.base" value="${scores.base}" class="w-full p-1 text-xs border rounded text-center" />
+                    </div>
+                    <div>
+                        <label class="text-xs font-medium text-gray-500">Racial</label>
+                        <input type="number" data-field="abilityScores" data-subfield="${ability}.racial" value="${scores.racial || 0}" class="w-full p-1 text-xs border rounded text-center" />
+                    </div>
+                    <div>
+                        <label class="text-xs font-medium text-gray-500">Other</label>
+                        <input type="number" data-field="abilityScores" data-subfield="${ability}.other" value="${scores.other || 0}" class="w-full p-1 text-xs border rounded text-center" />
+                    </div>
                 </div>
             </div>
         `;
@@ -28,7 +37,7 @@ window.SkillsPage = (character) => {
             const totalBonus = abilityMod + (isProficient ? character.proficiencyBonus : 0);
 
             return `
-                <div class="flex items-center justify-between p-2 border-b bg-white rounded">
+                <div class="flex items-center justify-between p-2 bg-white rounded">
                     <div class="flex items-center space-x-2">
                         <input type="checkbox" id="save-prof-${ability}" data-save="${ability}" ${isProficient ? 'checked' : ''} class="h-5 w-5 rounded text-indigo-600"/>
                         <label for="save-prof-${ability}" class="font-medium capitalize">${ability}</label>
@@ -63,65 +72,70 @@ window.SkillsPage = (character) => {
         `;
     };
 
+    const renderSkillCategory = (ability, title, allSkills) => {
+        const filteredSkills = allSkills.filter(([name, data]) => data.ability === ability);
+        if (filteredSkills.length === 0) return '';
+
+        return `
+            <div class="mb-4">
+                <h4 class="font-semibold text-gray-700 capitalize border-b pb-1 mb-2">${title}</h4>
+                <div class="space-y-2">
+                    ${filteredSkills.map(([name, data]) => renderSkill(name, data)).join('')}
+                </div>
+            </div>
+        `;
+    };
+
+    const allSkillEntries = Object.entries(character.skills);
+
     return `
         <div class="space-y-6">
             <div>
                 <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">Ability Scores</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="grid grid-cols-3 md:grid-cols-6 gap-3">
                     ${abilityScores.map(renderAbilityScoreRow).join('')}
                 </div>
             </div>
+            
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-gray-50 p-4 rounded-2xl shadow-sm">
-                    <h3 class="text-xl font-semibold mb-2 text-center">Saving Throws</h3>
-                    <div class="space-y-1">${renderSavingThrows()}</div>
-                </div>
-                <div class="bg-gray-50 p-4 rounded-2xl shadow-sm">
-                    <h3 class="text-xl font-semibold mb-2 text-center">General</h3>
-                    <div class="p-2 bg-white rounded flex items-center justify-between">
-                        <label class="font-medium">Proficiency Bonus:</label>
-                        <input type="number" data-field="proficiencyBonus" value="${character.proficiencyBonus}" class="w-20 p-1 border rounded text-center" />
+                <div>
+                    <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">Skills</h2>
+                    <div class="grid grid-cols-1 xl:grid-cols-2 gap-x-4">
+                       <div>
+                           ${renderSkillCategory('str', 'Strength', allSkillEntries)}
+                           ${renderSkillCategory('dex', 'Dexterity', allSkillEntries)}
+                           ${renderSkillCategory('con', 'Constitution', allSkillEntries)}
+                       </div>
+                       <div>
+                           ${renderSkillCategory('int', 'Intelligence', allSkillEntries)}
+                           ${renderSkillCategory('wis', 'Wisdom', allSkillEntries)}
+                           ${renderSkillCategory('cha', 'Charisma', allSkillEntries)}
+                       </div>
                     </div>
                 </div>
-            </div>
-            <div>
-                <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">Skills</h2>
-                <div class="space-y-2">
-                    ${Object.entries(character.skills).map(([name, data]) => renderSkill(name, data)).join('')}
+                <div class="space-y-6">
+                    <div>
+                        <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">Saving Throws</h2>
+                        <div class="bg-gray-50 p-4 rounded-2xl shadow-sm">
+                            <div class="grid grid-cols-2 lg:grid-cols-3 gap-2">
+                                ${renderSavingThrows()}
+                            </div>
+                        </div>
+                    </div>
+                     <div>
+                        <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">General</h2>
+                        <div class="bg-gray-50 p-4 rounded-2xl shadow-sm">
+                            <div class="p-2 bg-white rounded flex items-center justify-between">
+                                <label class="font-medium">Proficiency Bonus:</label>
+                                <input type="number" data-field="proficiencyBonus" value="${character.proficiencyBonus}" class="w-20 p-1 border rounded text-center" />
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     `;
 };
 
-window.attachSkillsPageHandlers = () => {
-    const skillsContainer = document.querySelector('#content-area');
-    if (skillsContainer) {
-        skillsContainer.addEventListener('input', (e) => {
-            if (e.target.tagName !== 'INPUT') return;
-            const field = e.target.dataset.field;
-            const subField = e.target.dataset.subfield;
-            if (field) {
-                window.stores.character.updateCharacterProperty(field, e.target.value, subField);
-            }
-        });
-
-        skillsContainer.addEventListener('change', (e) => {
-            const skillName = e.target.dataset.skill;
-            const type = e.target.dataset.type;
-            const saveAbility = e.target.dataset.save;
-
-            if (skillName && type) {
-                const character = window.stores.character.get();
-                const newSkills = { ...character.skills };
-                newSkills[skillName][type] = e.target.checked;
-                window.stores.character.set({ skills: newSkills });
-            } else if (saveAbility) {
-                const character = window.stores.character.get();
-                const newSaves = { ...character.savingThrows };
-                newSaves[saveAbility].proficient = e.target.checked;
-                window.stores.character.set({ savingThrows: newSaves });
-            }
-        });
-    }
-};
+// This function is no longer needed and can be safely removed.
+window.attachSkillsPageHandlers = () => {};

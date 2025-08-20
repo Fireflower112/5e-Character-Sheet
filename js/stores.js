@@ -25,7 +25,6 @@ window.stores.character = (function() {
     }
 
     function getInitialState() {
-        const humanAbilityId = 'default-human-racial-bonus';
         const leatherArmorId = uuid();
         const shieldId = uuid();
         const shortswordId = uuid();
@@ -34,10 +33,7 @@ window.stores.character = (function() {
             name: 'Valerius',
             race: '',
             subrace: '',
-            class1: 'Fighter',
-            class2: '',
-            level1: 1,
-            level2: 0,
+            classes: [{ name: 'Fighter', level: 1 }],
             alignment: 'Lawful Good',
             size: 'Medium',
             experience: { current: 0, toNext: 300 },
@@ -350,6 +346,26 @@ window.stores.character = (function() {
         updateSpellSlot: (level, type, value) => { /* ... unchanged ... */ },
         addAbility: (abilityData) => { /* ... unchanged ... */ },
         deleteAbility: (abilityId) => { /* ... unchanged ... */ },
+        
+        addClass: () => {
+            if (!character.classes) character.classes = [];
+            character.classes.push({ name: '', level: 1 });
+            notifySubscribers();
+        },
+        updateClass: (index, field, value) => {
+            if (character.classes && character.classes[index]) {
+                const isLevel = field === 'level';
+                const parsedValue = isLevel ? parseInt(value, 10) : value;
+                character.classes[index][field] = isLevel ? (isNaN(parsedValue) ? 0 : parsedValue) : value;
+                notifySubscribers();
+            }
+        },
+        removeClass: (index) => {
+            if (character.classes && character.classes[index]) {
+                character.classes.splice(index, 1);
+                notifySubscribers();
+            }
+        },
     };
 })();
 

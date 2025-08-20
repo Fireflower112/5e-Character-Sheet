@@ -5,9 +5,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const summaryHeaderArea = document.getElementById('character-summary-header');
     const mainNavButtons = document.querySelectorAll('.main-nav-button');
     
-    let currentPage = 'dashboard';
-    let currentSubPage = 'skills';
+    // Load last-viewed page from localStorage, or set defaults
+    let currentPage = localStorage.getItem('currentPage') || 'dashboard';
+    let currentSubPage = localStorage.getItem('currentSubPage') || 'skills';
 
+    // CORE RENDER FUNCTION - THIS WAS MISSING
     const renderApp = () => {
         const character = window.stores.character.get();
         
@@ -29,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'inventory':
                 pageHtml = window.InventoryContainerPage(character, currentSubPage);
                 break;
-            case 'homebrew': // Renamed from 'creations'
+            case 'homebrew':
                 pageHtml = window.HomebrewEditorPage();
                 break;
             case 'notes':
@@ -40,22 +42,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         contentArea.innerHTML = pageHtml;
-        attachContentHandlers();
         updateNavStyles();
     };
     
-    function attachContentHandlers() {
-        if (window.attachDashboardCombatHandlers) window.attachDashboardCombatHandlers();
-        if (window.attachInfoPageHandlers) window.attachInfoPageHandlers();
-        if (window.attachSkillsPageHandlers) window.attachSkillsPageHandlers();
-        if (window.attachInventoryHandlers) window.attachInventoryHandlers();
-        if (window.attachSpellsPageHandlers) window.attachSpellsPageHandlers();
-        if (window.attachNotesPageHandlers) window.attachNotesPageHandlers();
-        if (window.attachStoredItemsPageHandlers) window.attachStoredItemsPageHandlers();
-        if (window.attachAbilitiesEditorHandlers) window.attachAbilitiesEditorHandlers();
-        if (window.attachSpellsEditorHandlers) window.attachSpellsEditorHandlers();
-    }
-
     function updateNavStyles() {
         mainNavButtons.forEach(btn => {
             if (btn.dataset.page === currentPage) {
@@ -68,11 +57,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- CENTRALIZED EVENT LISTENERS ---
+
     contentArea.addEventListener('click', (e) => {
         const actionTarget = e.target.closest('[data-action]');
         if (!actionTarget) return;
 
-        const { action, itemId, subpage, abilityId, raceName, subraceName } = actionTarget.dataset;
+        const { action, itemId, subpage, abilityId, raceName, subraceName, lang, index } = actionTarget.dataset;
 
         switch (action) {
             case 'toggle-accordion':
@@ -80,159 +71,87 @@ document.addEventListener('DOMContentLoaded', () => {
                 const icon = actionTarget.querySelector('.accordion-icon');
                 if (details && details.classList.contains('accordion-details')) {
                     details.classList.toggle('hidden');
-                    if (icon) {
-                        icon.textContent = details.classList.contains('hidden') ? '[+]' : '[-]';
-                    }
+                    if (icon) icon.textContent = details.classList.contains('hidden') ? '[+]' : '[-]';
                 }
                 break;
             case 'toggle-favorite':
                 window.stores.character.toggleFavorite(itemId);
                 break;
             case 'delete-item':
-                if (confirm('Are you sure you want to delete this item?')) {
-                    window.stores.character.deleteItem(itemId);
-                }
+                if (confirm('Are you sure you want to delete this item?')) window.stores.character.deleteItem(itemId);
                 break;
-            case 'toggle-edit-item': 
-                document.getElementById(`item-display-${itemId}`).classList.toggle('hidden');
-                document.getElementById(`item-edit-area-${itemId}`).classList.toggle('hidden');
-                break;
-            case 'cancel-edit':
-                document.getElementById(`item-display-${itemId}`).classList.remove('hidden');
-                document.getElementById(`item-edit-area-${itemId}`).classList.add('hidden');
-                break;
-            case 'save-item-changes':
-                const editArea = document.getElementById(`item-edit-area-${itemId}`);
-                const character = window.stores.character.get();
-                const item = character.inventory.items[itemId];
-                
-                const newBonuses = Array.from(editArea.querySelectorAll('.edit-bonuses-list li')).map(li => ({
-                    field: li.dataset.field,
-                    value: parseInt(li.dataset.value, 10),
-                    type: li.dataset.type
-                }));
-                
-                const updates = {
-                    name: editArea.querySelector('.edit-item-name').value,
-                    description: editArea.querySelector('.edit-item-description').value,
-                    bonuses: newBonuses
-                };
-
-                if (item.itemType === 'weapon') {
-                    updates.numDice = parseInt(editArea.querySelector('.edit-item-numDice').value, 10);
-                    updates.dieType = parseInt(editArea.querySelector('.edit-item-dieType').value, 10);
-                }
-                if (item.itemType === 'armor') {
-                    updates.acBase = parseInt(editArea.querySelector('.edit-item-acBase').value, 10);
-                    updates.armorType = editArea.querySelector('.edit-item-armorType').value;
-                }
-                 if (item.itemType === 'shield') {
-                    updates.acBonus = parseInt(editArea.querySelector('.edit-item-acBonus').value, 10);
-                }
-                
-                window.stores.character.updateItem(itemId, updates);
-                window.showMessage('Item updated!', 'green');
-                break;
-            case 'add-bonus-to-edit':
-                 const bonusEditArea = document.getElementById(`item-edit-area-${itemId}`);
-                 const list = bonusEditArea.querySelector('.edit-bonuses-list');
-                 const fieldSelect = bonusEditArea.querySelector('.edit-bonus-field');
-                 const field = fieldSelect.value;
-                 const label = fieldSelect.options[fieldSelect.selectedIndex].text;
-                 const type = bonusEditArea.querySelector('.edit-bonus-type').value;
-                 const valueInput = bonusEditArea.querySelector('.edit-bonus-value');
-                 const value = parseInt(valueInput.value, 10);
-
-                 if (field && !isNaN(value)) {
-                    const symbol = type === 'override' ? '=' : (value > 0 ? '+' : '');
-                    const newLi = document.createElement('li');
-                    newLi.className = 'flex items-center justify-between bg-gray-200 px-2 py-0.5 rounded-full text-xs';
-                    newLi.dataset.field = field;
-                    newLi.dataset.value = value;
-                    newLi.dataset.type = type;
-                    newLi.innerHTML = `<span>${label}: ${symbol}${value}</span><button type="button" data-action="remove-bonus-from-edit" class="ml-2 text-red-500 hover:text-red-700 font-bold">x</button>`;
-                    list.appendChild(newLi);
-                    valueInput.value = '';
-                 }
-                break;
-            case 'remove-bonus-from-edit':
-                actionTarget.parentElement.remove();
-                break;
-            case 'delete-ability':
-                if (confirm('Are you sure you want to delete this ability?')) {
-                    window.stores.character.deleteAbility(abilityId);
-                }
-                break;
-            case 'edit-homebrew-race': {
-                const homebrewRaces = JSON.parse(localStorage.getItem('homebrewRaces') || '{}');
-                const raceData = homebrewRaces[raceName];
-                if (raceData) {
-                    const modalContainer = document.getElementById('modal-container');
-                    modalContainer.innerHTML = window.renderHomebrewRaceModal(raceData);
-                    window.attachHomebrewRaceModalHandlers(raceData);
-                }
-                break;
-            }
-            case 'delete-homebrew-race': {
-                if (confirm(`Are you sure you want to delete the ${raceName} race? This cannot be undone.`)) {
-                    window.stores.character.deleteHomebrewRace(raceName);
-                }
-                break;
-            }
-            case 'edit-homebrew-subrace': {
-                const homebrewRaces = JSON.parse(localStorage.getItem('homebrewRaces') || '{}');
-                const raceData = homebrewRaces[raceName];
-                const subraceData = raceData?.subraces.find(sr => sr.name === subraceName);
-                if (subraceData) {
-                    const modalContainer = document.getElementById('modal-container');
-                    modalContainer.innerHTML = window.renderHomebrewSubraceModal(raceName, subraceData);
-                    window.attachHomebrewSubraceModalHandlers(raceName, subraceData);
-                }
-                break;
-            }
-            case 'delete-homebrew-subrace': {
-                 if (confirm(`Are you sure you want to delete the ${subraceName} subrace? This cannot be undone.`)) {
-                    window.stores.character.deleteHomebrewSubrace(raceName, subraceName);
-                }
-                break;
-            }
             case 'sub-tab':
                 if (subpage) {
                     currentSubPage = subpage;
+                    localStorage.setItem('currentSubPage', currentSubPage);
                     renderApp();
                 }
+                break;
+            case 'add-class':
+                window.stores.character.addClass();
+                break;
+            case 'remove-class':
+                window.stores.character.removeClass(index);
+                break;
+            case 'open-homebrew-modal':
+                document.getElementById('modal-container').innerHTML = window.renderHomebrewRaceModal();
+                window.attachHomebrewRaceModalHandlers();
+                break;
+            case 'open-homebrew-subrace-modal':
+                document.getElementById('modal-container').innerHTML = window.renderHomebrewSubraceModal();
+                window.attachHomebrewSubraceModalHandlers();
+                break;
+            case 'remove-language':
+                window.stores.character.removeLanguage(lang);
                 break;
         }
     });
 
     contentArea.addEventListener('change', (e) => {
         const target = e.target;
-        const { itemId, action, field, itemType } = target.dataset;
+        const { action, field, itemType, skill, type, save } = target.dataset;
 
-        if (!action && !field) return;
+        if (action === 'assign-to-container') window.stores.character.assignItemToContainer(target.dataset.itemId, target.value);
+        else if (action === 'equip-to-slot') window.stores.character.equipItemToSlot(target.dataset.itemId, target.value);
+        else if (field === 'race') window.stores.character.applyRace(target.value);
+        else if (field === 'subrace') window.stores.character.applySubrace(target.value);
+        else if (skill && type) {
+            const character = window.stores.character.get();
+            const newSkills = { ...character.skills };
+            newSkills[skill][type] = target.checked;
+            window.stores.character.set({ skills: newSkills });
+        } else if (save) {
+            const character = window.stores.character.get();
+            const newSaves = { ...character.savingThrows };
+            newSaves[save].proficient = target.checked;
+            window.stores.character.set({ savingThrows: newSaves });
+        } else if (target.id === 'language-input') {
+            window.stores.character.addLanguage(target.value);
+            target.value = '';
+        }
+    });
+    
+    contentArea.addEventListener('input', (e) => {
+        const { action, field, subfield, index } = e.target.dataset;
 
-        if (action === 'assign-to-container') {
-            window.stores.character.assignItemToContainer(itemId, target.value);
-        } else if (action === 'equip-to-slot') {
-            window.stores.character.equipItemToSlot(itemId, target.value);
-        } else if (action === 'equip-weapon') {
-            const slot = target.checked ? 'Wielded' : 'none';
-            window.stores.character.equipItemToSlot(itemId, slot);
-        } else if (action === 'equip-armor-shield') {
-            const slot = target.checked ? (itemType === 'armor' ? 'Armor' : 'Shield') : 'none';
-            window.stores.character.equipItemToSlot(itemId, slot);
-        } else if (field) {
-            window.stores.character.updateItem(itemId, { [field]: target.value });
+        if (action === 'update-class') {
+            window.stores.character.updateClass(index, e.target.dataset.field, e.target.value);
+        } else if (field && field !== 'languages') {
+            window.stores.character.updateCharacterProperty(field, e.target.value, subfield);
         }
     });
 
     mainNavButtons.forEach(button => {
         button.addEventListener('click', () => {
             currentPage = button.dataset.page;
+            localStorage.setItem('currentPage', currentPage);
+
             if (currentPage === 'dashboard') currentSubPage = 'skills';
             if (currentPage === 'inventory') currentSubPage = 'equipped';
             if (currentPage === 'notes') currentSubPage = 'character';
             if (currentPage === 'character-editor') currentSubPage = 'basic';
+            localStorage.setItem('currentSubPage', currentSubPage);
+
             renderApp();
         });
     });
