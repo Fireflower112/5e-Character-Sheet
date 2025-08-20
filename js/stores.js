@@ -363,6 +363,24 @@ window.stores.character = (function() {
             }
         },
 
+        deleteHomebrewRace: (raceName) => {
+            const homebrewRaces = JSON.parse(localStorage.getItem('homebrewRaces') || '{}');
+            delete homebrewRaces[raceName];
+            localStorage.setItem('homebrewRaces', JSON.stringify(homebrewRaces));
+            window.stores.character.init();
+            window.showMessage('Homebrew race deleted!', 'green');
+        },
+        deleteHomebrewSubrace: (baseRaceName, subraceName) => {
+            const homebrewRaces = JSON.parse(localStorage.getItem('homebrewRaces') || '{}');
+            const baseRace = homebrewRaces[baseRaceName];
+            if (baseRace && baseRace.subraces) {
+                baseRace.subraces = baseRace.subraces.filter(sr => sr.name !== subraceName);
+                localStorage.setItem('homebrewRaces', JSON.stringify(homebrewRaces));
+                window.stores.character.init();
+                window.showMessage('Homebrew subrace deleted!', 'green');
+            }
+        },
+
         applyRace: (raceName) => {
             character.race = raceName;
             character.subrace = ''; 

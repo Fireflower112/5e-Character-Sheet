@@ -29,6 +29,9 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'inventory':
                 pageHtml = window.InventoryContainerPage(character, currentSubPage);
                 break;
+            case 'homebrew': // Renamed from 'creations'
+                pageHtml = window.HomebrewEditorPage();
+                break;
             case 'notes':
                 pageHtml = window.NotesPage(character, currentSubPage);
                 break;
@@ -69,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const actionTarget = e.target.closest('[data-action]');
         if (!actionTarget) return;
 
-        const { action, itemId, subpage, abilityId } = actionTarget.dataset;
+        const { action, itemId, subpage, abilityId, raceName, subraceName } = actionTarget.dataset;
 
         switch (action) {
             case 'toggle-accordion':
@@ -160,6 +163,39 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.stores.character.deleteAbility(abilityId);
                 }
                 break;
+            case 'edit-homebrew-race': {
+                const homebrewRaces = JSON.parse(localStorage.getItem('homebrewRaces') || '{}');
+                const raceData = homebrewRaces[raceName];
+                if (raceData) {
+                    const modalContainer = document.getElementById('modal-container');
+                    modalContainer.innerHTML = window.renderHomebrewRaceModal(raceData);
+                    window.attachHomebrewRaceModalHandlers(raceData);
+                }
+                break;
+            }
+            case 'delete-homebrew-race': {
+                if (confirm(`Are you sure you want to delete the ${raceName} race? This cannot be undone.`)) {
+                    window.stores.character.deleteHomebrewRace(raceName);
+                }
+                break;
+            }
+            case 'edit-homebrew-subrace': {
+                const homebrewRaces = JSON.parse(localStorage.getItem('homebrewRaces') || '{}');
+                const raceData = homebrewRaces[raceName];
+                const subraceData = raceData?.subraces.find(sr => sr.name === subraceName);
+                if (subraceData) {
+                    const modalContainer = document.getElementById('modal-container');
+                    modalContainer.innerHTML = window.renderHomebrewSubraceModal(raceName, subraceData);
+                    window.attachHomebrewSubraceModalHandlers(raceName, subraceData);
+                }
+                break;
+            }
+            case 'delete-homebrew-subrace': {
+                 if (confirm(`Are you sure you want to delete the ${subraceName} subrace? This cannot be undone.`)) {
+                    window.stores.character.deleteHomebrewSubrace(raceName, subraceName);
+                }
+                break;
+            }
             case 'sub-tab':
                 if (subpage) {
                     currentSubPage = subpage;
