@@ -1,8 +1,14 @@
 // js/abilities-editor-page.js
 
 window.AbilitiesEditorPage = (character) => {
-    // Data for bonus forms
-    const skillList = [ "Acrobatics", "Appraise", "Bluff", "Climb", "Diplomacy", "Disable Device", "Disguise", "Escape Artist", "Fly", "Handle Animal", "Heal", "Intimidate", "Knowledge (Arcana)", "Knowledge (Dungeoneering)", "Knowledge (Engineering)", "Knowledge (Geography)", "Knowledge (History)", "Knowledge (Local)", "Knowledge (Nature)", "Knowledge (Nobility)", "Knowledge (Planes)", "Knowledge (Religion)", "Linguistics", "Perception", "Perform", "Profession", "Ride", "Sense Motive", "Sleight of Hand", "Spellcraft", "Stealth", "Survival", "Swim", "Use Magic Device" ].map(name => ({ key: name.toLowerCase().replace(' (', '').replace(')', '').replace(/ /g, '-').replace(/-(\w)/g, (match, letter) => letter.toUpperCase()).replace(/Knowledge(\w)/, (_, c) => `knowledge${c.toUpperCase()}`), label: name }));
+    const skillList = [
+        "Acrobatics", "Animal Handling", "Arcana", "Athletics", "Deception", "History", 
+        "Insight", "Intimidation", "Investigation", "Medicine", "Nature", "Perception", 
+        "Performance", "Persuasion", "Religion", "Sleight of Hand", "Stealth", "Survival"
+    ].map(name => ({ 
+        key: name.toLowerCase().replace(/ /g, ''), 
+        label: name 
+    }));
     const skillLabelMap = new Map(skillList.map(skill => [skill.key, skill.label]));
     const abilityScores = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
 
@@ -30,7 +36,6 @@ window.AbilitiesEditorPage = (character) => {
             </div>`;
     };
 
-    // --- NEW: Helper function to render a section of abilities ---
     const renderAbilitySection = (title, abilities) => {
         if (abilities.length === 0) return '';
         return `
@@ -42,7 +47,6 @@ window.AbilitiesEditorPage = (character) => {
             </div>`;
     };
 
-    // --- NEW: Filter abilities by type ---
     const allAbilities = Object.values(character.abilities || {});
     const racialAbilities = allAbilities.filter(a => a.type === 'Racial');
     const classAbilities = allAbilities.filter(a => a.type === 'Class');
@@ -116,7 +120,6 @@ window.attachAbilitiesEditorHandlers = () => {
     const addAbilityBtn = document.getElementById('add-ability-btn');
     const bonusesList = document.getElementById('ability-bonuses-list');
     
-    // --- NEW: Logic for the inventory-style bonus UI ---
     const bonusCategorySelector = document.getElementById('ability-bonus-category-selector');
     const bonusDetailsArea = document.getElementById('ability-bonus-details-area');
     const abilitySelector = document.getElementById('ability-details-ability-selector');
@@ -179,7 +182,7 @@ window.attachAbilitiesEditorHandlers = () => {
     addAbilityBtn.onclick = () => {
         const newAbilityData = {
             name: document.getElementById('ability-name').value,
-            type: document.getElementById('ability-type').value, // Get the ability type
+            type: document.getElementById('ability-type').value,
             description: document.getElementById('ability-description').value,
             bonuses: [...abilityBonuses],
         };
@@ -191,7 +194,6 @@ window.attachAbilitiesEditorHandlers = () => {
             bonusesList.innerHTML = '';
             abilityBonuses = [];
 
-            // Reset bonus UI
             bonusDetailsArea.classList.add('hidden');
             bonusDetailsArea.classList.remove('flex');
             bonusCategorySelector.querySelectorAll('.bonus-cat-btn').forEach(btn => {

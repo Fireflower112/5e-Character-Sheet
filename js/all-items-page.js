@@ -4,9 +4,17 @@ window.InventoryPage = (character) => {
     const allItems = Object.values(character.inventory.items || {});
     const containers = Object.values(character.inventory.containers || {});
     
-    // --- Data for forms ---
     const equipmentSlots = [ { key: 'Armor', label: 'Armor' }, { key: 'Belt', label: 'Belt' }, { key: 'Body', label: 'Body' }, { key: 'Chest', label: 'Chest' }, { key: 'Eyes', label: 'Eyes' }, { key: 'Feet', label: 'Feet' }, { key: 'Hands', label: 'Hands' }, { key: 'Head', label: 'Head' }, { key: 'Headband', label: 'Headband' }, { key: 'Neck', label: 'Neck' }, { key: 'Ring1', label: 'Ring 1' }, { key: 'Ring2', label: 'Ring 2' }, { key: 'Shield', label: 'Shield' }, { key: 'Shoulders', label: 'Shoulders' }, { key: 'Wrists', label: 'Wrists' }];
-    const skillList = [ "Acrobatics", "Appraise", "Bluff", "Climb", "Diplomacy", "Disable Device", "Disguise", "Escape Artist", "Fly", "Handle Animal", "Heal", "Intimidate", "Knowledge (Arcana)", "Knowledge (Dungeoneering)", "Knowledge (Engineering)", "Knowledge (Geography)", "Knowledge (History)", "Knowledge (Local)", "Knowledge (Nature)", "Knowledge (Nobility)", "Knowledge (Planes)", "Knowledge (Religion)", "Linguistics", "Perception", "Perform", "Profession", "Ride", "Sense Motive", "Sleight of Hand", "Spellcraft", "Stealth", "Survival", "Swim", "Use Magic Device" ].map(name => ({ key: name.toLowerCase().replace(' (', '').replace(')', '').replace(/ /g, '-').replace(/-(\w)/g, (match, letter) => letter.toUpperCase()).replace(/Knowledge(\w)/, (_, c) => `knowledge${c.toUpperCase()}`), label: name }));
+    
+    const skillList = [
+        "Acrobatics", "Animal Handling", "Arcana", "Athletics", "Deception", "History", 
+        "Insight", "Intimidation", "Investigation", "Medicine", "Nature", "Perception", 
+        "Performance", "Persuasion", "Religion", "Sleight of Hand", "Stealth", "Survival"
+    ].map(name => ({ 
+        key: name.toLowerCase().replace(/ /g, ''), 
+        label: name 
+    }));
+
     const skillLabelMap = new Map(skillList.map(skill => [skill.key, skill.label]));
     const abilityScores = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
 
@@ -25,8 +33,6 @@ window.InventoryPage = (character) => {
                         <h4 class="font-medium text-gray-700">Edit Weapon Stats:</h4>
                         <div class="grid grid-cols-2 gap-2 text-sm">
                             <div><label class="font-medium">Damage</label><div class="flex items-center"><input type="number" class="edit-item-numDice w-full p-1 border rounded" value="${item.numDice || 1}"> <span class="mx-1 font-bold">d</span> <input type="number" class="edit-item-dieType w-full p-1 border rounded" value="${item.dieType || 6}"></div></div>
-                            <div><label class="font-medium">Crit Multiplier</label><input type="number" class="edit-item-critMultiplier w-full p-1 border rounded" value="${item.critMultiplier || 2}"></div>
-                            <div><label class="font-medium">Range (ft)</label><input type="number" class="edit-item-range w-full p-1 border rounded" value="${item.range || 0}"></div>
                         </div>
                     </div>`;
                 break;
@@ -35,7 +41,7 @@ window.InventoryPage = (character) => {
                     <div class="border-t pt-3 space-y-2">
                         <h4 class="font-medium text-gray-700">Edit Armor Stats:</h4>
                         <div class="grid grid-cols-2 gap-2 text-sm">
-                            <div><label class="font-medium">AC Bonus</label><input type="number" class="edit-item-acBonus w-full p-1 border rounded" value="${item.acBonus || 0}"></div>
+                            <div><label class="font-medium">AC Base</label><input type="number" class="edit-item-acBase w-full p-1 border rounded" value="${item.acBase || 0}"></div>
                             <div><label class="font-medium">Type</label><select class="edit-item-armorType w-full p-1 border rounded"><option value="light" ${item.armorType === 'light' ? 'selected' : ''}>Light</option><option value="medium" ${item.armorType === 'medium' ? 'selected' : ''}>Medium</option><option value="heavy" ${item.armorType === 'heavy' ? 'selected' : ''}>Heavy</option></select></div>
                         </div>
                     </div>`;
@@ -89,7 +95,6 @@ window.InventoryPage = (character) => {
         const favoriteButton = item.itemType === 'weapon' ? `<button data-action="toggle-favorite" data-item-id="${item.id}" class="text-gray-400 hover:text-yellow-500" title="Favorite"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 pointer-events-none" viewBox="0 0 20 20" fill="${item.favorited ? 'currentColor' : 'none'}" stroke="currentColor" style="color: ${item.favorited ? '#FBBF24' : 'inherit'}"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg></button>` : '';
         const bonusesHtml = (item.bonuses && item.bonuses.length > 0) ? `<div class="mt-2 pt-2 border-t flex flex-wrap gap-2">${item.bonuses.map(bonus => { const label = skillLabelMap.get(bonus.field) || bonus.field.toUpperCase(); const symbol = bonus.type === 'override' ? '=' : (bonus.value > 0 ? '+' : ''); return `<span class="inline-block bg-indigo-100 text-indigo-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">${label}: ${symbol}${bonus.value}</span>`; }).join('')}</div>` : '';
         
-        // --- FIX: Re-added the container control logic ---
         let containerControl = '';
         if (!item.equippedSlot || item.equippedSlot === 'none') {
             containerControl = `
@@ -172,17 +177,17 @@ window.InventoryPage = (character) => {
                             </select>
                         </div>
                         
-                        <div id="weapon-fields" class="hidden space-y-3 border-t pt-4"><h4 class="font-medium text-gray-700">Weapon Stats:</h4><div class="grid grid-cols-2 gap-4"><div><label for="weapon-range" class="block text-sm font-medium">Range (ft)</label><input type="number" id="weapon-range" value="0" class="w-full p-2 border rounded-md"></div><div><label for="weapon-num-dice" class="block text-sm font-medium">Num. of Dice</label><input type="number" id="weapon-num-dice" value="1" class="w-full p-2 border rounded-md"></div><div><label for="weapon-die-type" class="block text-sm font-medium">Type of Die</label><input type="number" id="weapon-die-type" value="6" class="w-full p-2 border rounded-md"></div><div class="col-span-2"><label for="weapon-crit" class="block text-sm font-medium">Crit Multiplier</label><input type="number" id="weapon-crit" value="2" class="w-full p-2 border rounded-md"></div></div></div>
-                        <div id="armor-fields" class="hidden space-y-3 border-t pt-4"><h4 class="font-medium text-gray-700">Armor Stats:</h4><label for="armor-type" class="block text-sm font-medium">Armor Type</label><select id="armor-type" class="w-full p-2 border rounded-md"><option value="light">Light</option><option value="medium">Medium</option><option value="heavy">Heavy</option></select><label for="armor-ac-bonus" class="block text-sm font-medium">Armor Bonus</label><input type="number" id="armor-ac-bonus" value="0" class="w-full p-2 border rounded-md"></div>
-                        <div id="shield-fields" class="hidden space-y-3 border-t pt-4"><h4 class="font-medium text-gray-700">Shield Stats:</h4><label for="shield-ac-bonus" class="block text-sm font-medium">AC Bonus</label><input type="number" id="shield-ac-bonus" value="0" class="w-full p-2 border rounded-md"></div>
+                        <div id="weapon-fields" class="hidden space-y-3 border-t pt-4"><h4 class="font-medium text-gray-700">Weapon Stats:</h4><div class="grid grid-cols-2 gap-4"><div><label for="weapon-num-dice" class="block text-sm font-medium">Num. of Dice</label><input type="number" id="weapon-num-dice" value="1" class="w-full p-2 border rounded-md"></div><div><label for="weapon-die-type" class="block text-sm font-medium">Type of Die</label><input type="number" id="weapon-die-type" value="6" class="w-full p-2 border rounded-md"></div></div></div>
+                        <div id="armor-fields" class="hidden space-y-3 border-t pt-4"><h4 class="font-medium text-gray-700">Armor Stats:</h4><label for="armor-type" class="block text-sm font-medium">Armor Type</label><select id="armor-type" class="w-full p-2 border rounded-md"><option value="light">Light</option><option value="medium">Medium</option><option value="heavy">Heavy</option></select><label for="armor-ac-base" class="block text-sm font-medium">Base AC</label><input type="number" id="armor-ac-base" value="10" class="w-full p-2 border rounded-md"></div>
+                        <div id="shield-fields" class="hidden space-y-3 border-t pt-4"><h4 class="font-medium text-gray-700">Shield Stats:</h4><label for="shield-ac-bonus" class="block text-sm font-medium">AC Bonus</label><input type="number" id="shield-ac-bonus" value="2" class="w-full p-2 border rounded-md"></div>
                         
                         <div id="bonuses-container" class="space-y-3 border-t pt-4">
                             <h4 class="font-medium text-gray-700">Bonuses:</h4>
-                            <div id="bonus-category-selector" class="flex flex-wrap gap-2"><button type="button" data-bonus-category="ability" class="bonus-cat-btn px-3 py-1 text-sm font-medium rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300">Ability Score</button><button type="button" data-bonus-category="skill" class="bonus-cat-btn px-3 py-1 text-sm font-medium rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300">Skill</button><button type="button" data-bonus-category="concentration" class="bonus-cat-btn px-3 py-1 text-sm font-medium rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300">Concentration</button></div>
+                            <div id="bonus-category-selector" class="flex flex-wrap gap-2"><button type="button" data-bonus-category="ability" class="bonus-cat-btn px-3 py-1 text-sm font-medium rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300">Ability Score</button><button type="button" data-bonus-category="skill" class="bonus-cat-btn px-3 py-1 text-sm font-medium rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300">Skill</button></div>
                             <div id="bonus-details-area" class="hidden items-center gap-4">
                                 <div id="ability-bonus-selector" class="hidden flex-grow"><label for="ability-bonus-type" class="block text-sm font-medium">Ability</label><select id="ability-bonus-type" class="w-full p-2 border rounded-md">${abilityScores.map(score => `<option value="${score}">${score.toUpperCase()}</option>`).join('')}</select></div>
                                 <div id="skill-bonus-selector" class="hidden flex-grow"><label for="skill-bonus-type" class="block text-sm font-medium">Skill</label><select id="skill-bonus-type" class="w-full p-2 border rounded-md">${skillList.map(skill => `<option value="${skill.key}">${skill.label}</option>`).join('')}</select></div>
-                                <div class="flex items-end space-x-2"><div class="flex items-center space-x-2 pr-2"><input type="radio" id="bonus-type-enhance" name="bonus-type" value="enhancement" checked><label for="bonus-type-enhance" class="text-sm">Augment (+)</label><input type="radio" id="bonus-type-override" name="bonus-type" value="override"><label for="bonus-type-override" class="text-sm">Set (=)</label></div><div class="flex-grow"><label for="bonus-value" class="block text-sm font-medium">Value</label><input type="number" id="bonus-value" placeholder="+1" class="w-24 p-2 border rounded-md"></div><button type="button" id="add-bonus-btn" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 h-10">Add</button></div>
+                                <div class="flex items-end space-x-2"><div class="flex items-center space-x-2 pr-2"><input type="radio" id="bonus-type-enhance" name="bonus-type" value="enhancement" checked><label for="bonus-type-enhance" class="text-sm">Bonus (+)</label></div><div class="flex-grow"><label for="bonus-value" class="block text-sm font-medium">Value</label><input type="number" id="bonus-value" placeholder="+1" class="w-24 p-2 border rounded-md"></div><button type="button" id="add-bonus-btn" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 h-10">Add</button></div>
                             </div>
                             <ul id="bonuses-list" class="flex flex-wrap gap-2 pt-2"></ul>
                         </div>
@@ -260,9 +265,6 @@ window.attachInventoryHandlers = () => {
             const selector = document.getElementById('skill-bonus-type');
             field = selector.value;
             fieldLabel = selector.options[selector.selectedIndex].text;
-        } else if (activeBonusCategory === 'concentration') {
-            field = 'concentration';
-            fieldLabel = 'Concentration';
         }
 
         if (field && !isNaN(value)) {
@@ -289,12 +291,10 @@ window.attachInventoryHandlers = () => {
             Object.assign(newItemData, {
                 numDice: parseInt(document.getElementById('weapon-num-dice').value, 10),
                 dieType: parseInt(document.getElementById('weapon-die-type').value, 10),
-                range: parseInt(document.getElementById('weapon-range').value, 10),
-                critMultiplier: parseInt(document.getElementById('weapon-crit').value, 10),
             });
         } else if (newItemData.itemType === 'armor') {
             newItemData.armorType = document.getElementById('armor-type').value;
-            newItemData.acBonus = parseInt(document.getElementById('armor-ac-bonus').value, 10);
+            newItemData.acBase = parseInt(document.getElementById('armor-ac-base').value, 10);
         } else if (newItemData.itemType === 'shield') {
             newItemData.acBonus = parseInt(document.getElementById('shield-ac-bonus').value, 10);
         }

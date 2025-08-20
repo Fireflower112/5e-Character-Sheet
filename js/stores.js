@@ -26,7 +26,6 @@ window.stores.character = (function() {
 
     function _collectAllActiveBonuses() {
         const allBonuses = [];
-        
         if (character.inventory && character.inventory.items) {
             for (const itemId in character.inventory.items) {
                 const item = character.inventory.items[itemId];
@@ -35,7 +34,6 @@ window.stores.character = (function() {
                 }
             }
         }
-
         if (character.abilities) {
             for (const abilityId in character.abilities) {
                 const ability = character.abilities[abilityId];
@@ -44,7 +42,6 @@ window.stores.character = (function() {
                 }
             }
         }
-        
         return allBonuses;
     }
 
@@ -52,7 +49,6 @@ window.stores.character = (function() {
         const allBonuses = _collectAllActiveBonuses();
         let enhancement = 0;
         const overrides = [];
-
         for (const bonus of allBonuses) {
             if (bonus.field === ability) {
                 if (bonus.type === 'override') {
@@ -86,7 +82,7 @@ window.stores.character = (function() {
         }
         return totalBonus;
     }
-    
+
     function calculateItemBonusesForAbility(ability) {
         let enhancement = 0;
         if (character.inventory && character.inventory.items) {
@@ -120,7 +116,7 @@ window.stores.character = (function() {
         }
         return enhancement;
     }
-    
+
     function calculateItemBonusesForSkill(skillName) {
         let totalBonus = 0;
         if (character.inventory && character.inventory.items) {
@@ -171,14 +167,10 @@ window.stores.character = (function() {
     }
 
     function getInitialState() {
-        const backpackId = uuid();
-        const bagOfHoldingId = uuid();
-        const bouncyBallId = uuid();
-        const shortSwordId = uuid();
-        const beltId = uuid();
+        const humanAbilityId = 'default-human-racial-bonus';
         const leatherArmorId = uuid();
         const shieldId = uuid();
-        const humanAbilityId = 'default-human-racial-bonus';
+        const shortswordId = uuid();
 
         const defaultState = {
             name: 'Valerius',
@@ -189,122 +181,78 @@ window.stores.character = (function() {
             level2: 0,
             alignment: 'Lawful Good',
             size: 'Medium',
-            experience: { current: 0, toNext: 1000 },
+            experience: { current: 0, toNext: 300 },
             hp: 10,
             maxHp: 10,
             tempHp: 0,
-            baseAttackBonus: 1,
+            proficiencyBonus: 2,
             armorClassComponents: { base: 10, naturalArmor: 0, deflection: 0, dodge: 0, override: 0 },
             initiative: { other: 0 },
             speed: { land: 30 },
             abilityScores: {
-                str: { base: 10, racial: 0, feat: 0, status: 0, override: 0 },
-                dex: { base: 10, racial: 0, feat: 0, status: 0, override: 0 },
-                con: { base: 10, racial: 0, feat: 0, status: 0, override: 0 },
-                int: { base: 10, racial: 0, feat: 0, status: 0, override: 0 },
-                wis: { base: 10, racial: 0, feat: 0, status: 0, override: 0 },
-                cha: { base: 10, racial: 0, feat: 0, status: 0, override: 0 },
+                str: { base: 10, racial: 0, other: 0, override: 0 },
+                dex: { base: 10, racial: 0, other: 0, override: 0 },
+                con: { base: 10, racial: 0, other: 0, override: 0 },
+                int: { base: 10, racial: 0, other: 0, override: 0 },
+                wis: { base: 10, racial: 0, other: 0, override: 0 },
+                cha: { base: 10, racial: 0, other: 0, override: 0 },
             },
-            savingThrows: { fortitude: { base: 0, other: 0 }, reflex: { base: 0, other: 0 }, will: { base: 0, other: 0 } },
+            savingThrows: {
+                str: { proficient: false },
+                dex: { proficient: false },
+                con: { proficient: false },
+                int: { proficient: false },
+                wis: { proficient: false },
+                cha: { proficient: false },
+            },
             skills: {
-                acrobatics: { ability: 'dex', ranks: 0, racial: 0, feat: 0, misc: 0 },
-                appraise: { ability: 'int', ranks: 0, racial: 0, feat: 0, misc: 0 },
-                bluff: { ability: 'cha', ranks: 0, racial: 0, feat: 0, misc: 0 },
-                climb: { ability: 'str', ranks: 0, racial: 0, feat: 0, misc: 0 },
-                diplomacy: { ability: 'cha', ranks: 0, racial: 0, feat: 0, misc: 0 },
-                disableDevice: { ability: 'dex', ranks: 0, racial: 0, feat: 0, misc: 0 },
-                disguise: { ability: 'cha', ranks: 0, racial: 0, feat: 0, misc: 0 },
-                escapeArtist: { ability: 'dex', ranks: 0, racial: 0, feat: 0, misc: 0 },
-                fly: { ability: 'dex', ranks: 0, racial: 0, feat: 0, misc: 0 },
-                handleAnimal: { ability: 'cha', ranks: 0, racial: 0, feat: 0, misc: 0 },
-                heal: { ability: 'wis', ranks: 0, racial: 0, feat: 0, misc: 0 },
-                intimidate: { ability: 'cha', ranks: 0, racial: 0, feat: 0, misc: 0 },
-                knowledgeArcana: { ability: 'int', ranks: 0, racial: 0, feat: 0, misc: 0 },
-                knowledgeDungeoneering: { ability: 'int', ranks: 0, racial: 0, feat: 0, misc: 0 },
-                knowledgeEngineering: { ability: 'int', ranks: 0, racial: 0, feat: 0, misc: 0 },
-                knowledgeGeography: { ability: 'int', ranks: 0, racial: 0, feat: 0, misc: 0 },
-                knowledgeHistory: { ability: 'int', ranks: 0, racial: 0, feat: 0, misc: 0 },
-                knowledgeLocal: { ability: 'int', ranks: 0, racial: 0, feat: 0, misc: 0 },
-                knowledgeNature: { ability: 'int', ranks: 0, racial: 0, feat: 0, misc: 0 },
-                knowledgeNobility: { ability: 'int', ranks: 0, racial: 0, feat: 0, misc: 0 },
-                knowledgePlanes: { ability: 'int', ranks: 0, racial: 0, feat: 0, misc: 0 },
-                knowledgeReligion: { ability: 'int', ranks: 0, racial: 0, feat: 0, misc: 0 },
-                linguistics: { ability: 'int', ranks: 0, racial: 0, feat: 0, misc: 0 },
-                perception: { ability: 'wis', ranks: 0, racial: 0, feat: 0, misc: 0 },
-                perform: { ability: 'cha', ranks: 0, racial: 0, feat: 0, misc: 0 },
-                profession: { ability: 'wis', ranks: 0, racial: 0, feat: 0, misc: 0 },
-                ride: { ability: 'dex', ranks: 0, racial: 0, feat: 0, misc: 0 },
-                senseMotive: { ability: 'wis', ranks: 0, racial: 0, feat: 0, misc: 0 },
-                sleightOfHand: { ability: 'dex', ranks: 0, racial: 0, feat: 0, misc: 0 },
-                spellcraft: { ability: 'int', ranks: 0, racial: 0, feat: 0, misc: 0 },
-                stealth: { ability: 'dex', ranks: 0, racial: 0, feat: 0, misc: 0 },
-                survival: { ability: 'wis', ranks: 0, racial: 0, feat: 0, misc: 0 },
-                swim: { ability: 'str', ranks: 0, racial: 0, feat: 0, misc: 0 },
-                useMagicDevice: { ability: 'cha', ranks: 0, racial: 0, feat: 0, misc: 0 },
+                acrobatics: { ability: 'dex', proficient: false, expertise: false },
+                animalHandling: { ability: 'wis', proficient: false, expertise: false },
+                arcana: { ability: 'int', proficient: false, expertise: false },
+                athletics: { ability: 'str', proficient: false, expertise: false },
+                deception: { ability: 'cha', proficient: false, expertise: false },
+                history: { ability: 'int', proficient: false, expertise: false },
+                insight: { ability: 'wis', proficient: false, expertise: false },
+                intimidation: { ability: 'cha', proficient: false, expertise: false },
+                investigation: { ability: 'int', proficient: false, expertise: false },
+                medicine: { ability: 'wis', proficient: false, expertise: false },
+                nature: { ability: 'int', proficient: false, expertise: false },
+                perception: { ability: 'wis', proficient: false, expertise: false },
+                performance: { ability: 'cha', proficient: false, expertise: false },
+                persuasion: { ability: 'cha', proficient: false, expertise: false },
+                religion: { ability: 'int', proficient: false, expertise: false },
+                sleightOfHand: { ability: 'dex', proficient: false, expertise: false },
+                stealth: { ability: 'dex', proficient: false, expertise: false },
+                survival: { ability: 'wis', proficient: false, expertise: false },
             },
             inventory: {
                 items: {
-                    [bouncyBallId]: {
-                        id: bouncyBallId, name: 'Bouncy Ball', itemType: 'other', weight: 0.2,
-                        description: 'A super bouncy ball.',
-                        bonuses: [{ field: 'acrobatics', value: 20, type: 'enhancement' }],
-                        equippedSlot: null, favorited: false, containerId: null, bonusesAlwaysActive: true
-                    },
-                    [shortSwordId]: {
-                        id: shortSwordId, name: 'Short Sword', itemType: 'weapon', weight: 5,
-                        description: 'A standard short sword.',
-                        bonuses: [],
-                        numDice: 1, dieType: 4, range: 0, critMultiplier: 2,
-                        equippedSlot: null, favorited: false, containerId: null
-                    },
-                    [beltId]: {
-                        id: beltId, name: 'Belt of Giant Strength', itemType: 'wearable', weight: 10,
-                        description: 'This belt grants the wearer immense strength.',
-                        bonuses: [{ field: 'str', value: 16, type: 'enhancement' }],
-                        equippedSlot: null, favorited: false, containerId: null
-                    },
                     [leatherArmorId]: {
-                        id: leatherArmorId, name: 'Leather Armor', itemType: 'armor', weight: 40,
-                        description: 'A suit of hardened leather armor.',
-                        armorType: 'medium', acBonus: 3,
-                        equippedSlot: null, favorited: false, containerId: null
+                        id: leatherArmorId, name: 'Leather Armor', itemType: 'armor', weight: 10,
+                        acBase: 11, armorType: 'light', equippedSlot: null,
                     },
                     [shieldId]: {
-                        id: shieldId, name: 'Heavy Steel Shield', itemType: 'shield', weight: 20,
-                        description: 'A sturdy steel shield.',
-                        acBonus: 2,
-                        equippedSlot: null, favorited: false, containerId: null
-                    }
+                        id: shieldId, name: 'Shield', itemType: 'shield', weight: 6,
+                        acBonus: 2, equippedSlot: null,
+                    },
+                    [shortswordId]: {
+                        id: shortswordId, name: 'Shortsword', itemType: 'weapon', weight: 2,
+                        numDice: 1, dieType: 6, properties: { finesse: true, light: true }, equippedSlot: null,
+                    },
                 },
                 currency: { cp: 0, sp: 0, gp: 0 },
-                containers: {
-                    [backpackId]: {
-                        id: backpackId, name: 'Backpack',
-                        description: 'A standard adventurer\'s backpack.',
-                        capacity: 50, weight: 2
-                    },
-                    [bagOfHoldingId]: {
-                        id: bagOfHoldingId, name: 'Bag of Holding',
-                        description: 'This bag appears to be a common cloth sack of about 2 feet by 4 feet in size.',
-                        capacity: 200, weight: 20
-                    }
-                }
+                containers: {}
             },
             feats: {},
             abilities: {
                 [humanAbilityId]: {
-                    id: humanAbilityId,
-                    name: 'Human Racial Bonus', 
-                    type: 'Racial',
-                    description: 'Humans select one ability score to increase by 2 at creation to represent their varied nature.',
-                    bonuses: [{ field: 'str', value: 2, type: 'enhancement' }]
+                    id: humanAbilityId, name: 'Human Ability Score Increase', type: 'Racial',
+                    description: 'One ability score of your choice increases by 1.',
+                    bonuses: [{ field: 'str', value: 1, type: 'enhancement' }]
                 }
             },
             notes: {
-                character: '',
-                npcs: '',
-                campaign: '',
-                combat: ''
+                character: '', npcs: '', campaign: '', combat: ''
             },
             spellcasting: { 
                 castingStat: 'int', 
@@ -319,13 +267,12 @@ window.stores.character = (function() {
         if (savedCharacter) {
             try {
                 const parsed = JSON.parse(savedCharacter);
-                
-                if (parsed.inventory) {
-                    parsed.inventory = { ...defaultState.inventory, ...parsed.inventory };
-                }
-                parsed.abilities = { ...(defaultState.abilities || {}), ...(parsed.abilities || {}) };
-
                 const finalState = { ...defaultState, ...parsed };
+                finalState.skills = { ...defaultState.skills, ...(parsed.skills || {}) };
+                finalState.savingThrows = { ...defaultState.savingThrows, ...(parsed.savingThrows || {}) };
+                finalState.abilityScores = { ...defaultState.abilityScores, ...(parsed.abilityScores || {}) };
+                finalState.inventory = { ...defaultState.inventory, ...(parsed.inventory || {}) };
+                finalState.abilities = { ...defaultState.abilities, ...(parsed.abilities || {}) };
                 window.showMessage('Character loaded successfully!', 'green');
                 return finalState;
             } catch (e) {

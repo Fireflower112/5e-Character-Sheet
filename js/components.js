@@ -3,85 +3,56 @@ window.getAbilityModifier = (score) => Math.floor((score - 10) / 2);
 
 window.getFinalAbilityScore = (character, ability) => {
     const scores = character.abilityScores[ability];
-    
-    const { enhancement, overrides } = window.stores.character.processBonusesForAbility(ability);
-    
-    const highestOverride = Math.max(scores.override || 0, ...overrides);
-    if (highestOverride > 0) {
-        return highestOverride;
-    }
-    
-    return (scores.base || 0) + (scores.racial || 0) + (scores.feat || 0) + (enhancement || 0) + (scores.status || 0);
+    return (scores.base || 0) + (scores.racial || 0) + (scores.other || 0);
 };
 
-window.getSizeModifier = (size) => {
-    switch (size) {
-        case 'Fine': return 8;
-        case 'Diminutive': return 4;
-        case 'Tiny': return 2;
-        case 'Small': return 1;
-        case 'Medium': return 0;
-        case 'Large': return -1;
-        case 'Huge': return -2;
-        case 'Gargantuan': return -4;
-        case 'Colossal': return -8;
-        default: return 0;
-    }
-};
-
-window.formatSkillName = (skillName) => {
-    const spaced = skillName.replace(/([A-Z])/g, ' $1');
-    const titleCased = spaced.charAt(0).toUpperCase() + spaced.slice(1);
-    
-    // Handle specific cases for Pathfinder naming conventions
-    if (titleCased.includes('Knowledge')) {
-        return titleCased.replace(' ', ' (').trim() + ')';
-    }
-    if (titleCased.includes('Disable Device')) {
-        return 'Disable Device';
-    }
-     if (titleCased.includes('Handle Animal')) {
-        return 'Handle Animal';
-    }
-    if (titleCased.includes('Escape Artist')) {
-        return 'Escape Artist';
-    }
-     if (titleCased.includes('Sense Motive')) {
-        return 'Sense Motive';
-    }
-    if (titleCased.includes('Sleight Of Hand')) {
-        return 'Sleight of Hand';
-    }
-    if (titleCased.includes('Use Magic Device')) {
-        return 'Use Magic Device';
-    }
-    
-    return titleCased;
-};
-
-
+// --- UPDATED: Full D&D 5e AC Calculation ---
 window.calculateTotalAC = (character) => {
-    const ac = character.armorClassComponents;
-    if (ac.override > 0) {
-        return ac.override;
-    }
-    
-    const { armorBonus, shieldBonus } = window.stores.character.calculateACBonuses();
-    const dexMod = window.getAbilityModifier(window.getFinalAbilityScore(character, 'dex'));
-    const sizeMod = window.getSizeModifier(character.size);
+    const equippedItems = Object.values(character.inventory.items || {}).filter(item => item.equippedSlot);
+    const equippedArmor = equippedItems.find(item => item.itemType === 'armor');
+    const equippedShield = equippedItems.find(item => item.itemType === 'shield');
 
-    return 10 + armorBonus + shieldBonus + dexMod + sizeMod + ac.naturalArmor + ac.deflection + (ac.dodge || 0);
+    const dexMod = window.getAbilityModifier(window.getFinalAbilityScore(character, 'dex'));
+    let totalAC = 0;
+
+    if (equippedArmor) {
+        switch (equippedArmor.armorType) {
+            case 'light':
+                totalAC = equippedArmor.acBase + dexMod;
+                break;
+            case 'medium':
+                totalAC = equippedArmor.acBase + Math.min(dexMod, 2); // Dex bonus capped at +2
+                break;
+            case 'heavy':
+                totalAC = equippedArmor.acBase; // No Dex bonus
+                break;
+            default:
+                totalAC = 10 + dexMod; // Fallback for improperly typed armor
+                break;
+        }
+    } else {
+        // No armor equipped
+        totalAC = 10 + dexMod;
+    }
+
+    if (equippedShield) {
+        totalAC += equippedShield.acBonus || 0;
+    }
+
+    return totalAC;
 };
 
 window.calculateSkillBonus = (character, skillName, skillData) => {
-    const finalAbilityScore = window.getFinalAbilityScore(character, skillData.ability);
-    const abilityMod = window.getAbilityModifier(finalAbilityScore);
-    const sizeMod = (['stealth', 'fly'].includes(skillName)) ? window.getSizeModifier(character.size) : 0;
+    const abilityMod = window.getAbilityModifier(window.getFinalAbilityScore(character, skillData.ability));
+    const proficiencyBonus = character.proficiencyBonus || 0;
     
-    const skillBonuses = window.stores.character.calculateBonusesForSkill(skillName);
+    let totalBonus = abilityMod;
+    if (skillData.proficient) {
+        totalBonus += proficiencyBonus;
+    }
+    if (skillData.expertise) {
+        totalBonus += proficiencyBonus;
+    }
     
-    const classSkillBonus = skillData.ranks > 0 ? 3 : 0;
-    
-    const totalBonus = skillData.ranks + abilityMod + sizeMod + (skillData.racial || 0) + (skillData.feat || 0) + skillBonuses + (skillData.status || 0) + (skillData.misc || 0) + classSkillBonus;
     return totalBonus;
 };

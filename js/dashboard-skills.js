@@ -1,12 +1,5 @@
 // js/dashboard-skills.js
 window.DashboardSkillsPage = (character) => {
-    const allSkills = Object.entries(character.skills);
-    
-    const regularSkills = allSkills.filter(([name]) => !name.startsWith('knowledge') && !['appraise', 'spellcraft', 'useMagicDevice', 'linguistics'].includes(name));
-    const trainedOnlySkills = allSkills.filter(([name, data]) => ['appraise', 'spellcraft', 'useMagicDevice', 'linguistics'].includes(name) && data.ranks > 0);
-    const knowledgeSkills = allSkills.filter(([name]) => name.startsWith('knowledge'));
-    const combinedSkills = [...regularSkills, ...trainedOnlySkills];
-
     const renderSimpleSkillList = (skills, title) => {
         if (skills.length === 0) return '';
         return `
@@ -15,8 +8,10 @@ window.DashboardSkillsPage = (character) => {
                 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-2">
                     ${skills.map(([skillName, skillData]) => {
                         const totalBonus = window.calculateSkillBonus(character, skillName, skillData);
-                        // --- FIX: Correctly formats Knowledge skills without extra parenthesis ---
-                        const displayName = window.formatSkillName(skillName).replace(' (', ': ').replace(')', '');
+                        
+                        const formatName = (name) => name.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+                        const displayName = formatName(skillName);
+
                         return `
                             <div class="flex justify-between items-baseline border-b border-gray-200 py-1">
                                 <span class="font-medium text-gray-700">${displayName}</span>
@@ -26,6 +21,8 @@ window.DashboardSkillsPage = (character) => {
                 </div>
             </div>`;
     };
+
+    const skillEntries = Object.entries(character.skills || {});
 
     return `
         <div class="space-y-4">
@@ -50,7 +47,6 @@ window.DashboardSkillsPage = (character) => {
                 </div>
             </div>
             
-            ${renderSimpleSkillList(combinedSkills, 'General Skills')}
-            ${renderSimpleSkillList(knowledgeSkills, 'Knowledge Skills')}
+            ${renderSimpleSkillList(skillEntries, 'Skills')}
         </div>`;
 };

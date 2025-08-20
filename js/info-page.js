@@ -1,88 +1,71 @@
 // js/info-page.js
 window.InfoPage = (character) => {
-    const pathfinderSizes = ['Fine', 'Diminutive', 'Tiny', 'Small', 'Medium', 'Large', 'Huge', 'Gargantuan', 'Colossal'];
-    const pathfinderAlignments = [ 'Lawful Good', 'Neutral Good', 'Chaotic Good', 'Lawful Neutral', 'Neutral', 'Chaotic Neutral', 'Lawful Evil', 'Neutral Evil', 'Chaotic Evil' ];
+    const dndSizes = ['Tiny', 'Small', 'Medium', 'Large', 'Huge', 'Gargantuan'];
+    const dndAlignments = [ 'Lawful Good', 'Neutral Good', 'Chaotic Good', 'Lawful Neutral', 'True Neutral', 'Chaotic Neutral', 'Lawful Evil', 'Neutral Evil', 'Chaotic Evil' ];
     const abilityScores = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
 
     const renderAbilityScoreRow = (ability) => {
         const scores = character.abilityScores[ability];
-        
-        const itemBonus = window.stores.character.calculateItemBonusesForAbility(ability);
-        const abilityBonus = window.stores.character.calculateAbilityBonusesForAbility(ability);
-        const totalRacialBonus = (scores.racial || 0) + abilityBonus;
-        
+        const finalScore = window.getFinalAbilityScore(character, ability);
+        const modifier = window.getAbilityModifier(finalScore);
+
         return `
-            <div class="grid grid-cols-7 gap-2 items-center">
-                <span class="font-medium text-left col-span-1">${ability.toUpperCase()}:</span>
-                <input type="number" data-field="abilityScores" data-subfield="${ability}.base" value="${scores.base}" class="p-1 border rounded text-center" />
-                <input type="number" value="${totalRacialBonus}" class="p-1 border rounded bg-gray-200 text-center" readonly title="Base Racial: ${scores.racial} + Ability Bonuses: ${abilityBonus}" />
-                <input type="number" data-field="abilityScores" data-subfield="${ability}.feat" value="${scores.feat || 0}" class="p-1 border rounded text-center" />
-                <input type="number" value="${itemBonus}" class="p-1 border rounded bg-gray-200 text-center" readonly />
-                <input type="number" data-field="abilityScores" data-subfield="${ability}.status" value="${scores.status}" class="p-1 border rounded text-center" />
-                <input type="number" data-field="abilityScores" data-subfield="${ability}.override" value="${scores.override}" class="p-1 border rounded text-center" />
+            <div class="p-4 bg-gray-50 rounded-lg shadow-sm text-center">
+                <div class="text-2xl font-bold uppercase">${ability}</div>
+                <div class="text-5xl font-extrabold text-indigo-600 my-2">${modifier >= 0 ? '+' : ''}${modifier}</div>
+                <div class="font-semibold text-gray-800">${finalScore}</div>
+                <div class="grid grid-cols-3 gap-1 mt-3 text-sm">
+                    <div><label class="text-xs font-medium">Base</label><input type="number" data-field="abilityScores" data-subfield="${ability}.base" value="${scores.base}" class="w-full p-1 border rounded text-center" /></div>
+                    <div><label class="text-xs font-medium">Racial</label><input type="number" data-field="abilityScores" data-subfield="${ability}.racial" value="${scores.racial || 0}" class="w-full p-1 border rounded text-center" /></div>
+                    <div><label class="text-xs font-medium">Other</label><input type="number" data-field="abilityScores" data-subfield="${ability}.other" value="${scores.other || 0}" class="w-full p-1 border rounded text-center" /></div>
+                </div>
             </div>
         `;
+    };
+
+    const renderSavingThrows = () => {
+        return abilityScores.map(ability => {
+            const abilityMod = window.getAbilityModifier(window.getFinalAbilityScore(character, ability));
+            const isProficient = character.savingThrows[ability]?.proficient || false;
+            const totalBonus = abilityMod + (isProficient ? character.proficiencyBonus : 0);
+
+            return `
+                <div class="flex items-center justify-between p-2 border-b">
+                    <div class="flex items-center space-x-2">
+                        <input type="checkbox" id="save-prof-${ability}" data-save="${ability}" ${isProficient ? 'checked' : ''} class="h-5 w-5 rounded text-indigo-600"/>
+                        <label for="save-prof-${ability}" class="font-medium capitalize">${ability}</label>
+                    </div>
+                    <span class="font-bold text-lg">${totalBonus >= 0 ? '+' : ''}${totalBonus}</span>
+                </div>
+            `;
+        }).join('');
     };
     
-    const renderAcComponents = () => {
-        const ac = character.armorClassComponents;
-        const { armorBonus, shieldBonus } = window.stores.character.calculateACBonuses();
-        const dexMod = window.getAbilityModifier(window.getFinalAbilityScore(character, 'dex'));
-        const sizeMod = window.getSizeModifier(character.size);
-
-        return `
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center bg-gray-50 p-4 rounded-lg">
-                <div class="flex flex-col items-center"><label class="font-medium">Base AC</label><input type="number" value="10" class="w-20 p-1 text-center bg-gray-200 border rounded-md" readonly></div>
-                <div class="flex flex-col items-center"><label class="font-medium">Dex Mod</label><input type="number" value="${dexMod}" class="w-20 p-1 text-center bg-gray-200 border rounded-md" readonly></div>
-                <div class="flex flex-col items-center"><label class="font-medium">Armor Bonus</label><input type="number" value="${armorBonus}" class="w-20 p-1 text-center bg-gray-200 border rounded-md" readonly></div>
-                <div class="flex flex-col items-center"><label class="font-medium">Shield Bonus</label><input type="number" value="${shieldBonus}" class="w-20 p-1 text-center bg-gray-200 border rounded-md" readonly></div>
-                <div class="flex flex-col items-center"><label class="font-medium">Natural Armor</label><input type="number" data-field="armorClassComponents" data-subfield="naturalArmor" value="${ac.naturalArmor}" class="w-20 p-1 text-center border rounded-md"></div>
-                <div class="flex flex-col items-center"><label class="font-medium">Dodge Bonus</label><input type="number" data-field="armorClassComponents" data-subfield="dodge" value="${ac.dodge || 0}" class="w-20 p-1 text-center border rounded-md"></div>
-                <div class="flex flex-col items-center"><label class="font-medium">Deflection Bonus</label><input type="number" data-field="armorClassComponents" data-subfield="deflection" value="${ac.deflection}" class="w-20 p-1 text-center border rounded-md"></div>
-                <div class="flex flex-col items-center"><label class="font-medium">Size Modifier</label><input type="number" value="${sizeMod}" class="w-20 p-1 text-center bg-gray-200 border rounded-md" readonly></div>
-                <div class="flex flex-col items-center col-span-full"><label class="font-medium">Temporary Override</label><input type="number" data-field="armorClassComponents" data-subfield="override" value="${ac.override || 0}" class="w-20 p-1 text-center border rounded-md"></div>
-            </div>
-        `;
-    };
-
-    const renderSpeedInputs = (speed) => {
-        const speedTypes = ['land', 'fly', 'swim', 'climb', 'burrow'];
-        return speedTypes.map(type => `
-            <div class="flex items-center space-x-2">
-                <label for="speed-${type}" class="w-20 text-lg font-medium text-gray-700 capitalize">${type}:</label>
-                <input
-                    type="number"
-                    id="speed-${type}"
-                    value="${speed[type] || 0}"
-                    data-field="speed"
-                    data-subfield="${type}"
-                    class="w-24 p-2 text-lg bg-gray-50 border border-gray-300 rounded-md"
-                />
-            </div>
-        `).join('');
-    };
-
     return `
         <div>
             <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">Character Information</h2>
             <div class="flex flex-col space-y-6">
-                <div class="flex items-center space-x-2"><label for="charName" class="text-lg font-medium text-gray-700">Name:</label><input id="charName" value="${character.name}" data-field="name" class="flex-1 p-2 text-lg bg-gray-50 border rounded-md"/></div>
-                <div class="flex items-center space-x-2"><label for="race" class="text-lg font-medium text-gray-700">Race:</label><input id="race" value="${character.race}" data-field="race" class="flex-1 p-2 text-lg bg-gray-50 border rounded-md"/></div>
-                <div class="flex items-center space-x-2"><label for="alignment" class="text-lg font-medium text-gray-700">Alignment:</label><select id="alignment" data-field="alignment" class="flex-1 p-2 text-lg bg-gray-50 border rounded-md">${pathfinderAlignments.map(a => `<option value="${a}" ${character.alignment === a ? 'selected' : ''}>${a}</option>`).join('')}</select></div>
-                <div class="flex items-center space-x-2"><label for="size" class="text-lg font-medium text-gray-700">Size:</label><select id="size" data-field="size" class="flex-1 p-2 text-lg bg-gray-50 border rounded-md">${pathfinderSizes.map(s => `<option value="${s}" ${character.size === s ? 'selected' : ''}>${s}</option>`).join('')}</select></div>
-                
-                <h3 class="text-xl font-semibold text-gray-800 border-b pb-1">Ability Scores</h3>
-                <div class="space-y-2 text-sm">
-                    <div class="grid grid-cols-7 gap-2 text-xs font-semibold text-gray-600 text-center"><div class="text-left"></div><div>Base</div><div>Racial</div><div>Feat</div><div>Item</div><div>Status</div><div>Override</div></div>
+
+                <div class="bg-gray-50 p-4 rounded-lg grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex items-center space-x-2"><label for="charName" class="font-medium text-gray-700">Name:</label><input id="charName" value="${character.name}" data-field="name" class="flex-1 p-2 bg-white border rounded-md"/></div>
+                    <div class="flex items-center space-x-2"><label for="race" class="font-medium text-gray-700">Race:</label><input id="race" value="${character.race}" data-field="race" class="flex-1 p-2 bg-white border rounded-md"/></div>
+                    <div class="flex items-center space-x-2"><label for="alignment" class="font-medium text-gray-700">Alignment:</label><select id="alignment" data-field="alignment" class="flex-1 p-2 bg-white border rounded-md">${dndAlignments.map(a => `<option value="${a}" ${character.alignment === a ? 'selected' : ''}>${a}</option>`).join('')}</select></div>
+                    <div class="flex items-center space-x-2"><label for="size" class="font-medium text-gray-700">Size:</label><select id="size" data-field="size" class="flex-1 p-2 bg-white border rounded-md">${dndSizes.map(s => `<option value="${s}" ${character.size === s ? 'selected' : ''}>${s}</option>`).join('')}</select></div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     ${abilityScores.map(renderAbilityScoreRow).join('')}
                 </div>
-                
-                <h3 class="text-xl font-semibold text-gray-800 border-b pb-1">Armor Class</h3>
-                ${renderAcComponents()}
 
-                <h3 class="text-xl font-semibold text-gray-800 border-b pb-1">Speed</h3>
-                <div class="grid grid-cols-2 gap-4">
-                    ${renderSpeedInputs(character.speed)}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-gray-50 p-4 rounded-2xl shadow-sm">
+                        <h3 class="text-xl font-semibold mb-2 text-center">Saving Throws</h3>
+                        ${renderSavingThrows()}
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-2xl shadow-sm">
+                        <h3 class="text-xl font-semibold mb-2 text-center">General</h3>
+                        <div class="flex items-center space-x-2"><label class="font-medium">Proficiency Bonus:</label><input type="number" data-field="proficiencyBonus" value="${character.proficiencyBonus}" class="w-20 p-1 border rounded text-center" /></div>
+                    </div>
                 </div>
                 
                 <h3 class="text-xl font-semibold text-gray-800 border-b pb-1">Class & Level</h3>
@@ -111,14 +94,21 @@ window.attachInfoPageHandlers = () => {
             const field = e.target.dataset.field;
             const subField = e.target.dataset.subfield;
             if (field) {
-                window.stores.character.updateCharacterProperty(field, e.target.value, subField);
+                window.updateCharacterInfo(field, e.target.value, subField);
             }
         });
-         infoContainer.addEventListener('change', (e) => {
-            if (e.target.tagName !== 'SELECT') return;
-            const field = e.target.dataset.field;
-            if (field) {
-                window.updateCharacterInfo(field, e.target.value, e.target.dataset.subfield);
+        
+        infoContainer.addEventListener('change', (e) => {
+            if (e.target.tagName === 'SELECT') {
+                const field = e.target.dataset.field;
+                if (field) {
+                    window.updateCharacterInfo(field, e.target.value);
+                }
+            } else if (e.target.dataset.save) {
+                const character = window.stores.character.get();
+                const newSaves = { ...character.savingThrows };
+                newSaves[e.target.dataset.save].proficient = e.target.checked;
+                window.stores.character.set({ savingThrows: newSaves });
             }
         });
     }
