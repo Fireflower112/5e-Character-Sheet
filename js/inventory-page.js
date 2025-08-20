@@ -2,14 +2,17 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     const contentArea = document.getElementById('content-area');
+    const summaryHeaderArea = document.getElementById('character-summary-header');
     const mainNavButtons = document.querySelectorAll('.main-nav-button');
     
-    // UPDATED: Default subPage for the dashboard is now 'skills'
     let currentPage = 'dashboard';
     let currentSubPage = 'skills';
 
     const renderApp = () => {
         const character = window.stores.character.get();
+        
+        summaryHeaderArea.innerHTML = window.renderCharacterSummaryHeader(character);
+        
         if (!character || Object.keys(character).length === 0) {
             contentArea.innerHTML = '<p>Loading character...</p>';
             return;
@@ -39,7 +42,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     function attachContentHandlers() {
-        // UPDATED: Removed main page handlers, added combat handlers
         if (window.attachDashboardCombatHandlers) window.attachDashboardCombatHandlers();
         if (window.attachInfoPageHandlers) window.attachInfoPageHandlers();
         if (window.attachSkillsPageHandlers) window.attachSkillsPageHandlers();
@@ -116,11 +118,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (item.itemType === 'weapon') {
                     updates.numDice = parseInt(editArea.querySelector('.edit-item-numDice').value, 10);
                     updates.dieType = parseInt(editArea.querySelector('.edit-item-dieType').value, 10);
-                    updates.critMultiplier = parseInt(editArea.querySelector('.edit-item-critMultiplier').value, 10);
-                    updates.range = parseInt(editArea.querySelector('.edit-item-range').value, 10);
                 }
                 if (item.itemType === 'armor') {
-                    updates.acBonus = parseInt(editArea.querySelector('.edit-item-acBonus').value, 10);
+                    updates.acBase = parseInt(editArea.querySelector('.edit-item-acBase').value, 10);
                     updates.armorType = editArea.querySelector('.edit-item-armorType').value;
                 }
                  if (item.itemType === 'shield') {
@@ -193,7 +193,6 @@ document.addEventListener('DOMContentLoaded', () => {
     mainNavButtons.forEach(button => {
         button.addEventListener('click', () => {
             currentPage = button.dataset.page;
-            // Set default sub-pages
             if (currentPage === 'dashboard') currentSubPage = 'skills';
             if (currentPage === 'inventory') currentSubPage = 'equipped';
             if (currentPage === 'notes') currentSubPage = 'character';

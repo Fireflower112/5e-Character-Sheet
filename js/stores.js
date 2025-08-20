@@ -316,6 +316,43 @@ window.stores.character = (function() {
             }
         },
         
+        applyRace: (raceName) => {
+            const raceData = window.dndData.races[raceName];
+            if (!raceData) return;
+
+            const newAbilities = { ...character.abilities };
+            for (const abilityId in newAbilities) {
+                if (newAbilities[abilityId].source === 'Racial Trait') {
+                    delete newAbilities[abilityId];
+                }
+            }
+            const newScores = { ...character.abilityScores };
+            for (const ability in newScores) {
+                newScores[ability].racial = 0;
+            }
+
+            for (const [stat, value] of Object.entries(raceData.abilityScoreIncrease)) {
+                if (newScores[stat]) {
+                    newScores[stat].racial = value;
+                }
+            }
+
+            if (raceData.traits) {
+                raceData.traits.forEach(trait => {
+                    const newTrait = {
+                        ...trait,
+                        id: uuid(),
+                        source: 'Racial Trait'
+                    };
+                    newAbilities[newTrait.id] = newTrait;
+                });
+            }
+
+            character.abilities = newAbilities;
+            character.abilityScores = newScores;
+            notifySubscribers();
+        },
+
         addItem: (itemData) => {
             const newItemId = uuid();
             const newItem = { id: newItemId, ...itemData, equippedSlot: null, favorited: false, containerId: null };

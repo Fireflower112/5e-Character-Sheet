@@ -19,7 +19,7 @@ window.InventoryPage = (character) => {
     const abilityScores = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
 
     const renderEditForm = (item) => {
-        const bonusesHtml = (item.bonuses || []).map((bonus, index) => {
+        const bonusesHtml = (item.bonuses || []).map((bonus) => {
             const label = skillLabelMap.get(bonus.field) || bonus.field.toUpperCase();
             const symbol = bonus.type === 'override' ? '=' : (bonus.value > 0 ? '+' : '');
             return `<li class="flex items-center justify-between bg-gray-200 px-2 py-0.5 rounded-full text-xs" data-field="${bonus.field}" data-value="${bonus.value}" data-type="${bonus.type}"><span>${label}: ${symbol}${bonus.value}</span><button type="button" data-action="remove-bonus-from-edit" class="ml-2 text-red-500 hover:text-red-700 font-bold">x</button></li>`;
@@ -183,11 +183,20 @@ window.InventoryPage = (character) => {
                         
                         <div id="bonuses-container" class="space-y-3 border-t pt-4">
                             <h4 class="font-medium text-gray-700">Bonuses:</h4>
-                            <div id="bonus-category-selector" class="flex flex-wrap gap-2"><button type="button" data-bonus-category="ability" class="bonus-cat-btn px-3 py-1 text-sm font-medium rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300">Ability Score</button><button type="button" data-bonus-category="skill" class="bonus-cat-btn px-3 py-1 text-sm font-medium rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300">Skill</button></div>
-                            <div id="bonus-details-area" class="hidden items-center gap-4">
-                                <div id="ability-bonus-selector" class="hidden flex-grow"><label for="ability-bonus-type" class="block text-sm font-medium">Ability</label><select id="ability-bonus-type" class="w-full p-2 border rounded-md">${abilityScores.map(score => `<option value="${score}">${score.toUpperCase()}</option>`).join('')}</select></div>
-                                <div id="skill-bonus-selector" class="hidden flex-grow"><label for="skill-bonus-type" class="block text-sm font-medium">Skill</label><select id="skill-bonus-type" class="w-full p-2 border rounded-md">${skillList.map(skill => `<option value="${skill.key}">${skill.label}</option>`).join('')}</select></div>
-                                <div class="flex items-end space-x-2"><div class="flex items-center space-x-2 pr-2"><input type="radio" id="bonus-type-enhance" name="bonus-type" value="enhancement" checked><label for="bonus-type-enhance" class="text-sm">Bonus (+)</label></div><div class="flex-grow"><label for="bonus-value" class="block text-sm font-medium">Value</label><input type="number" id="bonus-value" placeholder="+1" class="w-24 p-2 border rounded-md"></div><button type="button" id="add-bonus-btn" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 h-10">Add</button></div>
+                            <div class="flex items-end gap-2 text-sm">
+                                <select id="add-item-bonus-field" class="p-1 border rounded flex-grow">
+                                    <optgroup label="Ability Scores">
+                                        ${abilityScores.map(score => `<option value="${score}">${score.toUpperCase()}</option>`).join('')}
+                                    </optgroup>
+                                    <optgroup label="Skills">
+                                        ${skillList.map(skill => `<option value="${skill.key}">${skill.label}</option>`).join('')}
+                                    </optgroup>
+                                </select>
+                                <div>
+                                    <label class="block font-medium">Value</label>
+                                    <input type="number" id="add-item-bonus-value" class="w-20 p-1 border rounded" placeholder="+1">
+                                </div>
+                                <button type="button" id="add-bonus-btn" class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">Add</button>
                             </div>
                             <ul id="bonuses-list" class="flex flex-wrap gap-2 pt-2"></ul>
                         </div>
@@ -211,14 +220,10 @@ window.attachInventoryHandlers = () => {
         armor: document.getElementById('armor-fields'),
         shield: document.getElementById('shield-fields'),
     };
-    const bonusCategorySelector = document.getElementById('bonus-category-selector');
-    const bonusDetailsArea = document.getElementById('bonus-details-area');
-    const abilityBonusSelector = document.getElementById('ability-bonus-selector');
-    const skillBonusSelector = document.getElementById('skill-bonus-selector');
+    
     const addBonusBtn = document.getElementById('add-bonus-btn');
     const bonusesList = document.getElementById('bonuses-list');
-    let activeBonusCategory = null;
-
+    
     itemTypeSelect.onchange = (e) => {
         const selectedType = e.target.value;
         Object.values(itemFields).forEach(field => field?.classList.add('hidden'));
@@ -228,48 +233,17 @@ window.attachInventoryHandlers = () => {
     };
     itemTypeSelect.dispatchEvent(new Event('change'));
 
-    bonusCategorySelector.addEventListener('click', (e) => {
-        if (e.target.classList.contains('bonus-cat-btn')) {
-            const category = e.target.dataset.bonusCategory;
-            activeBonusCategory = category;
-            bonusCategorySelector.querySelectorAll('.bonus-cat-btn').forEach(btn => {
-                btn.classList.remove('bg-indigo-600', 'text-white');
-                btn.classList.add('bg-gray-200', 'text-gray-700');
-            });
-            e.target.classList.add('bg-indigo-600', 'text-white');
-            e.target.classList.remove('bg-gray-200', 'text-gray-700');
-            bonusDetailsArea.classList.remove('hidden');
-            bonusDetailsArea.classList.add('flex');
-            abilityBonusSelector.classList.add('hidden');
-            skillBonusSelector.classList.add('hidden');
-            if (category === 'ability') {
-                abilityBonusSelector.classList.remove('hidden');
-            } else if (category === 'skill') {
-                skillBonusSelector.classList.remove('hidden');
-            }
-        }
-    });
-
     addBonusBtn.onclick = () => {
-        const bonusValueInput = document.getElementById('bonus-value');
+        const bonusValueInput = document.getElementById('add-item-bonus-value');
         const value = parseInt(bonusValueInput.value, 10);
-        const type = document.querySelector('input[name="bonus-type"]:checked').value;
-        let field = null;
-        let fieldLabel = '';
-
-        if (activeBonusCategory === 'ability') {
-            const selector = document.getElementById('ability-bonus-type');
-            field = selector.value;
-            fieldLabel = selector.options[selector.selectedIndex].text;
-        } else if (activeBonusCategory === 'skill') {
-            const selector = document.getElementById('skill-bonus-type');
-            field = selector.value;
-            fieldLabel = selector.options[selector.selectedIndex].text;
-        }
+        const fieldSelect = document.getElementById('add-item-bonus-field');
+        const field = fieldSelect.value;
+        const fieldLabel = fieldSelect.options[fieldSelect.selectedIndex].text;
+        const type = 'enhancement'; 
 
         if (field && !isNaN(value)) {
             itemBonuses.push({ field, value, type });
-            const symbol = type === 'override' ? '=' : (value > 0 ? '+' : '');
+            const symbol = value > 0 ? '+' : '';
             const listItem = document.createElement('li');
             listItem.textContent = `${fieldLabel}: ${symbol}${value}`;
             listItem.className = 'inline-block bg-indigo-100 text-indigo-800 text-sm font-semibold px-2.5 py-0.5 rounded-full';
@@ -306,13 +280,6 @@ window.attachInventoryHandlers = () => {
             Object.values(itemFields).forEach(field => field?.classList.add('hidden'));
             bonusesList.innerHTML = '';
             itemBonuses = [];
-            bonusDetailsArea.classList.add('hidden');
-            bonusDetailsArea.classList.remove('flex');
-            bonusCategorySelector.querySelectorAll('.bonus-cat-btn').forEach(btn => {
-                btn.classList.remove('bg-indigo-600', 'text-white');
-                btn.classList.add('bg-gray-200', 'text-gray-700');
-            });
-            activeBonusCategory = null;
         } else {
             window.showMessage('Please enter an item name.', 'red');
         }

@@ -4,6 +4,8 @@ window.InfoPage = (character) => {
     const dndAlignments = [ 'Lawful Good', 'Neutral Good', 'Chaotic Good', 'Lawful Neutral', 'True Neutral', 'Chaotic Neutral', 'Lawful Evil', 'Neutral Evil', 'Chaotic Evil' ];
     const abilityScores = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
 
+    const raceNames = Object.keys(window.dndData.races || {});
+
     const renderAbilityScoreRow = (ability) => {
         const scores = character.abilityScores[ability];
         const finalScore = window.getFinalAbilityScore(character, ability);
@@ -48,7 +50,15 @@ window.InfoPage = (character) => {
 
                 <div class="bg-gray-50 p-4 rounded-lg grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="flex items-center space-x-2"><label for="charName" class="font-medium text-gray-700">Name:</label><input id="charName" value="${character.name}" data-field="name" class="flex-1 p-2 bg-white border rounded-md"/></div>
-                    <div class="flex items-center space-x-2"><label for="race" class="font-medium text-gray-700">Race:</label><input id="race" value="${character.race}" data-field="race" class="flex-1 p-2 bg-white border rounded-md"/></div>
+                    
+                    <div class="flex items-center space-x-2">
+                        <label for="race" class="font-medium text-gray-700">Race:</label>
+                        <input id="race" list="race-options" value="${character.race}" data-field="race" class="flex-1 p-2 bg-white border rounded-md"/>
+                        <datalist id="race-options">
+                            ${raceNames.map(name => `<option value="${name}"></option>`).join('')}
+                        </datalist>
+                    </div>
+
                     <div class="flex items-center space-x-2"><label for="alignment" class="font-medium text-gray-700">Alignment:</label><select id="alignment" data-field="alignment" class="flex-1 p-2 bg-white border rounded-md">${dndAlignments.map(a => `<option value="${a}" ${character.alignment === a ? 'selected' : ''}>${a}</option>`).join('')}</select></div>
                     <div class="flex items-center space-x-2"><label for="size" class="font-medium text-gray-700">Size:</label><select id="size" data-field="size" class="flex-1 p-2 bg-white border rounded-md">${dndSizes.map(s => `<option value="${s}" ${character.size === s ? 'selected' : ''}>${s}</option>`).join('')}</select></div>
                 </div>
@@ -89,26 +99,32 @@ window.InfoPage = (character) => {
 window.attachInfoPageHandlers = () => {
     const infoContainer = document.querySelector('#content-area');
     if (infoContainer) {
+        // --- UPDATED: 'input' event now only uses the non-rendering update function ---
         infoContainer.addEventListener('input', (e) => {
             if (e.target.tagName !== 'INPUT') return;
             const field = e.target.dataset.field;
             const subField = e.target.dataset.subfield;
             if (field) {
-                window.updateCharacterInfo(field, e.target.value, subField);
+                // This updates the data in the background without interrupting typing
+                window.stores.character.updateCharacterProperty(field, e.target.value, subField);
             }
         });
         
+        // --- UPDATED: 'change' event now handles selects, checkboxes, AND applying the race template ---
         infoContainer.addEventListener('change', (e) => {
-            if (e.target.tagName === 'SELECT') {
-                const field = e.target.dataset.field;
-                if (field) {
-                    window.updateCharacterInfo(field, e.target.value);
-                }
+            const field = e.target.dataset.field;
+
+            if (e.target.tagName === 'SELECT' && field) {
+                window.updateCharacterInfo(field, e.target.value);
             } else if (e.target.dataset.save) {
+                // This is for the saving throw checkboxes
                 const character = window.stores.character.get();
                 const newSaves = { ...character.savingThrows };
                 newSaves[e.target.dataset.save].proficient = e.target.checked;
                 window.stores.character.set({ savingThrows: newSaves });
+            } else if (field === 'race') {
+                // This applies the race template only AFTER the user is done editing
+                window.stores.character.applyRace(e.target.value);
             }
         });
     }
