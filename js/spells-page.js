@@ -7,17 +7,31 @@ window.SpellsPage = (character) => {
 
     const renderSpellSlots = (spellSlots) => {
         const slots = Array.isArray(spellSlots) ? spellSlots : [];
+        // --- UPDATED: Filter out spell levels with 0 total slots ---
+        const visibleSlots = slots
+            .map((slot, level) => ({ ...slot, level })) // Add level to object for reference
+            .filter(slot => slot.total > 0);
+
+        if (visibleSlots.length === 0) {
+            return `
+                <div class="bg-gray-50 p-6 rounded-2xl shadow-sm mb-6">
+                    <h3 class="text-xl font-semibold mb-3">Spell Slots</h3>
+                    <p class="text-gray-500 italic">No spell slots available. Add them in the Character Editor.</p>
+                </div>
+            `;
+        }
+        
         return `
             <div class="bg-gray-50 p-6 rounded-2xl shadow-sm mb-6">
                 <h3 class="text-xl font-semibold mb-3">Spell Slots</h3>
                 <div id="spell-slots-container" class="grid grid-cols-2 md:grid-cols-5 gap-4">
-                    ${slots.map((slot, level) => `
+                    ${visibleSlots.map(slot => `
                         <div class="bg-white p-3 rounded-lg shadow-inner text-center">
-                            <label class="font-bold text-lg">Lvl ${level}</label>
+                            <label class="font-bold text-lg">Lvl ${slot.level}</label>
                             <div class="flex items-center justify-center mt-2">
-                                <input type="number" value="${slot.used}" data-level="${level}" data-type="used" class="w-12 text-center p-1 border rounded-md">
+                                <input type="number" value="${slot.used}" data-level="${slot.level}" data-type="used" class="w-12 text-center p-1 border rounded-md">
                                 <span class="mx-1">/</span>
-                                <input type="number" value="${slot.total}" data-level="${level}" data-type="total" class="w-12 text-center p-1 border rounded-md">
+                                <input type="number" value="${slot.total}" class="w-12 text-center p-1 border rounded-md bg-gray-200" readonly>
                             </div>
                         </div>
                     `).join('')}
@@ -144,9 +158,10 @@ window.attachSpellsPageHandlers = () => {
     }
 
     if (spellSlotsContainer) {
-        spellSlotsContainer.addEventListener('change', (e) => {
+        // Use 'input' instead of 'change' for more immediate updates
+        spellSlotsContainer.addEventListener('input', (e) => {
             const { level, type } = e.target.dataset;
-            if (level && type) {
+            if (level && type === 'used') { // Only 'used' slots are editable here
                 window.stores.character.updateSpellSlot(level, type, e.target.value);
             }
         });

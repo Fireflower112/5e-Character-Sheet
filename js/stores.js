@@ -87,7 +87,6 @@ window.stores.character = (function() {
         return totalBonus;
     }
     
-    // --- NEW: Calculates enhancement bonuses for an ability score ONLY from ITEMS ---
     function calculateItemBonusesForAbility(ability) {
         let enhancement = 0;
         if (character.inventory && character.inventory.items) {
@@ -105,13 +104,12 @@ window.stores.character = (function() {
         return enhancement;
     }
 
-    // --- NEW: Calculates enhancement bonuses for an ability score ONLY from ABILITIES ---
     function calculateAbilityBonusesForAbility(ability) {
         let enhancement = 0;
         if (character.abilities) {
             for (const abilityId in character.abilities) {
                 const charAbility = character.abilities[abilityId];
-                if (charAbility.bonuses) {
+                if (charAbility.type === 'Racial' && charAbility.bonuses) {
                     for (const bonus of charAbility.bonuses) {
                         if (bonus.field === ability && bonus.type !== 'override') {
                             enhancement += parseInt(bonus.value, 10) || 0;
@@ -121,6 +119,42 @@ window.stores.character = (function() {
             }
         }
         return enhancement;
+    }
+    
+    // --- NEW: Calculates bonuses for a skill ONLY from ITEMS ---
+    function calculateItemBonusesForSkill(skillName) {
+        let totalBonus = 0;
+        if (character.inventory && character.inventory.items) {
+             for (const itemId in character.inventory.items) {
+                const item = character.inventory.items[itemId];
+                if ((item.equippedSlot || item.bonusesAlwaysActive) && item.bonuses) {
+                    for (const bonus of item.bonuses) {
+                        if (bonus.field === skillName) {
+                            totalBonus += parseInt(bonus.value, 10) || 0;
+                        }
+                    }
+                }
+            }
+        }
+        return totalBonus;
+    }
+
+    // --- NEW: Calculates bonuses for a skill ONLY from RACIAL abilities ---
+    function calculateRacialAbilityBonusesForSkill(skillName) {
+        let totalBonus = 0;
+        if (character.abilities) {
+            for (const abilityId in character.abilities) {
+                const ability = character.abilities[abilityId];
+                if (ability.type === 'Racial' && ability.bonuses) {
+                    for (const bonus of ability.bonuses) {
+                         if (bonus.field === skillName) {
+                            totalBonus += parseInt(bonus.value, 10) || 0;
+                        }
+                    }
+                }
+            }
+        }
+        return totalBonus;
     }
 
     function calculateACBonuses() {
@@ -261,7 +295,7 @@ window.stores.character = (function() {
             feats: {},
             abilities: {
                 [humanAbilityId]: {
-                    id: humanAbilityId, name: 'Human Racial Bonus',
+                    id: humanAbilityId, name: 'Human Racial Bonus', type: 'Racial',
                     description: 'Humans select one ability score to increase by 2 at creation to represent their varied nature.',
                     bonuses: [{ field: 'str', value: 2, type: 'enhancement' }]
                 }
@@ -423,9 +457,11 @@ window.stores.character = (function() {
             }
         },
         updateSpellSlot: (level, type, value) => {
-            if (character.spellcasting.spellSlots[level]) {
+            const parsedLevel = parseInt(level, 10);
+            const parsedValue = parseInt(value, 10) || 0;
+            if (character.spellcasting.spellSlots[parsedLevel]) {
                 const newSlots = [...character.spellcasting.spellSlots];
-                newSlots[level] = { ...newSlots[level], [type]: parseInt(value, 10) || 0 };
+                newSlots[parsedLevel] = { ...newSlots[parsedLevel], [type]: parsedValue };
                 character.spellcasting.spellSlots = newSlots;
                 notifySubscribers();
             }
@@ -450,6 +486,8 @@ window.stores.character = (function() {
         calculateACBonuses,
         calculateItemBonusesForAbility,
         calculateAbilityBonusesForAbility,
+        calculateItemBonusesForSkill,
+        calculateRacialAbilityBonusesForSkill,
     };
 })();
 

@@ -8,6 +8,11 @@ window.SkillsPage = (character) => {
                     ${skills.map(([skillName, skillData]) => {
                         const totalBonus = window.calculateSkillBonus(character, skillName, skillData);
                         const displayNameFinal = window.formatSkillName(skillName);
+                        
+                        // --- NEW: Get bonuses from their specific sources ---
+                        const itemBonus = window.stores.character.calculateItemBonusesForSkill(skillName);
+                        const racialAbilityBonus = window.stores.character.calculateRacialAbilityBonusesForSkill(skillName);
+                        const totalRacialBonus = (skillData.racial || 0) + racialAbilityBonus;
     
                         const classSkillCheckbox = skillData.ranks > 0 
                             ? `<div class="flex items-center space-x-1 ml-4">
@@ -41,11 +46,11 @@ window.SkillsPage = (character) => {
                                     </div>
                                     <div class="flex flex-col items-center">
                                         <label class="font-medium">Racial</label>
-                                        <input type="number" data-skill="${skillName}" data-field="racial" value="${skillData.racial || 0}" class="w-16 p-1 text-center bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
+                                        <input type="number" value="${totalRacialBonus}" class="w-16 p-1 text-center bg-gray-200 border rounded-md" readonly title="Base Racial: ${skillData.racial || 0} + Ability Bonuses: ${racialAbilityBonus}" />
                                     </div>
                                     <div class="flex flex-col items-center">
                                         <label class="font-medium">Item</label>
-                                        <input type="number" value="${window.stores.character.calculateBonusesForSkill(skillName)}" class="w-16 p-1 text-center bg-gray-200 border rounded-md" readonly />
+                                        <input type="number" value="${itemBonus}" class="w-16 p-1 text-center bg-gray-200 border rounded-md" readonly />
                                     </div>
                                     <div class="flex flex-col items-center">
                                         <label class="font-medium">Misc</label>
@@ -75,4 +80,20 @@ window.SkillsPage = (character) => {
     `;
 };
 
-// ... attachSkillsPageHandlers function is unchanged ...
+window.attachSkillsPageHandlers = () => {
+    const skillsContainer = document.querySelector('#content-area');
+    if (skillsContainer) {
+        skillsContainer.addEventListener('input', (e) => {
+            const skillName = e.target.dataset.skill;
+            const field = e.target.dataset.field;
+            const value = parseInt(e.target.value, 10) || 0;
+
+            if (skillName && field) {
+                const character = window.stores.character.get();
+                const newCharacter = { ...character };
+                newCharacter.skills[skillName][field] = value;
+                window.stores.character.set(newCharacter);
+            }
+        });
+    }
+};

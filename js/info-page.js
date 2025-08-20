@@ -15,9 +15,7 @@ window.InfoPage = (character) => {
             <div class="grid grid-cols-7 gap-2 items-center">
                 <span class="font-medium text-left col-span-1">${ability.toUpperCase()}:</span>
                 <input type="number" data-field="abilityScores" data-subfield="${ability}.base" value="${scores.base}" class="p-1 border rounded text-center" />
-                
                 <input type="number" value="${totalRacialBonus}" class="p-1 border rounded bg-gray-200 text-center" readonly title="Base Racial: ${scores.racial} + Ability Bonuses: ${abilityBonus}" />
-                
                 <input type="number" data-field="abilityScores" data-subfield="${ability}.feat" value="${scores.feat || 0}" class="p-1 border rounded text-center" />
                 <input type="number" value="${itemBonus}" class="p-1 border rounded bg-gray-200 text-center" readonly />
                 <input type="number" data-field="abilityScores" data-subfield="${ability}.status" value="${scores.status}" class="p-1 border rounded text-center" />
@@ -93,9 +91,6 @@ window.InfoPage = (character) => {
                     <div class="flex-1 flex flex-col space-y-2"><label for="class2" class="font-medium text-gray-700">Class 2:</label><input id="class2" value="${character.class2 || ''}" data-field="class2" class="p-2 border rounded-md"/><label for="level2" class="font-medium text-gray-700">Level 2:</label><input type="number" id="level2" value="${character.level2 || 0}" data-field="level2" class="p-2 border rounded-md"/></div>
                 </div>
                 
-                <h3 class="text-xl font-semibold text-gray-800 border-b pb-1">Spellcasting</h3>
-                <div class="flex items-center space-x-2"><label for="spellResistance" class="text-lg font-medium text-gray-700">Spell Resistance:</label><input type="number" id="spellResistance" value="${character.spellcasting?.spellResistance || 0}" data-field="spellcasting" data-subfield="spellResistance" class="w-24 p-2 text-lg bg-gray-50 border rounded-md"/></div>
-            
                 <div class="bg-gray-50 p-4 rounded-2xl shadow-sm">
                     <h3 class="text-xl font-semibold mb-2 text-center">Experience</h3>
                     <div class="flex justify-center items-center space-x-4">
@@ -123,7 +118,7 @@ window.attachInfoPageHandlers = () => {
             if (e.target.tagName !== 'SELECT') return;
             const field = e.target.dataset.field;
             if (field) {
-                window.updateCharacterInfo(field, e.target.value);
+                window.updateCharacterInfo(field, e.target.value, e.target.dataset.subfield);
             }
         });
     }

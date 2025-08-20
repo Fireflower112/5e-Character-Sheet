@@ -1,8 +1,6 @@
 // js/abilities-editor-page.js
 
 window.AbilitiesEditorPage = (character) => {
-    const allAbilities = Object.values(character.abilities || {});
-    
     // Data for bonus forms
     const skillList = [ "Acrobatics", "Appraise", "Bluff", "Climb", "Diplomacy", "Disable Device", "Disguise", "Escape Artist", "Fly", "Handle Animal", "Heal", "Intimidate", "Knowledge (Arcana)", "Knowledge (Dungeoneering)", "Knowledge (Engineering)", "Knowledge (Geography)", "Knowledge (History)", "Knowledge (Local)", "Knowledge (Nature)", "Knowledge (Nobility)", "Knowledge (Planes)", "Knowledge (Religion)", "Linguistics", "Perception", "Perform", "Profession", "Ride", "Sense Motive", "Sleight of Hand", "Spellcraft", "Stealth", "Survival", "Swim", "Use Magic Device" ].map(name => ({ key: name.toLowerCase().replace(' (', '').replace(')', '').replace(/ /g, '-').replace(/-(\w)/g, (match, letter) => letter.toUpperCase()).replace(/Knowledge(\w)/, (_, c) => `knowledge${c.toUpperCase()}`), label: name }));
     const skillLabelMap = new Map(skillList.map(skill => [skill.key, skill.label]));
@@ -32,36 +30,73 @@ window.AbilitiesEditorPage = (character) => {
             </div>`;
     };
 
+    // --- NEW: Helper function to render a section of abilities ---
+    const renderAbilitySection = (title, abilities) => {
+        if (abilities.length === 0) return '';
+        return `
+            <div class="bg-gray-50 p-4 rounded-xl shadow-sm">
+                <h3 class="text-xl font-semibold mb-3">${title}</h3>
+                <div class="space-y-3">
+                    ${abilities.map(renderAbilityCard).join('')}
+                </div>
+            </div>`;
+    };
+
+    // --- NEW: Filter abilities by type ---
+    const allAbilities = Object.values(character.abilities || {});
+    const racialAbilities = allAbilities.filter(a => a.type === 'Racial');
+    const classAbilities = allAbilities.filter(a => a.type === 'Class');
+    const otherAbilities = allAbilities.filter(a => !['Racial', 'Class'].includes(a.type));
+
     return `
         <div>
             <div class="space-y-4">
-                <div class="bg-gray-50 p-4 rounded-xl shadow-sm">
-                    <h3 class="text-xl font-semibold mb-3">Abilities</h3>
-                    <div class="space-y-3">
-                        ${allAbilities.length > 0 ? allAbilities.map(renderAbilityCard).join('') : '<p class="text-gray-500 italic">No abilities added yet.</p>'}
-                    </div>
-                </div>
+                ${renderAbilitySection('Racial Abilities', racialAbilities)}
+                ${renderAbilitySection('Class Abilities', classAbilities)}
+                ${renderAbilitySection('Other Abilities', otherAbilities)}
 
                 <div class="bg-gray-100 p-6 rounded-2xl shadow-inner">
                     <h3 class="text-lg font-semibold mb-3">Add New Ability</h3>
                     <form id="add-ability-form" class="space-y-4">
-                        <div><label for="ability-name" class="block text-sm font-medium">Ability Name</label><input type="text" id="ability-name" required class="w-full p-2 border rounded-md"></div>
+                        <div class="grid grid-cols-2 gap-4">
+                           <div><label for="ability-name" class="block text-sm font-medium">Ability Name</label><input type="text" id="ability-name" required class="w-full p-2 border rounded-md"></div>
+                           <div>
+                                <label for="ability-type" class="block text-sm font-medium">Ability Type</label>
+                                <select id="ability-type" class="w-full p-2 border rounded-md">
+                                    <option value="Racial">Racial</option>
+                                    <option value="Class">Class</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                           </div>
+                        </div>
                         <textarea id="ability-description" placeholder="Ability Description (Optional)" class="w-full p-2 border rounded-md"></textarea>
                         
                         <div id="bonuses-container" class="space-y-3 border-t pt-4">
                             <h4 class="font-medium text-gray-700">Bonuses (Optional):</h4>
-                            <div class="flex items-end gap-2 text-sm">
-                                <select id="add-ability-bonus-field" class="p-1 border rounded flex-grow">
-                                    <optgroup label="Ability Scores">
-                                        ${abilityScores.map(score => `<option value="${score}">${score.toUpperCase()}</option>`).join('')}
-                                    </optgroup>
-                                    <optgroup label="Skills">
-                                        ${skillList.map(skill => `<option value="${skill.key}">${skill.label}</option>`).join('')}
-                                    </optgroup>
-                                </select>
-                                <select id="add-ability-bonus-type" class="p-1 border rounded"><option value="enhancement">Augment (+)</option><option value="override">Set (=)</option></select>
-                                <div><label class="block font-medium">Value</label><input type="number" id="add-ability-bonus-value" class="w-20 p-1 border rounded" placeholder="+1"></div>
-                                <button type="button" id="add-ability-bonus-btn" class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-xs">Add</button>
+                            <div id="ability-bonus-category-selector" class="flex flex-wrap gap-2">
+                                <button type="button" data-bonus-category="ability" class="bonus-cat-btn px-3 py-1 text-sm font-medium rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300">Ability Score</button>
+                                <button type="button" data-bonus-category="skill" class="bonus-cat-btn px-3 py-1 text-sm font-medium rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300">Skill</button>
+                            </div>
+                            <div id="ability-bonus-details-area" class="hidden items-center gap-4">
+                                <div id="ability-details-ability-selector" class="hidden flex-grow">
+                                    <label for="ability-bonus-type-select" class="block text-sm font-medium">Ability</label>
+                                    <select id="ability-bonus-type-select" class="w-full p-2 border rounded-md">${abilityScores.map(score => `<option value="${score}">${score.toUpperCase()}</option>`).join('')}</select>
+                                </div>
+                                <div id="ability-details-skill-selector" class="hidden flex-grow">
+                                    <label for="ability-skill-bonus-type" class="block text-sm font-medium">Skill</label>
+                                    <select id="ability-skill-bonus-type" class="w-full p-2 border rounded-md">${skillList.map(skill => `<option value="${skill.key}">${skill.label}</option>`).join('')}</select>
+                                </div>
+                                <div class="flex items-end space-x-2">
+                                    <div class="flex items-center space-x-2 pr-2">
+                                        <input type="radio" id="ability-bonus-type-enhance" name="ability-bonus-type" value="enhancement" checked><label for="ability-bonus-type-enhance" class="text-sm">Augment (+)</label>
+                                        <input type="radio" id="ability-bonus-type-override" name="ability-bonus-type" value="override"><label for="ability-bonus-type-override" class="text-sm">Set (=)</label>
+                                    </div>
+                                    <div class="flex-grow">
+                                        <label for="ability-bonus-value" class="block text-sm font-medium">Value</label>
+                                        <input type="number" id="ability-bonus-value" placeholder="+1" class="w-24 p-2 border rounded-md">
+                                    </div>
+                                    <button type="button" id="add-ability-bonus-btn" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 h-10">Add</button>
+                                </div>
                             </div>
                             <ul id="ability-bonuses-list" class="flex flex-wrap gap-2 pt-2"></ul>
                         </div>
@@ -79,16 +114,56 @@ window.attachAbilitiesEditorHandlers = () => {
 
     let abilityBonuses = [];
     const addAbilityBtn = document.getElementById('add-ability-btn');
-    const addBonusBtn = document.getElementById('add-ability-bonus-btn');
     const bonusesList = document.getElementById('ability-bonuses-list');
+    
+    // --- NEW: Logic for the inventory-style bonus UI ---
+    const bonusCategorySelector = document.getElementById('ability-bonus-category-selector');
+    const bonusDetailsArea = document.getElementById('ability-bonus-details-area');
+    const abilitySelector = document.getElementById('ability-details-ability-selector');
+    const skillSelector = document.getElementById('ability-details-skill-selector');
+    const addBonusBtn = document.getElementById('add-ability-bonus-btn');
+    let activeBonusCategory = null;
+
+    bonusCategorySelector.addEventListener('click', (e) => {
+        if (e.target.classList.contains('bonus-cat-btn')) {
+            const category = e.target.dataset.bonusCategory;
+            activeBonusCategory = category;
+            bonusCategorySelector.querySelectorAll('.bonus-cat-btn').forEach(btn => {
+                btn.classList.remove('bg-indigo-600', 'text-white');
+                btn.classList.add('bg-gray-200', 'text-gray-700');
+            });
+            e.target.classList.add('bg-indigo-600', 'text-white');
+            e.target.classList.remove('bg-gray-200', 'text-gray-700');
+            
+            bonusDetailsArea.classList.remove('hidden');
+            bonusDetailsArea.classList.add('flex');
+            abilitySelector.classList.add('hidden');
+            skillSelector.classList.add('hidden');
+            
+            if (category === 'ability') {
+                abilitySelector.classList.remove('hidden');
+            } else if (category === 'skill') {
+                skillSelector.classList.remove('hidden');
+            }
+        }
+    });
 
     addBonusBtn.onclick = () => {
-        const bonusValueInput = document.getElementById('add-ability-bonus-value');
+        const bonusValueInput = document.getElementById('ability-bonus-value');
         const value = parseInt(bonusValueInput.value, 10);
-        const type = document.getElementById('add-ability-bonus-type').value;
-        const fieldSelect = document.getElementById('add-ability-bonus-field');
-        const field = fieldSelect.value;
-        const fieldLabel = fieldSelect.options[fieldSelect.selectedIndex].text;
+        const type = document.querySelector('input[name="ability-bonus-type"]:checked').value;
+        let field = null;
+        let fieldLabel = '';
+
+        if (activeBonusCategory === 'ability') {
+            const selector = document.getElementById('ability-bonus-type-select');
+            field = selector.value;
+            fieldLabel = selector.options[selector.selectedIndex].text;
+        } else if (activeBonusCategory === 'skill') {
+            const selector = document.getElementById('ability-skill-bonus-type');
+            field = selector.value;
+            fieldLabel = selector.options[selector.selectedIndex].text;
+        }
 
         if (field && !isNaN(value)) {
             abilityBonuses.push({ field, value, type });
@@ -104,6 +179,7 @@ window.attachAbilitiesEditorHandlers = () => {
     addAbilityBtn.onclick = () => {
         const newAbilityData = {
             name: document.getElementById('ability-name').value,
+            type: document.getElementById('ability-type').value, // Get the ability type
             description: document.getElementById('ability-description').value,
             bonuses: [...abilityBonuses],
         };
@@ -114,6 +190,16 @@ window.attachAbilitiesEditorHandlers = () => {
             addAbilityForm.reset();
             bonusesList.innerHTML = '';
             abilityBonuses = [];
+
+            // Reset bonus UI
+            bonusDetailsArea.classList.add('hidden');
+            bonusDetailsArea.classList.remove('flex');
+            bonusCategorySelector.querySelectorAll('.bonus-cat-btn').forEach(btn => {
+                btn.classList.remove('bg-indigo-600', 'text-white');
+                btn.classList.add('bg-gray-200', 'text-gray-700');
+            });
+            activeBonusCategory = null;
+
         } else {
             window.showMessage('Please enter an ability name.', 'red');
         }

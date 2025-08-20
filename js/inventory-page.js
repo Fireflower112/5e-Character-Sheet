@@ -1,7 +1,6 @@
 // js/inventory-page.js (Main App Logic)
 
 document.addEventListener('DOMContentLoaded', () => {
-    // This line MUST be inside the DOMContentLoaded wrapper
     const contentArea = document.getElementById('content-area');
     const mainNavButtons = document.querySelectorAll('.main-nav-button');
     
@@ -50,6 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (window.attachNotesPageHandlers) window.attachNotesPageHandlers();
         if (window.attachStoredItemsPageHandlers) window.attachStoredItemsPageHandlers();
         if (window.attachAbilitiesEditorHandlers) window.attachAbilitiesEditorHandlers();
+        if (window.attachSpellsEditorHandlers) window.attachSpellsEditorHandlers();
     }
 
     function updateNavStyles() {
@@ -64,7 +64,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // This event handler MUST be inside the DOMContentLoaded wrapper
     contentArea.addEventListener('click', (e) => {
         const actionTarget = e.target.closest('[data-action]');
         if (!actionTarget) return;
@@ -171,7 +170,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // This event handler MUST be inside the DOMContentLoaded wrapper
     contentArea.addEventListener('change', (e) => {
         const target = e.target;
         const { itemId, action, field, itemType } = target.dataset;
@@ -193,14 +191,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- Initialization ---
     mainNavButtons.forEach(button => {
         button.addEventListener('click', () => {
             currentPage = button.dataset.page;
-            // Set default sub-pages
             currentSubPage = 'basic'; 
             if (currentPage === 'inventory') currentSubPage = 'equipped';
             if (currentPage === 'notes') currentSubPage = 'character';
+            if (currentPage === 'character-editor') currentSubPage = 'basic';
             renderApp();
         });
     });
