@@ -1,12 +1,14 @@
 // js/character-summary-header.js
 window.renderCharacterSummaryHeader = (character) => {
     if (!character || !character.name) {
-        return ''; // Don't render if there's no character data yet
+        return '';
     }
 
-    const classAndLevel = character.class2 
-        ? `${character.class1} ${character.level1} / ${character.class2} ${character.level2}` 
-        : `${character.class1} ${character.level1}`;
+    const classAndLevel = (character.classes || [])
+        .map(c => `${c.name || 'Class'} ${c.level || 1}`)
+        .join(' / ');
+
+    const totalLevel = (character.classes || []).reduce((sum, cls) => sum + (cls.level || 0), 0);
 
     const raceAndSubrace = character.subrace
         ? `${character.race} (${character.subrace})`
@@ -24,7 +26,7 @@ window.renderCharacterSummaryHeader = (character) => {
                 <div class="w-1/2 md:w-1/4 px-2 py-1"><div class="text-sm font-semibold text-gray-500 uppercase">Languages</div><div class="font-medium text-gray-800">${languages}</div></div>
             </div>
             <div class="flex items-center justify-center mt-4 space-x-4 text-md font-medium text-gray-700">
-                <span>Level: <span class="font-semibold">${character.level1 + character.level2}</span></span>
+                <span>Level: <span class="font-semibold">${totalLevel}</span></span>
                 <span>XP: <span class="font-semibold">${character.experience.current} / ${character.experience.toNext}</span></span>
             </div>
         </div>

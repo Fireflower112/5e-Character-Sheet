@@ -5,11 +5,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const summaryHeaderArea = document.getElementById('character-summary-header');
     const mainNavButtons = document.querySelectorAll('.main-nav-button');
     
-    // Load last-viewed page from localStorage, or set defaults
     let currentPage = localStorage.getItem('currentPage') || 'dashboard';
     let currentSubPage = localStorage.getItem('currentSubPage') || 'skills';
 
-    // CORE RENDER FUNCTION - THIS WAS MISSING
     const renderApp = () => {
         const character = window.stores.character.get();
         
@@ -63,23 +61,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const actionTarget = e.target.closest('[data-action]');
         if (!actionTarget) return;
 
-        const { action, itemId, subpage, abilityId, raceName, subraceName, lang, index } = actionTarget.dataset;
+        const { action, subpage, lang, index } = actionTarget.dataset;
 
         switch (action) {
-            case 'toggle-accordion':
-                const details = actionTarget.nextElementSibling;
-                const icon = actionTarget.querySelector('.accordion-icon');
-                if (details && details.classList.contains('accordion-details')) {
-                    details.classList.toggle('hidden');
-                    if (icon) icon.textContent = details.classList.contains('hidden') ? '[+]' : '[-]';
-                }
-                break;
-            case 'toggle-favorite':
-                window.stores.character.toggleFavorite(itemId);
-                break;
-            case 'delete-item':
-                if (confirm('Are you sure you want to delete this item?')) window.stores.character.deleteItem(itemId);
-                break;
             case 'sub-tab':
                 if (subpage) {
                     currentSubPage = subpage;
@@ -88,10 +72,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 break;
             case 'add-class':
-                window.stores.character.addClass();
+                window.stores.characterActions.addClass();
                 break;
             case 'remove-class':
-                window.stores.character.removeClass(index);
+                window.stores.characterActions.removeClass(index);
                 break;
             case 'open-homebrew-modal':
                 document.getElementById('modal-container').innerHTML = window.renderHomebrewRaceModal();
@@ -102,20 +86,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.attachHomebrewSubraceModalHandlers();
                 break;
             case 'remove-language':
-                window.stores.character.removeLanguage(lang);
+                window.stores.characterActions.removeLanguage(lang);
                 break;
         }
     });
 
     contentArea.addEventListener('change', (e) => {
         const target = e.target;
-        const { action, field, itemType, skill, type, save } = target.dataset;
+        const { action, field, skill, type, save } = target.dataset;
 
-        if (action === 'assign-to-container') window.stores.character.assignItemToContainer(target.dataset.itemId, target.value);
-        else if (action === 'equip-to-slot') window.stores.character.equipItemToSlot(target.dataset.itemId, target.value);
-        else if (field === 'race') window.stores.character.applyRace(target.value);
-        else if (field === 'subrace') window.stores.character.applySubrace(target.value);
-        else if (skill && type) {
+        if (field === 'race') {
+            window.stores.characterActions.applyRace(target.value);
+        } else if (field === 'subrace') {
+            window.stores.characterActions.applySubrace(target.value);
+        } else if (action === 'update-class') {
+            window.stores.characterActions.updateClass(target.dataset.index, target.dataset.field, target.value);
+        } else if (action === 'update-subclass') {
+            window.stores.characterActions.updateSubclass(target.dataset.index, target.value);
+        } else if (skill && type) {
             const character = window.stores.character.get();
             const newSkills = { ...character.skills };
             newSkills[skill][type] = target.checked;
@@ -126,8 +114,8 @@ document.addEventListener('DOMContentLoaded', () => {
             newSaves[save].proficient = target.checked;
             window.stores.character.set({ savingThrows: newSaves });
         } else if (target.id === 'language-input') {
-            window.stores.character.addLanguage(target.value);
-            target.value = '';
+             window.stores.characterActions.addLanguage(target.value);
+             target.value = '';
         }
     });
     
@@ -135,9 +123,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const { action, field, subfield, index } = e.target.dataset;
 
         if (action === 'update-class') {
-            window.stores.character.updateClass(index, e.target.dataset.field, e.target.value);
-        } else if (field && field !== 'languages') {
-            window.stores.character.updateCharacterProperty(field, e.target.value, subfield);
+            window.stores.characterActions.updateClass(index, e.target.dataset.field, e.target.value);
+        } else if (field) {
+            window.stores.characterActions.updateCharacterProperty(field, e.target.value, subfield);
         }
     });
 

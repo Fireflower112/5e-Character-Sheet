@@ -7,6 +7,8 @@ window.InfoPage = (character) => {
     const selectedRaceData = window.dndData.races[character.race];
     const subraces = selectedRaceData?.subraces || [];
     
+    const classNames = Object.keys(window.dndData.classes || {});
+
     return `
         <div>
             <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">Character Information</h2>
@@ -52,15 +54,37 @@ window.InfoPage = (character) => {
                             <button data-action="add-class" class="px-3 py-1 bg-blue-500 text-white text-sm font-semibold rounded-md hover:bg-blue-600">Add Class</button>
                         </div>
                         <div id="class-level-container" class="space-y-2">
-                            ${(character.classes || []).map((cls, index) => `
-                                <div class="p-2 border rounded-md bg-white space-y-2">
-                                    <div class="flex items-center space-x-2">
-                                        <div class="flex-1"><label class="text-sm font-medium">Class</label><input value="${cls.name}" data-action="update-class" data-index="${index}" data-field="name" class="w-full p-2 border rounded-md"/></div>
-                                        <div class="w-24"><label class="text-sm font-medium">Level</label><input type="number" value="${cls.level}" data-action="update-class" data-index="${index}" data-field="level" class="w-full p-2 border rounded-md"/></div>
-                                        <button data-action="remove-class" data-index="${index}" class="px-3 py-2 bg-red-500 text-white self-end rounded-md hover:bg-red-600">&times;</button>
+                            ${(character.classes || []).map((cls, index) => {
+                                const selectedClassData = window.dndData.classes[cls.name];
+                                const classSubclasses = selectedClassData?.subclasses || [];
+                                
+                                return `
+                                <div class="p-3 border rounded-md bg-white space-y-2">
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="text-sm font-medium">Class</label>
+                                            <select data-action="update-class" data-index="${index}" data-field="name" class="w-full p-2 border rounded-md bg-white">
+                                                <option value="">-- Select Class --</option>
+                                                ${classNames.map(name => `<option value="${name}" ${cls.name === name ? 'selected' : ''}>${name}</option>`).join('')}
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="text-sm font-medium">Level</label>
+                                            <div class="flex items-center">
+                                                <input type="number" value="${cls.level}" data-action="update-class" data-index="${index}" data-field="level" class="w-full p-2 border rounded-md"/>
+                                                <button data-action="remove-class" data-index="${index}" class="ml-2 px-3 py-2 bg-red-500 text-white self-end rounded-md hover:bg-red-600">&times;</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="text-sm font-medium">${selectedClassData?.subclassTitle || 'Subclass'}</label>
+                                        <select data-action="update-subclass" data-index="${index}" class="w-full p-2 border rounded-md bg-white" ${!cls.name || classSubclasses.length === 0 ? 'disabled' : ''}>
+                                            <option value="">-- Select Subclass --</option>
+                                            ${classSubclasses.map(sub => `<option value="${sub.name}" ${cls.subclassName === sub.name ? 'selected' : ''}>${sub.name}</option>`).join('')}
+                                        </select>
                                     </div>
                                 </div>
-                            `).join('')}
+                            `}).join('')}
                         </div>
                     </div>
                     <div class="space-y-3">
@@ -77,6 +101,3 @@ window.InfoPage = (character) => {
         </div>
     `;
 };
-
-// This function is no longer needed and can be safely removed.
-window.attachInfoPageHandlers = () => {};
