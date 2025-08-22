@@ -9,7 +9,16 @@ window.stores.characterActions = (function(store) {
         });
     }
 
-    // --- Inventory Actions ---
+    // --- NEW: Attunement Action ---
+    function toggleAttunement(itemId) {
+        const character = store.get();
+        const newItems = JSON.parse(JSON.stringify(character.inventory.items));
+        if (newItems[itemId] && newItems[itemId].requiresAttunement) {
+            newItems[itemId].attuned = !newItems[itemId].attuned;
+            store.set({ inventory: { ...character.inventory, items: newItems } });
+        }
+    }
+
     function addItem(itemData) {
         const character = store.get();
         const newItem = { ...itemData, id: uuid() };
@@ -74,7 +83,6 @@ window.stores.characterActions = (function(store) {
         }
     }
 
-    // --- Character & Ability Actions ---
     function _applyClassFeatures() {
         const character = store.get();
         if (!character.classes) return;
@@ -99,63 +107,46 @@ window.stores.characterActions = (function(store) {
         store.set({ abilities: finalAbilities });
     }
 
-    // UPDATED to handle both base race and subrace features
     function applyRace() {
         const character = store.get();
         const raceData = window.dndData.races[character.race];
         if (!raceData) return;
-
         const subraceData = (raceData.subraces || []).find(sub => sub.name === character.subrace);
-
         const currentAbilities = Object.values(character.abilities || {});
         const nonRacialAbilities = currentAbilities.filter(ability => !ability.source?.startsWith('Racial'));
-        
         const newRacialTraits = (raceData.traits || []).map(trait => ({ ...trait, id: uuid(), source: 'Racial Trait', type: 'Racial' }));
         if (subraceData && subraceData.traits) {
             newRacialTraits.push(...subraceData.traits.map(trait => ({ ...trait, id: uuid(), source: 'Racial Subrace Trait', type: 'Racial' })));
         }
-        
         const finalAbilities = {};
         [...nonRacialAbilities, ...newRacialTraits].forEach(ability => { finalAbilities[ability.id] = ability; });
-
         const finalScores = JSON.parse(JSON.stringify(character.abilityScores));
         for (const score in finalScores) { finalScores[score].racial = 0; }
-        
         const applyAsi = (asi) => {
             if (!asi) return;
             for (const [stat, value] of Object.entries(asi)) {
-                if (finalScores[stat] && typeof value === 'number') { 
-                    finalScores[stat].racial += value; 
-                }
+                if (finalScores[stat] && typeof value === 'number') { finalScores[stat].racial += value; }
             }
         };
         applyAsi(raceData.abilityScoreIncrease);
         applyAsi(subraceData?.abilityScoreIncrease);
-
         const finalLanguages = ['Common'];
         if (raceData.languages) {
             raceData.languages.split(',').map(l => l.trim()).forEach(lang => {
                 if (!finalLanguages.includes(lang)) finalLanguages.push(lang);
             });
         }
-        
-        store.set({ 
-            abilities: finalAbilities, 
-            abilityScores: finalScores, 
-            languages: finalLanguages
-        });
+        store.set({ abilities: finalAbilities, abilityScores: finalScores, languages: finalLanguages });
     }
 
-    // UPDATED to be simpler and more reliable
     function applySubrace(subraceName) {
         store.set({ subrace: subraceName });
-        applyRace(); // Re-run the main applyRace, which now handles subraces automatically
+        applyRace();
     }
     
-    // This is the function that runs when the race dropdown is changed
     function handleRaceChange(raceName) {
-        store.set({ race: raceName, subrace: '' }); // Set the new race and clear the old subrace
-        applyRace(); // Re-run all racial calculations
+        store.set({ race: raceName, subrace: '' });
+        applyRace();
     }
 
     function updateClass(index, field, value) {
@@ -177,7 +168,8 @@ window.stores.characterActions = (function(store) {
         if (subField) {
             let path = subField.split('.');
             let obj = newCharacterState[field];
-            for (let i = 0; i < path.length - 1; i++) {
+            if (!obj) { obj = newCharacterState[field] = {}; } // Ensure base object exists
+			for (let i = 0; i < path.length - 1; i++) {
                 if (!obj[path[i]]) obj[path[i]] = {};
                 obj = obj[path[i]];
             }
@@ -230,7 +222,8 @@ window.stores.characterActions = (function(store) {
     }
 
     return {
-        handleRaceChange, // Exposing the new race change handler
+        toggleAttunement,
+        handleRaceChange,
         _applyClassFeatures,
         applyRace,
         applySubrace,

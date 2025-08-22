@@ -80,14 +80,15 @@ window.getInitialState = () => {
 					description: "Dry food, enough for one day."
 				},
 				"default-item-4": {
-					id: "default-item-4",
-					name: "Gauntlets of Ogre Power",
-					weight: 2,
-					itemType: "wearable",
-					requiresAttunement: true,
-					description: "Your Strength score is 19 while you wear these gauntlets.",
-					bonuses: [{ field: 'str', value: 19, type: 'override' }]
-				}
+                    id: "default-item-4",
+                    name: "Gauntlets of Ogre Power",
+                    weight: 2,
+                    itemType: "other", // No longer "wearable"
+                    requiresAttunement: true, // This item requires attunement
+                    attuned: false, // It starts off not attuned
+                    description: "Your Strength score is 19 while you wear these gauntlets.",
+                    bonuses: [{ field: 'str', value: 19, type: 'override' }]
+                }
 			}, 
 			currency: {
 				cp: 0,
