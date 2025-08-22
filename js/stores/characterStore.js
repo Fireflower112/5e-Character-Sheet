@@ -10,8 +10,7 @@ window.stores.character = {
     },
 
     set: function(newState) {
-		console.log('%c STORE:', 'color: green; font-weight: bold;', 'Saving the following data:', newState);
-		this._character = { ...this._character, ...newState };
+        this._character = { ...this._character, ...newState };
         this._notifySubscribers();
     },
     
@@ -42,5 +41,88 @@ window.stores.character = {
         window.stores.characterActions.applyRace(this._character.race);
         window.stores.characterActions._applyClassFeatures();
         this._notifySubscribers();
+    },
+
+    saveHomebrewRace: function(raceData) {
+        try {
+            const homebrewRaces = JSON.parse(localStorage.getItem('homebrewRaces') || '{}');
+            homebrewRaces[raceData.name] = raceData;
+            localStorage.setItem('homebrewRaces', JSON.stringify(homebrewRaces));
+            window.dndData.races[raceData.name] = raceData;
+            window.showMessage('Homebrew race saved!', 'green');
+            this._notifySubscribers();
+        } catch (e) {
+            console.error("Failed to save homebrew race:", e);
+            window.showMessage('Error saving homebrew race.', 'red');
+        }
+    },
+
+    saveHomebrewSubrace: function(baseRaceName, subraceData) {
+        try {
+            const homebrewRaces = JSON.parse(localStorage.getItem('homebrewRaces') || '{}');
+            const baseRace = homebrewRaces[baseRaceName] || window.dndData.races[baseRaceName];
+
+            if (baseRace) {
+                if (!baseRace.subraces) {
+                    baseRace.subraces = [];
+                }
+                const existingSubraceIndex = baseRace.subraces.findIndex(s => s.name === subraceData.name);
+                if (existingSubraceIndex > -1) {
+                    baseRace.subraces[existingSubraceIndex] = subraceData;
+                } else {
+                    baseRace.subraces.push(subraceData);
+                }
+                
+                if (homebrewRaces[baseRaceName]) {
+                     localStorage.setItem('homebrewRaces', JSON.stringify(homebrewRaces));
+                }
+                
+                window.dndData.races[baseRaceName] = baseRace;
+                window.showMessage('Homebrew subrace saved!', 'green');
+                this._notifySubscribers();
+            } else {
+                 window.showMessage(`Base race "${baseRaceName}" not found.`, 'red');
+            }
+        } catch (e) {
+            console.error("Failed to save homebrew subrace:", e);
+            window.showMessage('Error saving homebrew subrace.', 'red');
+        }
+    },
+
+    deleteHomebrewRace: function(raceName) {
+        try {
+            const homebrewRaces = JSON.parse(localStorage.getItem('homebrewRaces') || '{}');
+            delete homebrewRaces[raceName];
+            localStorage.setItem('homebrewRaces', JSON.stringify(homebrewRaces));
+            delete window.dndData.races[raceName];
+            window.showMessage('Homebrew race deleted!', 'green');
+            this._notifySubscribers();
+        } catch (e) {
+            console.error("Failed to delete homebrew race:", e);
+            window.showMessage('Error deleting homebrew race.', 'red');
+        }
+    },
+
+    deleteHomebrewSubrace: function(baseRaceName, subraceName) {
+        try {
+            const homebrewRaces = JSON.parse(localStorage.getItem('homebrewRaces') || '{}');
+            const baseRace = homebrewRaces[baseRaceName] || window.dndData.races[baseRaceName];
+
+            if (baseRace && baseRace.subraces) {
+                const subraceIndex = baseRace.subraces.findIndex(s => s.name === subraceName);
+                if (subraceIndex > -1) {
+                    baseRace.subraces.splice(subraceIndex, 1);
+                    if (homebrewRaces[baseRaceName]) {
+                        localStorage.setItem('homebrewRaces', JSON.stringify(homebrewRaces));
+                    }
+                    window.dndData.races[baseRaceName] = baseRace;
+                    window.showMessage('Homebrew subrace deleted!', 'green');
+                    this._notifySubscribers();
+                }
+            }
+        } catch (e) {
+            console.error("Failed to delete homebrew subrace:", e);
+            window.showMessage('Error deleting homebrew subrace.', 'red');
+        }
     }
 };

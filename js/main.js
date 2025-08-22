@@ -1,5 +1,14 @@
 // js/main.js
 
+function loadHomebrewData() {
+    try {
+        const homebrewRaces = JSON.parse(localStorage.getItem('homebrewRaces') || '{}');
+        Object.assign(window.dndData.races, homebrewRaces);
+    } catch (e) {
+        console.error("Failed to load homebrew data:", e);
+    }
+}
+
 window.showMessage = (message, color) => {
     const messageBox = document.getElementById('message-box');
     if (!messageBox) return;
@@ -12,13 +21,15 @@ window.showMessage = (message, color) => {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
+    loadHomebrewData();
+
     const contentArea = document.getElementById('content-area');
     const summaryHeaderArea = document.getElementById('character-summary-header');
     const mainNavButtons = document.querySelectorAll('.main-nav-button');
     
     let currentPage = localStorage.getItem('currentPage') || 'dashboard';
     let currentSubPage = localStorage.getItem('currentSubPage') || 'skills';
-    let editBonuses = []; // Temporary holder for bonuses while editing
+    let editBonuses = [];
 
     const renderApp = () => {
         const character = window.stores.character.get();
@@ -59,9 +70,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const actionTarget = e.target.closest('[data-action]');
         if (!actionTarget) return;
 
-        const { action, subpage, itemId, lang, index, abilityId } = actionTarget.dataset;
+        const { action, subpage, itemId, lang, index, abilityId, raceName, subraceName } = actionTarget.dataset;
 
         switch (action) {
+            case 'sub-tab':
+                if (subpage) {
+                    currentSubPage = subpage;
+                    localStorage.setItem('currentSubPage', currentSubPage);
+                    renderApp();
+                }
+                break;
             case 'edit-item': {
                 const character = window.stores.character.get();
                 const item = character.inventory.items[itemId];
@@ -105,7 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const symbol = type === 'override' ? '=' : (value > 0 ? '+' : '');
                     const newLi = document.createElement('li');
                     newLi.className = 'inline-block bg-indigo-100 text-indigo-800 text-sm font-semibold pl-2.5 pr-1 py-0.5 rounded-full';
-                    newLi.innerHTML = `<span>${label}: ${symbol}${value}</span><button type="button" data-action="remove-edit-bonus" class="ml-2 text-red-500 hover:text-red-700 font-bold">x</button>`;
+                    newLi.innerHTML = `<span>${label}: ${symbol}${value}</span><button type="button" class="ml-2 text-red-500 hover:text-red-700 font-bold">x</button>`;
                     newLi.querySelector('button').onclick = () => {
                         const index = editBonuses.findIndex(b => b === newBonus);
                         if (index > -1) editBonuses.splice(index, 1);
@@ -118,14 +136,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             case 'remove-edit-bonus': {
                 actionTarget.parentElement.remove();
-                break;
-            }
-            case 'sub-tab': {
-                if (subpage) {
-                    currentSubPage = subpage;
-                    localStorage.setItem('currentSubPage', currentSubPage);
-                    renderApp();
-                }
                 break;
             }
             case 'toggle-favorite':
@@ -153,6 +163,37 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'remove-language':
                 window.stores.characterActions.removeLanguage(lang);
                 break;
+            case 'edit-homebrew-race': {
+                const homebrewRaces = JSON.parse(localStorage.getItem('homebrewRaces') || '{}');
+                const raceToEdit = homebrewRaces[raceName];
+                if (raceToEdit) {
+                    document.getElementById('modal-container').innerHTML = window.renderHomebrewRaceModal(raceToEdit);
+                    window.attachHomebrewRaceModalHandlers(raceToEdit);
+                }
+                break;
+            }
+            case 'delete-homebrew-race': {
+                if (confirm(`Are you sure you want to delete the "${raceName}" race?`)) {
+                    window.stores.character.deleteHomebrewRace(raceName);
+                }
+                break;
+            }
+            case 'edit-homebrew-subrace': {
+                const allRaces = {...window.dndData.races, ...JSON.parse(localStorage.getItem('homebrewRaces') || '{}')};
+                const baseRace = allRaces[raceName];
+                const subraceToEdit = baseRace?.subraces.find(s => s.name === subraceName);
+                if (subraceToEdit) {
+                    document.getElementById('modal-container').innerHTML = window.renderHomebrewSubraceModal(raceName, subraceToEdit);
+                    window.attachHomebrewSubraceModalHandlers(raceName, subraceToEdit);
+                }
+                break;
+            }
+            case 'delete-homebrew-subrace': {
+                 if (confirm(`Are you sure you want to delete the "${subraceName}" subrace?`)) {
+                    window.stores.character.deleteHomebrewSubrace(raceName, subraceName);
+                }
+                break;
+            }
         }
     });
 
@@ -171,7 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const slot = target.checked ? (itemType === 'armor' ? 'Armor' : 'Shield') : 'none';
             window.stores.characterActions.equipItemToSlot(itemId, slot);
         } else if (field === 'race') {
-            window.stores.characterActions.applyRace(target.value);
+            window.stores.characterActions.handleRaceChange(target.value);
         } else if (field === 'subrace') {
             window.stores.characterActions.applySubrace(target.value);
         } else if (action === 'update-class') {
@@ -196,9 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     contentArea.addEventListener('input', (e) => {
         const { action, field, subfield, index } = e.target.dataset;
-        // This is the critical fix for the race ability bug
         if (field === 'race' || field === 'subrace') return;
-
         if (action === 'update-class') {
             window.stores.characterActions.updateClass(index, e.target.dataset.field, e.target.value);
         } else if (field) {
@@ -215,7 +254,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (currentPage === 'notes') currentSubPage = 'character';
             if (currentPage === 'character-editor') currentSubPage = 'basic';
             localStorage.setItem('currentSubPage', currentSubPage);
-            renderApp();
+renderApp();
         });
     });
 
