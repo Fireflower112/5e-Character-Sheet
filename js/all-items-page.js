@@ -3,18 +3,21 @@
 window.AllItemsPage = (character) => {
     const allItems = Object.values(character.inventory.items || {});
     const containers = Object.values(character.inventory.containers || {});
+    const skillList = ["Acrobatics", "Animal Handling", "Arcana", "Athletics", "Deception", "History", "Insight", "Intimidation", "Investigation", "Medicine", "Nature", "Perception", "Performance", "Persuasion", "Religion", "Sleight of Hand", "Stealth", "Survival"];
+    const abilityScores = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
     const equipmentSlots = [ { key: 'Armor', label: 'Armor' }, { key: 'Belt', label: 'Belt' }, { key: 'Body', label: 'Body' }, { key: 'Chest', label: 'Chest' }, { key: 'Eyes', label: 'Eyes' }, { key: 'Feet', label: 'Feet' }, { key: 'Hands', label: 'Hands' }, { key: 'Head', label: 'Head' }, { key: 'Headband', label: 'Headband' }, { key: 'Neck', label: 'Neck' }, { key: 'Ring1', label: 'Ring 1' }, { key: 'Ring2', label: 'Ring 2' }, { key: 'Shield', label: 'Shield' }, { key: 'Shoulders', label: 'Shoulders' }, { key: 'Wrists', label: 'Wrists' }];
-    
+
+    // THIS IS THE HELPER FUNCTION THAT WAS MISSING
     const renderItemCard = (item) => {
-        // This function is unchanged
         let equipControl = '';
         const equippableTypes = ['weapon', 'armor', 'shield', 'wearable'];
+
         if (equippableTypes.includes(item.itemType)) {
             if (item.itemType === 'weapon') {
                 equipControl = `<div class="flex items-center space-x-2"><input type="checkbox" id="equip-weapon-${item.id}" data-item-id="${item.id}" data-action="equip-weapon" ${item.equippedSlot ? 'checked' : ''} class="rounded text-indigo-600 h-5 w-5"/><label for="equip-weapon-${item.id}" class="text-gray-700">Wielded</label></div>`;
             } else if (['armor', 'shield'].includes(item.itemType)) {
                 equipControl = `<div class="flex items-center space-x-2"><input type="checkbox" id="equip-${item.itemType}-${item.id}" data-item-id="${item.id}" data-action="equip-armor-shield" data-item-type="${item.itemType}" ${item.equippedSlot ? 'checked' : ''} class="rounded text-indigo-600 h-5 w-5"/><label for="equip-${item.itemType}-${item.id}" class="text-gray-700">Equipped</label></div>`;
-            } else {
+            } else if (item.itemType === 'wearable') {
                 equipControl = `<select data-item-id="${item.id}" data-action="equip-to-slot" class="p-1 border rounded-md text-sm"><option value="none">Not Equipped</option>${equipmentSlots.map(slot => `<option value="${slot.key}" ${item.equippedSlot === slot.key ? 'selected' : ''}>${slot.label}</option>`).join('')}</select>`;
             }
         }
@@ -36,52 +39,84 @@ window.AllItemsPage = (character) => {
                 ${containerControl}
             </div>`;
     };
-    
-    const allItemsHtml = allItems.length > 0
-        ? allItems.map(renderItemCard).join('')
-        : '<p class="text-gray-500 italic">No items in inventory. Add one below!</p>';
 
-    // --- ADDED a new div to wrap the list and the form ---
+    // --- SORTING LOGIC ---
+    const attunementItems = allItems.filter(i => i.requiresAttunement);
+    const remainingItems = allItems.filter(i => !i.requiresAttunement);
+    const weapons = remainingItems.filter(i => i.itemType === 'weapon');
+    const armor = remainingItems.filter(i => i.itemType === 'armor');
+    const shields = remainingItems.filter(i => i.itemType === 'shield');
+    const others = remainingItems.filter(i => !['weapon', 'armor', 'shield'].includes(i.itemType));
+
+    const renderCategorySection = (title, items) => {
+        if (items.length === 0) return '';
+        return `
+            <details class="bg-gray-50 p-4 rounded-xl shadow-sm" open>
+                <summary class="text-xl font-semibold cursor-pointer">${title}</summary>
+                <div class="mt-3 space-y-3">
+                    ${items.map(renderItemCard).join('')}
+                </div>
+            </details>`;
+    };
+
     return `
         <div class="space-y-6">
-            <div class="bg-gray-50 p-6 rounded-2xl shadow-sm">
-                <h3 class="text-xl font-semibold mb-3">All Items</h3>
-                <div class="space-y-3">${allItemsHtml}</div>
-            </div>
+            ${renderCategorySection('Items Requiring Attunement', attunementItems)}
+            ${renderCategorySection('Weapons', weapons)}
+            ${renderCategorySection('Armor', armor)}
+            ${renderCategorySection('Shields', shields)}
+            ${renderCategorySection('Other Items', others)}
 
             <div class="bg-gray-100 p-6 rounded-2xl shadow-inner">
                 <h3 class="text-lg font-semibold mb-3">Add New Item</h3>
                 <form id="add-item-form" class="space-y-4">
                      <div class="grid grid-cols-3 gap-4">
-                        <div class="col-span-2"><label for="item-name" class="block text-sm font-medium">Item Name</label><input type="text" id="item-name" required class="w-full p-2 border rounded-md"></div>
-                        <div><label for="item-weight" class="block text-sm font-medium">Weight (lbs)</label><input type="number" id="item-weight" value="0" step="0.1" class="w-full p-2 border rounded-md"></div>
+                        <div class="col-span-2"><label class="block text-sm font-medium">Item Name</label><input type="text" id="item-name" required class="w-full p-2 border rounded-md"></div>
+                        <div><label class="block text-sm font-medium">Weight (lbs)</label><input type="number" id="item-weight" value="0" step="0.1" class="w-full p-2 border rounded-md"></div>
                     </div>
-                    <textarea id="item-description" placeholder="Item Description (Optional)" class="w-full p-2 border rounded-md"></textarea>
-                    <div>
-                        <label for="item-type" class="block text-sm font-medium text-gray-700 mb-1">Item Type</label>
-                        <select id="item-type" class="w-full p-2 border rounded-md">
-                            <option value="other">Other</option>
-                            <option value="wearable">Wearable Item</option>
-                            <option value="weapon">Weapon</option>
-                            <option value="armor">Armor</option>
-                            <option value="shield">Shield</option>
-                        </select>
+                    <textarea id="item-description" placeholder="Item Description" class="w-full p-2 border rounded-md"></textarea>
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Item Type</label>
+                            <select id="item-type" class="p-2 border rounded-md">
+                                <option value="other">Other</option>
+                                <option value="wearable">Wearable</option>
+                                <option value="weapon">Weapon</option>
+                                <option value="armor">Armor</option>
+                                <option value="shield">Shield</option>
+                            </select>
+                        </div>
+                        <div class="flex items-center space-x-2 pt-5">
+                             <input type="checkbox" id="item-requires-attunement" class="h-4 w-4 rounded text-indigo-600">
+                             <label for="item-requires-attunement" class="font-medium text-gray-700">Requires Attunement</label>
+                        </div>
                     </div>
                     <div id="weapon-fields" class="hidden space-y-3 border-t pt-4"><h4 class="font-medium text-gray-700">Weapon Stats:</h4><div class="grid grid-cols-2 gap-4"><div><label for="weapon-num-dice" class="block text-sm font-medium">Num. of Dice</label><input type="number" id="weapon-num-dice" value="1" class="w-full p-2 border rounded-md"></div><div><label for="weapon-die-type" class="block text-sm font-medium">Type of Die</label><input type="number" id="weapon-die-type" value="6" class="w-full p-2 border rounded-md"></div></div></div>
                     <div id="armor-fields" class="hidden space-y-3 border-t pt-4"><h4 class="font-medium text-gray-700">Armor Stats:</h4><label for="armor-type" class="block text-sm font-medium">Armor Type</label><select id="armor-type" class="w-full p-2 border rounded-md"><option value="light">Light</option><option value="medium">Medium</option><option value="heavy">Heavy</option></select><label for="armor-ac-base" class="block text-sm font-medium">Base AC</label><input type="number" id="armor-ac-base" value="10" class="w-full p-2 border rounded-md"></div>
                     <div id="shield-fields" class="hidden space-y-3 border-t pt-4"><h4 class="font-medium text-gray-700">Shield Stats:</h4><label for="shield-ac-bonus" class="block text-sm font-medium">AC Bonus</label><input type="number" id="shield-ac-bonus" value="2" class="w-full p-2 border rounded-md"></div>
+                    <div id="bonuses-container" class="space-y-3 border-t pt-4">
+                        <h4 class="font-medium text-gray-700">Bonuses:</h4>
+                        <div class="flex items-end gap-2 text-sm">
+                            <select id="add-item-bonus-field" class="p-1 border rounded flex-grow"><optgroup label="Primary Stats"><option value="ac">Armor Class</option><option value="initiative">Initiative</option></optgroup><optgroup label="Ability Scores">${abilityScores.map(score => `<option value="${score}">${score.toUpperCase()}</option>`).join('')}</optgroup><optgroup label="Skills">${skillList.map(skill => `<option value="${skill.toLowerCase().replace(/ /g, '')}">${skill}</option>`).join('')}</optgroup></select>
+                            <select id="add-item-bonus-type" class="p-1 border rounded"><option value="enhancement">Enhance (+)</option><option value="override">Override (=)</option></select>
+                            <div><label class="block font-medium">Value</label><input type="number" id="add-item-bonus-value" class="w-20 p-1 border rounded" placeholder="+1"></div>
+                            <button type="button" id="add-bonus-btn" class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">Add</button>
+                        </div>
+                        <ul id="bonuses-list" class="flex flex-wrap gap-2 pt-2"></ul>
+                    </div>
                     <button type="button" id="add-item-btn" class="w-full px-4 py-2 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700">Add Item</button>
                 </form>
             </div>
         </div>`;
 };
 
-// --- ADDED the handler function back in ---
 window.attachAllItemsPageHandlers = () => {
     const addItemForm = document.getElementById('add-item-form');
     if (!addItemForm) return;
 
-    const addItemBtn = document.getElementById('add-item-btn');
+    let itemBonuses = [];
+    const addBonusBtn = document.getElementById('add-bonus-btn');
+    const bonusesList = document.getElementById('bonuses-list');
     const itemTypeSelect = document.getElementById('item-type');
     const itemFields = {
         weapon: document.getElementById('weapon-fields'),
@@ -96,13 +131,42 @@ window.attachAllItemsPageHandlers = () => {
             itemFields[selectedType].classList.remove('hidden');
         }
     };
+    
+    addBonusBtn.onclick = () => {
+        const bonusValueInput = document.getElementById('add-item-bonus-value');
+        const value = parseInt(bonusValueInput.value, 10);
+        const fieldSelect = document.getElementById('add-item-bonus-field');
+        const field = fieldSelect.value;
+        const fieldLabel = fieldSelect.options[fieldSelect.selectedIndex].text;
+        const typeSelect = document.getElementById('add-item-bonus-type');
+        const type = typeSelect.value;
 
+        if (field && !isNaN(value)) {
+            const bonus = { field, value, type };
+            itemBonuses.push(bonus);
+            const symbol = type === 'override' ? '=' : (value > 0 ? '+' : '');
+            const listItem = document.createElement('li');
+            listItem.innerHTML = `${fieldLabel}: ${symbol}${value} <button type="button" class="remove-bonus-btn text-red-500 ml-1 font-bold">x</button>`;
+            listItem.className = 'inline-block bg-indigo-100 text-indigo-800 text-sm font-semibold pl-2.5 pr-1 py-0.5 rounded-full';
+            listItem.querySelector('.remove-bonus-btn').onclick = () => {
+                const index = itemBonuses.findIndex(b => b === bonus);
+                if (index > -1) itemBonuses.splice(index, 1);
+                listItem.remove();
+            };
+            bonusesList.appendChild(listItem);
+            bonusValueInput.value = '';
+        }
+    };
+
+    const addItemBtn = document.getElementById('add-item-btn');
     addItemBtn.onclick = () => {
         const newItemData = {
             name: document.getElementById('item-name').value,
             weight: parseFloat(document.getElementById('item-weight').value) || 0,
             description: document.getElementById('item-description').value,
             itemType: document.getElementById('item-type').value,
+            requiresAttunement: document.getElementById('item-requires-attunement').checked,
+            bonuses: [...itemBonuses],
         };
 
         if (newItemData.itemType === 'weapon') {
@@ -119,11 +183,13 @@ window.attachAllItemsPageHandlers = () => {
 
         if (newItemData.name) {
             window.stores.characterActions.addItem(newItemData);
-            window.showMessage('Item added successfully!', 'green');
+            window.showMessage('Item added!', 'green');
             addItemForm.reset();
+            bonusesList.innerHTML = '';
+            itemBonuses = [];
             Object.values(itemFields).forEach(field => field?.classList.add('hidden'));
         } else {
-            window.showMessage('Please enter an item name.', 'red');
+            window.showMessage('Item name is required.', 'red');
         }
     };
 };

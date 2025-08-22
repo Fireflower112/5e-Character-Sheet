@@ -12,6 +12,7 @@ window.stores.characterActions = (function(store) {
     // --- Inventory Actions ---
     function addItem(itemData) {
         const character = store.get();
+        // The itemData from the form now includes bonuses and attunement
         const newItem = { ...itemData, id: uuid() };
         const newItems = { ...character.inventory.items, [newItem.id]: newItem };
         store.set({ inventory: { ...character.inventory, items: newItems } });

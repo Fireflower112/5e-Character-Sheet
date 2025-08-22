@@ -48,7 +48,61 @@ window.getInitialState = () => {
             stealth: { ability: 'dex', proficient: false, expertise: false },
             survival: { ability: 'wis', proficient: false, expertise: false },
         },
-        inventory: { items: {}, currency: { cp: 0, sp: 0, gp: 0 }, containers: {} },
+        // Inside your defaultState object in js/stores/defaultCharacter.js
+
+		inventory: { 
+			items: {
+				"default-item-1": {
+					id: "default-item-1",
+					name: "Longsword",
+					weight: 3,
+					itemType: "weapon",
+					numDice: 1,
+					dieType: 8,
+					description: "A versatile martial weapon.",
+					equippedSlot: "Wielded"
+				},
+				"default-item-2": {
+					id: "default-item-2",
+					name: "Shield",
+					weight: 6,
+					itemType: "shield",
+					acBonus: 2,
+					description: "A standard shield.",
+					equippedSlot: "Shield"
+				},
+				"default-item-3": {
+					id: "default-item-3",
+					name: "Rations (1 day)",
+					weight: 2,
+					itemType: "other",
+					containerId: "default-container-1",
+					description: "Dry food, enough for one day."
+				},
+				"default-item-4": {
+					id: "default-item-4",
+					name: "Gauntlets of Ogre Power",
+					weight: 2,
+					itemType: "wearable",
+					requiresAttunement: true,
+					description: "Your Strength score is 19 while you wear these gauntlets.",
+					bonuses: [{ field: 'str', value: 19, type: 'override' }]
+				}
+			}, 
+			currency: {
+				cp: 0,
+				sp: 0,
+				gp: 15
+			}, 
+			containers: {
+				"default-container-1": {
+					id: "default-container-1",
+					name: "Backpack",
+					capacity: 30,
+					weight: 5
+				}
+			} 
+		},
         feats: {},
         abilities: {},
         notes: { character: '', npcs: '', campaign: '', combat: '' },
