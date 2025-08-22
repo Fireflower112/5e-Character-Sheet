@@ -1,4 +1,17 @@
-// js/inventory-page.js (Main App Logic)
+// js/main.js
+
+window.showMessage = (message, color) => {
+    const messageBox = document.getElementById('message-box');
+    if (!messageBox) return;
+
+    messageBox.textContent = message;
+    messageBox.style.backgroundColor = color;
+    messageBox.classList.add('show');
+
+    setTimeout(() => {
+        messageBox.classList.remove('show');
+    }, 3000);
+};
 
 document.addEventListener('DOMContentLoaded', () => {
     const contentArea = document.getElementById('content-area');
@@ -41,6 +54,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         contentArea.innerHTML = pageHtml;
         updateNavStyles();
+        
+        // After rendering, if a page has special handlers that NEED to run
+        // (like the form submission buttons in the inventory), we can call them here.
+        // We will add to this section as needed.
+        if (currentPage === 'inventory' && currentSubPage === 'all') {
+            window.attachInventoryHandlers();
+        }
+         if (currentPage === 'inventory' && currentSubPage === 'stored') {
+            window.attachStoredItemsPageHandlers();
+        }
     };
     
     function updateNavStyles() {
@@ -55,8 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- CENTRALIZED EVENT LISTENERS ---
-
+    // --- A SINGLE, POWERFUL CLICK LISTENER ---
     contentArea.addEventListener('click', (e) => {
         const actionTarget = e.target.closest('[data-action]');
         if (!actionTarget) return;
@@ -91,6 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // --- A SINGLE, POWERFUL CHANGE LISTENER ---
     contentArea.addEventListener('change', (e) => {
         const target = e.target;
         const { action, field, skill, type, save } = target.dataset;

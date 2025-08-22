@@ -4,7 +4,7 @@ window.getInitialState = () => {
 
     const defaultState = {
         name: 'Valerius',
-        race: '',
+        race: 'Elf',
         subrace: '',
         classes: [{ name: 'Fighter', level: 1, subclassName: '' }],
         alignment: 'Lawful Good',
@@ -12,6 +12,7 @@ window.getInitialState = () => {
         experience: { current: 0, toNext: 300 },
         hp: 10,
         maxHp: 10,
+		initiative: { base: 0, other: 0 },
         tempHp: 0,
         proficiencyBonus: 2,
         languages: ['Common'],
@@ -52,7 +53,16 @@ window.getInitialState = () => {
         abilities: {},
         notes: { character: '', npcs: '', campaign: '', combat: '' },
         spellcasting: { castingStat: 'int', spellResistance: 0, spellSlots: Array(10).fill({ total: 0, used: 0 }) },
-        spells: {},
+        spells: {
+            "default-spell-1": { // ADDED this whole block for testing
+                id: "default-spell-1",
+                name: "Magic Missile",
+                level: 1,
+                school: "Evocation",
+                favorited: true,
+                description: "You create three magical darts."
+            }
+        },
         equippedItems: {},
     };
 
