@@ -2,56 +2,36 @@
 
 window.EquippedItemsPage = (character) => {
     const allItems = Object.values(character.inventory.items || {});
-    const equippedWeapons = allItems.filter(item => item.equippedSlot === 'Wielded');
+    const equippedWeapons = allItems.filter(item => item.equippedSlot === 'Wielded' || item.itemType === 'weapon' && item.equippedSlot);
+    const equippedArmor = allItems.find(item => item.equippedSlot === 'Armor');
+    const equippedShield = allItems.find(item => item.equippedSlot === 'Shield');
+    const currency = character.inventory.currency || { cp: 0, sp: 0, gp: 0, pp: 0 };
     
-    const equipmentSlots = [
-        { key: 'Armor', label: 'Armor' }, { key: 'Belt', label: 'Belt' }, { key: 'Body', label: 'Body' },
-        { key: 'Chest', label: 'Chest' }, { key: 'Eyes', label: 'Eyes' }, { key: 'Feet', label: 'Feet' },
-        { key: 'Hands', label: 'Hands' }, { key: 'Head', label: 'Head' }, { key: 'Headband', label: 'Headband' },
-        { key: 'Neck', label: 'Neck' }, { key: 'Ring1', label: 'Ring 1' }, { key: 'Ring2', label: 'Ring 2' },
-        { key: 'Shield', label: 'Shield' }, { key: 'Shoulders', label: 'Shoulders' }, { key: 'Wrists', label: 'Wrists' },
-    ];
-
-    const equippedMap = new Map();
-    allItems.forEach(item => {
-        if (item.equippedSlot && item.equippedSlot !== 'Wielded') {
-            equippedMap.set(item.equippedSlot, item);
-        }
-    });
-
     const renderAccordionDetails = (item) => {
-        // --- UPDATED: Added AC Bonus display for armor and shields ---
-        let acBonusHtml = '';
-        if (['armor', 'shield'].includes(item.itemType) && item.acBonus) {
-            acBonusHtml = `<div class="font-semibold">AC Bonus: +${item.acBonus}</div>`;
+        let detailsHtml = '';
+        if (item.itemType === 'weapon') {
+            detailsHtml += `<div><strong>Damage:</strong> ${item.numDice || 1}d${item.dieType || 6}</div>`;
         }
-
-        const bonusesHtml = (item.bonuses && item.bonuses.length > 0) ? `
-            <div class="mt-2 pt-2 border-t text-xs">
-                <h5 class="font-semibold mb-1">Bonuses:</h5>
-                <div class="flex flex-wrap gap-1">
-                    ${item.bonuses.map(bonus => {
-                        const label = bonus.field.charAt(0).toUpperCase() + bonus.field.slice(1);
-                        const symbol = bonus.type === 'override' ? '=' : (bonus.value > 0 ? '+' : '');
-                        return `<span class="bg-indigo-100 text-indigo-800 text-xs font-semibold px-2 py-0.5 rounded-full">${label}: ${symbol}${bonus.value}</span>`;
-                    }).join('')}
-                </div>
-            </div>` : '';
-
+        if (item.itemType === 'armor') {
+            detailsHtml += `<div><strong>AC Base:</strong> ${item.acBase || 0}</div>`;
+        }
+        if (item.itemType === 'shield') {
+            detailsHtml += `<div><strong>AC Bonus:</strong> +${item.acBonus || 0}</div>`;
+        }
+        
         return `
             <div class="text-xs text-gray-600 mt-1 space-y-1">
                 <p class="italic">${item.description || 'No description.'}</p>
-                ${acBonusHtml}
-                ${bonusesHtml}
+                ${detailsHtml}
             </div>
         `;
     };
 
-    const renderWeapons = () => {
-        if (equippedWeapons.length === 0) {
-            return `<div class="text-gray-500 italic p-3 bg-white rounded-lg shadow-inner">(no weapons wielded)</div>`;
+    const renderWeapons = (title, items) => {
+         if (items.length === 0) {
+            return `<div class="text-gray-500 italic p-3 bg-white rounded-lg shadow-inner">(no ${title.toLowerCase()} equipped)</div>`;
         }
-        return equippedWeapons.map(item => `
+        return items.map(item => `
             <div class="bg-white p-3 rounded-lg shadow-inner">
                 <button data-action="toggle-accordion" class="w-full flex justify-between items-center text-left font-semibold text-indigo-700 hover:text-indigo-900">
                     <span>${item.name}</span>
@@ -64,44 +44,47 @@ window.EquippedItemsPage = (character) => {
         `).join('');
     };
 
-    const renderedSlots = equipmentSlots.map(slot => {
-        const item = equippedMap.get(slot.key);
-        const itemDisplay = item 
-            ? `<div>
-                 <button data-action="toggle-accordion" class="w-full flex justify-between items-center text-left font-semibold text-indigo-700 hover:text-indigo-900">
-                    <span>${item.name}</span>
-                    <span class="accordion-icon text-gray-400 font-mono text-sm">[+]</span>
-                </button>
-                <div class="accordion-details hidden pt-2 border-t mt-2">
-                    ${renderAccordionDetails(item)}
-                </div>
-               </div>`
-            : `<div class="text-gray-500 italic text-right">(empty)</div>`;
-
-        return `
-            <div class="p-3 bg-white rounded-lg shadow-inner">
-                <div class="flex items-center justify-between">
-                    <div class="font-bold text-gray-800">${slot.label}</div>
-                    ${!item ? itemDisplay : ''}
-                </div>
-                ${item ? itemDisplay : ''}
-            </div>`;
-    }).join('');
-
    return `
-       <div class="bg-gray-50 p-6 rounded-2xl shadow-sm space-y-6">
-           <div>
-               <h3 class="text-xl font-semibold mb-3">Wielded Items</h3>
-               <div id="wielded-items-list" class="space-y-2">
-                   ${renderWeapons()}
-               </div>
-           </div>
-           <div>
-              <h3 class="text-xl font-semibold mb-3">Equipped Items by Slot</h3>
-              <div id="equipped-items-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
-                  ${renderedSlots}
-              </div>
-           </div>
+       <div class="space-y-6">
+            <div class="bg-gray-50 p-6 rounded-2xl shadow-sm">
+                <h3 class="text-xl font-semibold mb-3">Wielded & Worn</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="space-y-2">
+                        <h4 class="font-medium text-center text-gray-600">Weapons</h4>
+                        ${renderWeapons('Weapons', equippedWeapons)}
+                    </div>
+                    <div class="space-y-2">
+                        <h4 class="font-medium text-center text-gray-600">Armor</h4>
+                        ${equippedArmor ? renderWeapons('Armor', [equippedArmor]) : renderWeapons('Armor', [])}
+                    </div>
+                    <div class="space-y-2">
+                        <h4 class="font-medium text-center text-gray-600">Shield</h4>
+                        ${equippedShield ? renderWeapons('Shield', [equippedShield]) : renderWeapons('Shield', [])}
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-50 p-6 rounded-2xl shadow-sm">
+                <h3 class="text-xl font-semibold mb-3">Currency</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                    <div><label class="font-medium text-gray-600">Copper (CP)</label><input type="number" data-field="inventory" data-subfield="currency.cp" value="${currency.cp}" class="w-full p-2 border rounded-md mt-1 text-center"></div>
+                    <div><label class="font-medium text-gray-600">Silver (SP)</label><input type="number" data-field="inventory" data-subfield="currency.sp" value="${currency.sp}" class="w-full p-2 border rounded-md mt-1 text-center"></div>
+                    <div><label class="font-medium text-gray-600">Gold (GP)</label><input type="number" data-field="inventory" data-subfield="currency.gp" value="${currency.gp}" class="w-full p-2 border rounded-md mt-1 text-center"></div>
+                    <div><label class="font-medium text-gray-600">Platinum (PP)</label><input type="number" data-field="inventory" data-subfield="currency.pp" value="${currency.pp}" class="w-full p-2 border rounded-md mt-1 text-center"></div>
+                </div>
+            </div>
        </div>
    `;
+};
+
+window.attachEquippedItemsPageHandlers = () => {
+    const content = document.getElementById('sub-content-area');
+    content.addEventListener('click', (e) => {
+        const button = e.target.closest('button[data-action="toggle-accordion"]');
+        if (button) {
+            const details = button.nextElementSibling;
+            const icon = button.querySelector('.accordion-icon');
+            details.classList.toggle('hidden');
+            icon.textContent = details.classList.contains('hidden') ? '[+]' : '[-]';
+        }
+    });
 };

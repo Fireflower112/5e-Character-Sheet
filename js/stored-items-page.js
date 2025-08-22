@@ -4,44 +4,13 @@ window.StoredItemsPage = (character) => {
     const containers = Object.values(character.inventory.containers || {});
     const allItems = Object.values(character.inventory.items || {});
 
-    // We can reuse the helper function from inventory-page.js if it's made global,
-    // but for simplicity, we'll just define it here as well.
     const renderAccordionDetails = (item) => {
-        const skillLabelMap = new Map([
-            ["acrobatics", "Acrobatics"], ["appraise", "Appraise"], ["bluff", "Bluff"], ["climb", "Climb"],
-            ["diplomacy", "Diplomacy"], ["disableDevice", "Disable Device"], ["disguise", "Disguise"],
-            ["escapeArtist", "Escape Artist"], ["fly", "Fly"], ["handleAnimal", "Handle Animal"], ["heal", "Heal"],
-            ["intimidate", "Intimidate"], ["knowledgeArcana", "Knowledge (Arcana)"], ["knowledgeDungeoneering", "Knowledge (Dungeoneering)"],
-            ["knowledgeEngineering", "Knowledge (Engineering)"], ["knowledgeGeography", "Knowledge (Geography)"],
-            ["knowledgeHistory", "Knowledge (History)"], ["knowledgeLocal", "Knowledge (Local)"], ["knowledgeNature", "Knowledge (Nature)"],
-            ["knowledgeNobility", "Knowledge (Nobility)"], ["knowledgePlanes", "Knowledge (Planes)"], ["knowledgeReligion", "Knowledge (Religion)"],
-            ["linguistics", "Linguistics"], ["perception", "Perception"], ["perform", "Perform"], ["profession", "Profession"],
-            ["ride", "Ride"], ["senseMotive", "Sense Motive"], ["sleightOfHand", "Sleight of Hand"],
-            ["spellcraft", "Spellcraft"], ["stealth", "Stealth"], ["survival", "Survival"], ["swim", "Swim"],
-            ["useMagicDevice", "Use Magic Device"], ["concentration", "Concentration"]
-        ]);
-        const bonusesHtml = (item.bonuses && item.bonuses.length > 0)
-            ? `<div class="mt-2 pt-2 border-t">
-                <h4 class="font-semibold text-gray-700 mb-1 text-sm">Bonuses:</h4>
-                <div class="flex flex-wrap gap-1">
-                    ${item.bonuses.map(bonus => {
-                        const label = skillLabelMap.get(bonus.field) || bonus.field.toUpperCase();
-                        const symbol = bonus.type === 'override' ? '=' : (bonus.value > 0 ? '+' : '');
-                        return `<span class="inline-block bg-indigo-100 text-indigo-800 text-xs font-semibold px-2 py-0.5 rounded-full">${label}: ${symbol}${bonus.value}</span>`;
-                    }).join('')}
-                </div>
-            </div>`
-            : '';
-
-        return `
-            <p class="text-gray-600 text-sm italic">${item.description || 'No description.'}</p>
-            ${bonusesHtml}
-        `;
+        return `<p class="text-gray-600 text-sm italic">${item.description || 'No description.'}</p>`;
     }
 
     const renderContainers = () => {
         if (containers.length === 0) {
-            return `<p class="text-gray-500 italic">No containers created yet.</p>`;
+            return `<p class="text-gray-500 italic">No containers created yet. Add one below.</p>`;
         }
         return containers.map(container => {
             const itemsInContainer = allItems.filter(item => item.containerId === container.id);
@@ -51,7 +20,7 @@ window.StoredItemsPage = (character) => {
                 <div class="bg-white p-4 rounded-lg shadow-sm" id="container-${container.id}">
                     <div class="flex justify-between items-center mb-2">
                         <h4 class="font-semibold text-lg">${container.name}</h4>
-                        <span class="text-sm text-gray-600">Weight: ${totalWeight.toFixed(2)} / ${container.capacity} lbs</span>
+                        <span class="text-sm text-gray-600">Weight: ${totalWeight.toFixed(2)} / ${container.capacity || 0} lbs</span>
                     </div>
                     ${container.description ? `<p class="text-sm text-gray-500 mb-2">${container.description}</p>` : ''}
                     <div class="pl-4 border-l-2 border-gray-200 space-y-1">
@@ -101,6 +70,18 @@ window.StoredItemsPage = (character) => {
 };
 
 window.attachStoredItemsPageHandlers = () => {
+    const content = document.getElementById('sub-content-area');
+    
+    content.addEventListener('click', (e) => {
+        const button = e.target.closest('button[data-action="toggle-accordion"]');
+        if (button) {
+            const details = button.nextElementSibling;
+            const icon = button.querySelector('.accordion-icon');
+            details.classList.toggle('hidden');
+            icon.textContent = details.classList.contains('hidden') ? '[+]' : '[-]';
+        }
+    });
+    
     const addContainerBtn = document.getElementById('add-container-btn');
     if (addContainerBtn) {
         addContainerBtn.onclick = () => {
@@ -113,7 +94,8 @@ window.attachStoredItemsPageHandlers = () => {
             };
 
             if (newContainer.name) {
-                window.stores.character.addContainer(newContainer);
+                // --- THIS LINE IS NOW ACTIVE ---
+                window.stores.characterActions.addContainer(newContainer);
                 window.showMessage('Container added successfully!', 'green');
                 document.getElementById('add-container-form').reset();
             } else {
