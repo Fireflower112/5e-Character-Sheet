@@ -6,17 +6,14 @@ window.getFinalAbilityScore = (character, ability) => {
     const scores = character.abilityScores[ability];
     const equippedItems = Object.values(character.inventory.items || {}).filter(item => item.equippedSlot);
     
-    // Check for override bonuses from equipped items (e.g., Gauntlets of Ogre Power)
     const overrideBonuses = equippedItems
         .flatMap(item => item.bonuses || [])
         .filter(bonus => bonus.field === ability && bonus.type === 'override');
 
     if (overrideBonuses.length > 0) {
-        // If there are overrides, return the highest one
         return Math.max(...overrideBonuses.map(b => b.value));
     }
 
-    // If no overrides, calculate the total from enhancements
     const enhancementBonuses = equippedItems
         .flatMap(item => item.bonuses || [])
         .filter(bonus => bonus.field === ability && bonus.type === 'enhancement')
@@ -47,7 +44,6 @@ window.calculateTotalAC = (character) => {
         totalAC += equippedShield.acBonus || 0;
     }
     
-    // Add bonuses from any other equipped items
     const acBonuses = equippedItems
         .flatMap(item => item.bonuses || [])
         .filter(bonus => bonus.field === 'ac')
@@ -64,7 +60,6 @@ window.calculateSkillBonus = (character, skillName, skillData) => {
     if (skillData.proficient) totalBonus += proficiencyBonus;
     if (skillData.expertise) totalBonus += proficiencyBonus;
 
-    // Add bonuses from any equipped items
     const skillBonuses = Object.values(character.inventory.items || {})
         .filter(item => item.equippedSlot)
         .flatMap(item => item.bonuses || [])

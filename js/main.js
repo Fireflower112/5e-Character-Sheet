@@ -18,10 +18,10 @@ document.addEventListener('DOMContentLoaded', () => {
     
     let currentPage = localStorage.getItem('currentPage') || 'dashboard';
     let currentSubPage = localStorage.getItem('currentSubPage') || 'skills';
+    let editBonuses = []; // Temporary holder for bonuses while editing
 
     const renderApp = () => {
-		console.log('%c RENDER:', 'color: blue; font-weight: bold;', 'Page is redrawing.');
-		const character = window.stores.character.get();
+        const character = window.stores.character.get();
         summaryHeaderArea.innerHTML = window.renderCharacterSummaryHeader(character);
         if (!character || Object.keys(character).length === 0) {
             contentArea.innerHTML = '<p>Loading character...</p>';
@@ -59,18 +59,75 @@ document.addEventListener('DOMContentLoaded', () => {
         const actionTarget = e.target.closest('[data-action]');
         if (!actionTarget) return;
 
-        // MODIFIED: Added itemId
-        const { action, subpage, lang, index, itemId } = actionTarget.dataset;
+        const { action, subpage, itemId, lang, index, abilityId } = actionTarget.dataset;
 
         switch (action) {
-            case 'sub-tab':
+            case 'edit-item': {
+                const character = window.stores.character.get();
+                const item = character.inventory.items[itemId];
+                if (item) {
+                    editBonuses = [...(item.bonuses || [])];
+                    const displayArea = document.getElementById(`item-display-${itemId}`);
+                    const editArea = document.getElementById(`item-edit-area-${itemId}`);
+                    editArea.innerHTML = window.renderItemEditForm(item);
+                    displayArea.classList.add('hidden');
+                    editArea.classList.remove('hidden');
+                }
+                break;
+            }
+            case 'cancel-item-edit': {
+                document.getElementById(`item-display-${itemId}`).classList.remove('hidden');
+                document.getElementById(`item-edit-area-${itemId}`).classList.add('hidden');
+                break;
+            }
+            case 'save-item-edit': {
+                const editArea = document.getElementById(`item-edit-area-${itemId}`);
+                const updates = {
+                    name: editArea.querySelector('.edit-item-name').value,
+                    description: editArea.querySelector('.edit-item-description').value,
+                    bonuses: editBonuses,
+                };
+                window.stores.characterActions.updateItem(itemId, updates);
+                break;
+            }
+            case 'add-edit-bonus': {
+                const bonusEditArea = document.getElementById(`item-edit-area-${itemId}`);
+                const list = bonusEditArea.querySelector('.edit-bonuses-list');
+                const fieldSelect = bonusEditArea.querySelector('.edit-bonus-field');
+                const field = fieldSelect.value;
+                const label = fieldSelect.options[fieldSelect.selectedIndex].text;
+                const type = bonusEditArea.querySelector('.edit-bonus-type').value;
+                const valueInput = bonusEditArea.querySelector('.edit-bonus-value');
+                const value = parseInt(valueInput.value, 10);
+                if (field && !isNaN(value)) {
+                    const newBonus = { field, value, type };
+                    editBonuses.push(newBonus);
+                    const symbol = type === 'override' ? '=' : (value > 0 ? '+' : '');
+                    const newLi = document.createElement('li');
+                    newLi.className = 'inline-block bg-indigo-100 text-indigo-800 text-sm font-semibold pl-2.5 pr-1 py-0.5 rounded-full';
+                    newLi.innerHTML = `<span>${label}: ${symbol}${value}</span><button type="button" data-action="remove-edit-bonus" class="ml-2 text-red-500 hover:text-red-700 font-bold">x</button>`;
+                    newLi.querySelector('button').onclick = () => {
+                        const index = editBonuses.findIndex(b => b === newBonus);
+                        if (index > -1) editBonuses.splice(index, 1);
+                        newLi.remove();
+                    };
+                    list.appendChild(newLi);
+                    valueInput.value = '';
+                }
+                break;
+            }
+            case 'remove-edit-bonus': {
+                actionTarget.parentElement.remove();
+                break;
+            }
+            case 'sub-tab': {
                 if (subpage) {
                     currentSubPage = subpage;
                     localStorage.setItem('currentSubPage', currentSubPage);
                     renderApp();
                 }
                 break;
-            // --- NEW: Added handlers for favorite and delete ---
+            }
             case 'toggle-favorite':
                 if (itemId) window.stores.characterActions.toggleFavoriteItem(itemId);
                 break;
@@ -79,21 +136,30 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.stores.characterActions.deleteItem(itemId);
                 }
                 break;
-            // (Other cases are unchanged)
-            case 'add-class': window.stores.characterActions.addClass(); break;
-            case 'remove-class': window.stores.characterActions.removeClass(index); break;
-            case 'open-homebrew-modal': /* ... */ break;
-            case 'open-homebrew-subrace-modal': /* ... */ break;
-            case 'remove-language': window.stores.characterActions.removeLanguage(lang); break;
+            case 'add-class':
+                window.stores.characterActions.addClass();
+                break;
+            case 'remove-class':
+                window.stores.characterActions.removeClass(index);
+                break;
+            case 'open-homebrew-modal':
+                document.getElementById('modal-container').innerHTML = window.renderHomebrewRaceModal();
+                window.attachHomebrewRaceModalHandlers();
+                break;
+            case 'open-homebrew-subrace-modal':
+                document.getElementById('modal-container').innerHTML = window.renderHomebrewSubraceModal();
+                window.attachHomebrewSubraceModalHandlers();
+                break;
+            case 'remove-language':
+                window.stores.characterActions.removeLanguage(lang);
+                break;
         }
     });
 
     contentArea.addEventListener('change', (e) => {
         const target = e.target;
-        // MODIFIED: Added itemId and itemType
         const { action, field, skill, type, save, itemId, itemType } = target.dataset;
 
-        // --- NEW: Added handlers for inventory actions ---
         if (action === 'assign-to-container') {
             window.stores.characterActions.assignItemToContainer(itemId, target.value);
         } else if (action === 'equip-to-slot') {
@@ -104,21 +170,36 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (action === 'equip-armor-shield') {
             const slot = target.checked ? (itemType === 'armor' ? 'Armor' : 'Shield') : 'none';
             window.stores.characterActions.equipItemToSlot(itemId, slot);
-        } 
-        // (Other change handlers are unchanged)
-        else if (field === 'race') { window.stores.characterActions.applyRace(target.value); } 
-        else if (field === 'subrace') { window.stores.characterActions.applySubrace(target.value); } 
-        else if (action === 'update-class') { window.stores.characterActions.updateClass(target.dataset.index, target.dataset.field, target.value); } 
-        else if (action === 'update-subclass') { window.stores.characterActions.updateSubclass(target.dataset.index, target.value); } 
-        else if (skill && type) { /* ... */ } 
-        else if (save) { /* ... */ } 
-        else if (target.id === 'language-input') { /* ... */ }
+        } else if (field === 'race') {
+            window.stores.characterActions.applyRace(target.value);
+        } else if (field === 'subrace') {
+            window.stores.characterActions.applySubrace(target.value);
+        } else if (action === 'update-class') {
+            window.stores.characterActions.updateClass(target.dataset.index, target.dataset.field, target.value);
+        } else if (action === 'update-subclass') {
+            window.stores.characterActions.updateSubclass(target.dataset.index, target.value);
+        } else if (skill && type) {
+            const character = window.stores.character.get();
+            const newSkills = { ...character.skills };
+            newSkills[skill][type] = target.checked;
+            window.stores.character.set({ skills: newSkills });
+        } else if (save) {
+            const character = window.stores.character.get();
+            const newSaves = { ...character.savingThrows };
+            newSaves[save].proficient = target.checked;
+            window.stores.character.set({ savingThrows: newSaves });
+        } else if (target.id === 'language-input') {
+            window.stores.characterActions.addLanguage(target.value);
+            target.value = '';
+        }
     });
     
     contentArea.addEventListener('input', (e) => {
         const { action, field, subfield, index } = e.target.dataset;
-         if (field === 'race' || field === 'subrace') return;
-		 if (action === 'update-class') {
+        // This is the critical fix for the race ability bug
+        if (field === 'race' || field === 'subrace') return;
+
+        if (action === 'update-class') {
             window.stores.characterActions.updateClass(index, e.target.dataset.field, e.target.value);
         } else if (field) {
             window.stores.characterActions.updateCharacterProperty(field, e.target.value, subfield);

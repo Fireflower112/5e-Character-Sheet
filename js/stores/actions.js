@@ -12,10 +12,18 @@ window.stores.characterActions = (function(store) {
     // --- Inventory Actions ---
     function addItem(itemData) {
         const character = store.get();
-        // The itemData from the form now includes bonuses and attunement
         const newItem = { ...itemData, id: uuid() };
         const newItems = { ...character.inventory.items, [newItem.id]: newItem };
         store.set({ inventory: { ...character.inventory, items: newItems } });
+    }
+
+    function updateItem(itemId, updates) {
+        const character = store.get();
+        const newItems = JSON.parse(JSON.stringify(character.inventory.items));
+        if (newItems[itemId]) {
+            newItems[itemId] = { ...newItems[itemId], ...updates };
+            store.set({ inventory: { ...character.inventory, items: newItems } });
+        }
     }
 
     function addContainer(containerData) {
@@ -66,7 +74,7 @@ window.stores.characterActions = (function(store) {
         }
     }
 
-    // --- Character & Ability Actions (from your working file) ---
+    // --- Character & Ability Actions ---
     function _applyClassFeatures() {
         const character = store.get();
         if (!character.classes) return;
@@ -91,53 +99,63 @@ window.stores.characterActions = (function(store) {
         store.set({ abilities: finalAbilities });
     }
 
-    function applyRace(raceName) {
+    // UPDATED to handle both base race and subrace features
+    function applyRace() {
         const character = store.get();
-        const raceData = window.dndData.races[raceName];
-        
+        const raceData = window.dndData.races[character.race];
+        if (!raceData) return;
+
+        const subraceData = (raceData.subraces || []).find(sub => sub.name === character.subrace);
+
         const currentAbilities = Object.values(character.abilities || {});
         const nonRacialAbilities = currentAbilities.filter(ability => !ability.source?.startsWith('Racial'));
         
-        const newRacialTraits = [];
-        if (raceData?.traits) {
-            raceData.traits.forEach(trait => {
-                newRacialTraits.push({ ...trait, id: uuid(), source: 'Racial Trait', type: 'Racial' });
-            });
+        const newRacialTraits = (raceData.traits || []).map(trait => ({ ...trait, id: uuid(), source: 'Racial Trait', type: 'Racial' }));
+        if (subraceData && subraceData.traits) {
+            newRacialTraits.push(...subraceData.traits.map(trait => ({ ...trait, id: uuid(), source: 'Racial Subrace Trait', type: 'Racial' })));
         }
         
         const finalAbilities = {};
-        [...nonRacialAbilities, ...newRacialTraits].forEach(ability => {
-            finalAbilities[ability.id] = ability;
-        });
+        [...nonRacialAbilities, ...newRacialTraits].forEach(ability => { finalAbilities[ability.id] = ability; });
 
         const finalScores = JSON.parse(JSON.stringify(character.abilityScores));
         for (const score in finalScores) { finalScores[score].racial = 0; }
-        if (raceData?.abilityScoreIncrease) {
-            for (const [stat, value] of Object.entries(raceData.abilityScoreIncrease)) {
+        
+        const applyAsi = (asi) => {
+            if (!asi) return;
+            for (const [stat, value] of Object.entries(asi)) {
                 if (finalScores[stat] && typeof value === 'number') { 
-                    finalScores[stat].racial = (finalScores[stat].racial || 0) + value; 
+                    finalScores[stat].racial += value; 
                 }
             }
-        }
+        };
+        applyAsi(raceData.abilityScoreIncrease);
+        applyAsi(subraceData?.abilityScoreIncrease);
+
         const finalLanguages = ['Common'];
-        if (raceData?.languages) {
+        if (raceData.languages) {
             raceData.languages.split(',').map(l => l.trim()).forEach(lang => {
                 if (!finalLanguages.includes(lang)) finalLanguages.push(lang);
             });
         }
-        console.log('%c ACTION (Race):', 'color: red; font-weight: bold;', 'Calculated new abilities:', finalAbilities);
-		store.set({ 
-			race: raceName,  
-            subrace: '',
+        
+        store.set({ 
             abilities: finalAbilities, 
             abilityScores: finalScores, 
             languages: finalLanguages
         });
     }
 
+    // UPDATED to be simpler and more reliable
     function applySubrace(subraceName) {
         store.set({ subrace: subraceName });
-        applyRace(store.get().race);
+        applyRace(); // Re-run the main applyRace, which now handles subraces automatically
+    }
+    
+    // This is the function that runs when the race dropdown is changed
+    function handleRaceChange(raceName) {
+        store.set({ race: raceName, subrace: '' }); // Set the new race and clear the old subrace
+        applyRace(); // Re-run all racial calculations
     }
 
     function updateClass(index, field, value) {
@@ -212,6 +230,7 @@ window.stores.characterActions = (function(store) {
     }
 
     return {
+        handleRaceChange, // Exposing the new race change handler
         _applyClassFeatures,
         applyRace,
         applySubrace,
@@ -222,8 +241,8 @@ window.stores.characterActions = (function(store) {
         updateClass,
         updateSubclass,
         removeClass,
-        // Adding inventory functions
         addItem,
+        updateItem,
         addContainer,
         deleteItem,
         assignItemToContainer,
