@@ -1,8 +1,8 @@
 // js/homebrew-subrace-creator.js
 
-window.renderHomebrewSubraceModal = (baseRaceName = '', subraceToEdit = null) => {
+DndSheet.pages.renderHomebrewSubraceModal = (baseRaceName = '', subraceToEdit = null) => {
     const abilityScores = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'];
-    const raceNames = Object.keys(window.dndData.races || {});
+    const raceNames = Object.keys(DndSheet.pages.dndData.races || {});
 
     const renderTrait = (trait = { name: '', description: '' }) => `
         <div class="trait-entry p-2 border rounded bg-gray-50">
@@ -63,7 +63,7 @@ window.renderHomebrewSubraceModal = (baseRaceName = '', subraceToEdit = null) =>
     `;
 };
 
-window.attachHomebrewSubraceModalHandlers = (baseRaceName, subraceToEdit = null) => {
+DndSheet.pages.attachHomebrewSubraceModalHandlers = (baseRaceName, subraceToEdit = null) => {
     const modalContainer = document.getElementById('modal-container');
     const overlay = document.getElementById('homebrew-subrace-modal-overlay');
     const cancelBtn = document.getElementById('cancel-homebrew-subrace-btn');
@@ -93,11 +93,11 @@ window.attachHomebrewSubraceModalHandlers = (baseRaceName, subraceToEdit = null)
         });
 
         if (!finalBaseRaceName || !subraceData.name) {
-            window.showMessage('Base Race and Subrace Name are required.', 'red');
+            DndSheet.helpers.showMessage('Base Race and Subrace Name are required.', 'red');
             return;
         }
 
-        window.stores.character.saveHomebrewSubrace(finalBaseRaceName, subraceData);
+       DndSheet.pages.stores.character.saveHomebrewSubrace(finalBaseRaceName, subraceData);
         closeModal();
     };
     

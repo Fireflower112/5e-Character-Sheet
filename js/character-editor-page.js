@@ -1,6 +1,6 @@
 // js/character-editor-page.js
 
-window.CharacterEditorPage = (character, subPage) => {
+DndSheet.pages.CharacterEditorPage = (character, subPage) => {
     // Determine which sub-tab is active for styling
     const isBasicActive = subPage === 'basic';
     const isSkillsActive = subPage === 'skills';
@@ -11,19 +11,19 @@ window.CharacterEditorPage = (character, subPage) => {
     let subContent = '';
     switch(subPage) {
         case 'basic':
-            subContent = window.InfoPage(character); 
+            subContent = DndSheet.pages.InfoPage(character); 
             break;
         case 'skills':
-            subContent = window.SkillsPage(character);
+            subContent = DndSheet.pages.SkillsPage(character);
             break;
         case 'abilities':
-            subContent = window.AbilitiesEditorPage(character);
+            subContent = DndSheet.pages.AbilitiesEditorPage(character);
             break;
         case 'feats':
             subContent = `<h3 class="text-xl font-semibold">Feats</h3><p>This is where you'll add and view feats.</p>`;
             break;
         case 'spells':
-            subContent = window.SpellsEditorPage(character);
+            subContent = DndSheet.pages.SpellsEditorPage(character);
             break;
     }
 

@@ -1,6 +1,6 @@
 // js/inventory-container-page.js
 
-window.InventoryContainerPage = (character, subPage) => {
+DndSheet.pages.InventoryContainerPage = (character, subPage) => {
     const isEquippedActive = subPage === 'equipped';
     const isStoredActive = subPage === 'stored';
     const isAllActive = subPage === 'all';
@@ -8,16 +8,16 @@ window.InventoryContainerPage = (character, subPage) => {
     let subContent = '';
     switch(subPage) {
         case 'equipped':
-            subContent = window.EquippedItemsPage(character);
+            subContent = DndSheet.pages.EquippedItemsPage(character);
             break;
         case 'stored':
-            subContent = window.StoredItemsPage(character);
+            subContent = DndSheet.pages.StoredItemsPage(character);
             break;
         case 'all':
-            subContent = window.AllItemsPage(character);
+            subContent = DndSheet.pages.AllItemsPage(character);
             break;
         default:
-            subContent = window.EquippedItemsPage(character);
+            subContent = DndSheet.pages.EquippedItemsPage(character);
             break;
     }
 

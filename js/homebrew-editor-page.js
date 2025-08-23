@@ -1,6 +1,6 @@
 // js/homebrew-editor-page.js
 
-window.HomebrewEditorPage = () => {
+DndSheet.pages.HomebrewEditorPage = () => {
     const homebrewRaces = JSON.parse(localStorage.getItem('homebrewRaces') || '{}');
     const raceEntries = Object.values(homebrewRaces);
 

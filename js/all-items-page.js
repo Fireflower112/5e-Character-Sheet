@@ -1,6 +1,6 @@
 // js/all-items-page.js
 
-window.renderItemBonuses = (item) => {
+DndSheet.pages.renderItemBonuses = (item) => {
     if (!item.bonuses || item.bonuses.length === 0) return '';
     const skillList = ["Acrobatics", "Animal Handling", "Arcana", "Athletics", "Deception", "History", "Insight", "Intimidation", "Investigation", "Medicine", "Nature", "Perception", "Performance", "Persuasion", "Religion", "Sleight of Hand", "Stealth", "Survival"];
     const abilityScores = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
@@ -14,17 +14,21 @@ window.renderItemBonuses = (item) => {
     return `<div class="mt-2 pt-2 border-t text-xs"><h5 class="font-semibold mb-1 text-gray-600">Bonuses:</h5><div class="flex flex-wrap gap-1">${item.bonuses.map(bonus => { const label = getLabel(bonus.field); const symbol = bonus.type === 'override' ? '=' : (bonus.value > 0 ? '+' : ''); return `<span class="bg-indigo-100 text-indigo-800 text-xs font-semibold px-2 py-0.5 rounded-full">${label}: ${symbol}${bonus.value}</span>`; }).join('')}</div></div>`;
 };
 
-window.renderItemCard = (character, item) => {
+DndSheet.pages.renderItemCard = (character, item) => {
     const containers = Object.values(character.inventory.containers || {});
     
     let equipControl = '';
     if (item.requiresAttunement) {
         equipControl = `<div class="flex items-center space-x-2"><input type="checkbox" id="attune-${item.id}" data-item-id="${item.id}" data-action="toggle-attunement" ${item.attuned ? 'checked' : ''} class="rounded text-indigo-600 h-5 w-5"/><label for="attune-${item.id}" class="text-gray-700">Attuned</label></div>`;
     } else if (item.itemType === 'weapon') {
-        equipControl = `<div class="flex items-center space-x-2"><input type="checkbox" id="equip-weapon-${item.id}" data-item-id="${item.id}" data-action="equip-weapon" ${item.equippedSlot ? 'checked' : ''} class="rounded text-indigo-600 h-5 w-5"/><label for="equip-weapon-${item.id}" class="text-gray-700">Wielded</label></div>`;
-    } else if (['armor', 'shield'].includes(item.itemType)) {
-        equipControl = `<div class="flex items-center space-x-2"><input type="checkbox" id="equip-${item.itemType}-${item.id}" data-item-id="${item.id}" data-action="equip-armor-shield" data-item-type="${item.itemType}" ${item.equippedSlot ? 'checked' : ''} class="rounded text-indigo-600 h-5 w-5"/><label for="equip-${item.itemType}-${item.id}" class="text-gray-700">Equipped</label></div>`;
+        const slot = item.equippedSlot === 'Wielded' ? 'Wielded' : null;
+        equipControl = `<div class="flex items-center space-x-2"><input type="checkbox" id="equip-weapon-${item.id}" data-item-id="${item.id}" data-action="equip-weapon" ${slot ? 'checked' : ''} class="rounded text-indigo-600 h-5 w-5"/><label for="equip-weapon-${item.id}" class="text-gray-700">Wielded</label></div>`;
+    } else if (item.itemType === 'armor') {
+        equipControl = `<div class="flex items-center space-x-2"><input type="checkbox" id="equip-armor-${item.id}" data-item-id="${item.id}" data-action="equip-armor" ${item.equippedSlot === 'Armor' ? 'checked' : ''} class="rounded text-indigo-600 h-5 w-5"/><label for="equip-armor-${item.id}" class="text-gray-700">Equipped</label></div>`;
+    } else if (item.itemType === 'shield') {
+        equipControl = `<div class="flex items-center space-x-2"><input type="checkbox" id="equip-shield-${item.id}" data-item-id="${item.id}" data-action="equip-shield" ${item.equippedSlot === 'Shield' ? 'checked' : ''} class="rounded text-indigo-600 h-5 w-5"/><label for="equip-shield-${item.id}" class="text-gray-700">Equipped</label></div>`;
     }
+
 
     const favoriteButton = (item.itemType === 'weapon') ? `<button data-action="toggle-favorite" data-item-id="${item.id}" class="text-gray-400 hover:text-yellow-500" title="Favorite"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 pointer-events-none" viewBox="0 0 20 20" fill="${item.favorited ? 'currentColor' : 'none'}" stroke="currentColor" style="color: ${item.favorited ? '#FBBF24' : 'inherit'}"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg></button>` : '';
     
@@ -50,7 +54,7 @@ window.renderItemCard = (character, item) => {
                 </div>
                 <div class="accordion-details hidden mt-2 pt-2 border-t">
                     ${item.description ? `<p class="text-gray-600 text-sm">${item.description}</p>` : ''}
-                    ${window.renderItemBonuses(item)}
+                    ${DndSheet.pages.renderItemBonuses(item)}
                     ${containerControl}
                 </div>
             </div>
@@ -58,7 +62,7 @@ window.renderItemCard = (character, item) => {
         </div>`;
 };
 
-window.renderItemEditForm = (item) => {
+DndSheet.pages.renderItemEditForm = (item) => {
     const skillList = ["Acrobatics", "Animal Handling", "Arcana", "Athletics", "Deception", "History", "Insight", "Intimidation", "Investigation", "Medicine", "Nature", "Perception", "Performance", "Persuasion", "Religion", "Sleight of Hand", "Stealth", "Survival"];
     const abilityScores = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
     const primaryStats = { 'ac': 'Armor Class', 'initiative': 'Initiative' };
@@ -95,7 +99,7 @@ window.renderItemEditForm = (item) => {
         </div>`;
 };
 
-window.AllItemsPage = (character) => {
+DndSheet.pages.AllItemsPage = (character) => {
     const allItems = Object.values(character.inventory.items || {});
     const skillList = ["Acrobatics", "Animal Handling", "Arcana", "Athletics", "Deception", "History", "Insight", "Intimidation", "Investigation", "Medicine", "Nature", "Perception", "Performance", "Persuasion", "Religion", "Sleight of Hand", "Stealth", "Survival"];
     const abilityScores = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
@@ -108,7 +112,7 @@ window.AllItemsPage = (character) => {
 
     const renderCategorySection = (title, items) => {
         if (items.length === 0) return '';
-        return `<details class="bg-gray-50 p-4 rounded-xl shadow-sm" open><summary class="text-xl font-semibold cursor-pointer">${title}</summary><div class="mt-3 space-y-3">${items.map(item => window.renderItemCard(character, item)).join('')}</div></details>`;
+        return `<details class="bg-gray-50 p-4 rounded-xl shadow-sm" open><summary class="text-xl font-semibold cursor-pointer">${title}</summary><div class="mt-3 space-y-3">${items.map(item => DndSheet.pages.renderItemCard(character, item)).join('')}</div></details>`;
     };
 
     return `
@@ -151,8 +155,20 @@ window.AllItemsPage = (character) => {
                     </div>
                     <div id="armor-fields" class="hidden space-y-3 border-t pt-4">
                         <h4 class="font-medium text-gray-700">Armor Stats:</h4>
-                        <label for="armor-ac-base" class="block text-sm font-medium">Base AC</label>
-                        <input type="number" id="armor-ac-base" value="10" class="w-full p-2 border rounded-md">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="armor-ac-base" class="block text-sm font-medium">Base AC</label>
+                                <input type="number" id="armor-ac-base" value="10" class="w-full p-2 border rounded-md">
+                            </div>
+                            <div>
+                                <label for="armor-type" class="block text-sm font-medium">Armor Type</label>
+                                <select id="armor-type" class="w-full p-2 border rounded-md">
+                                    <option value="light">Light</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="heavy">Heavy</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
                     <div id="shield-fields" class="hidden space-y-3 border-t pt-4">
                         <h4 class="font-medium text-gray-700">Shield Stats:</h4>
@@ -183,7 +199,7 @@ window.AllItemsPage = (character) => {
         </div>`;
 };
 
-window.attachAllItemsPageHandlers = () => {
+DndSheet.pages.attachAllItemsPageHandlers = () => {
     const addItemForm = document.getElementById('add-item-form');
     if (!addItemForm) return;
 
@@ -255,14 +271,14 @@ window.attachAllItemsPageHandlers = () => {
         }
 
         if (newItemData.name) {
-            window.stores.characterActions.addItem(newItemData);
-            window.showMessage('Item added!', 'green');
+            DndSheet.stores.characterActions.addItem(newItemData);
+            DndSheet.helpers.showMessage('Item added!', 'green');
             addItemForm.reset();
             bonusesList.innerHTML = '';
             itemBonuses = [];
             Object.values(itemFields).forEach(field => field?.classList.add('hidden'));
         } else {
-            window.showMessage('Item name is required.', 'red');
+            DndSheet.helpers.showMessage('Item name is required.', 'red');
         }
     };
 };

@@ -1,5 +1,5 @@
 // js/character-summary-header.js
-window.renderCharacterSummaryHeader = (character) => {
+DndSheet.pages.renderCharacterSummaryHeader = (character) => {
     if (!character || !character.name) {
         return '';
     }

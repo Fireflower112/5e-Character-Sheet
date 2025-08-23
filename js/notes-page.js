@@ -1,6 +1,6 @@
 // js/notes-page.js
 
-window.NotesPage = (character, subPage) => {
+DndSheet.pages.NotesPage = (character, subPage) => {
     // Determine which sub-tab is active for styling
     const isCharacterActive = subPage === 'character';
     const isNpcsActive = subPage === 'npcs';
@@ -44,14 +44,14 @@ window.NotesPage = (character, subPage) => {
 };
 
 // This function saves the notes as you type
-window.attachNotesPageHandlers = () => {
+DndSheet.pages.attachNotesPageHandlers = () => {
     const notesArea = document.querySelector('#sub-content-area textarea[data-note]');
     if (notesArea) {
         notesArea.addEventListener('input', (e) => {
             const noteType = e.target.dataset.note;
-            const character = window.stores.character.get();
+            const character = DndSheet.stores.character.get(); // Corrected namespace
             const newNotes = { ...character.notes, [noteType]: e.target.value };
-            window.stores.character.set({ notes: newNotes });
+            DndSheet.stores.character.set({ notes: newNotes }); // Corrected namespace
         });
     }
 };

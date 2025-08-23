@@ -1,10 +1,10 @@
 // js/dashboard-skills.js
-window.DashboardSkillsPage = (character) => {
+DndSheet.pages.DashboardSkillsPage = (character) => {
     const abilityScores = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
 
     const renderAbilityScoreCard = (ability) => {
-        const finalScore = window.getFinalAbilityScore(character, ability);
-        const modifier = window.getAbilityModifier(finalScore);
+        const finalScore = DndSheet.helpers.getFinalAbilityScore(character, ability);
+        const modifier = DndSheet.helpers.getAbilityModifier(finalScore);
 
         return `
             <div class="bg-white p-4 rounded-lg shadow-sm text-center">
@@ -16,7 +16,7 @@ window.DashboardSkillsPage = (character) => {
     };
     
     const renderSavingThrowCard = (ability) => {
-        const modifier = window.getAbilityModifier(window.getFinalAbilityScore(character, ability));
+        const modifier = DndSheet.helpers.getAbilityModifier(DndSheet.helpers.getFinalAbilityScore(character, ability));
         const isProficient = character.savingThrows[ability]?.proficient || false;
         const totalBonus = modifier + (isProficient ? character.proficiencyBonus : 0);
         const proficiencyColor = isProficient ? 'text-green-600' : 'text-gray-800';
@@ -38,7 +38,7 @@ window.DashboardSkillsPage = (character) => {
                 ${filteredSkills.length > 0 ? `
                     <div class="space-y-1 mt-2">
                         ${filteredSkills.map(([skillName, skillData]) => {
-                            const totalBonus = window.calculateSkillBonus(character, skillName, skillData);
+                            const totalBonus = DndSheet.helpers.calculateSkillBonus(character, skillName, skillData);
                             const formatName = (name) => name.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
                             return `
                                 <div class="flex justify-between items-baseline py-1">

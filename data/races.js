@@ -1,7 +1,6 @@
 // data/races.js
-window.dndData = window.dndData || {};
 
-window.dndData.races = {
+DndSheet.data.races = {
     "Aarakocra": {
         "name": "Aarakocra",
         "abilityScoreIncrease": { "dex": 2, "wis": 1 },

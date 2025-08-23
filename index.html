@@ -24,8 +24,8 @@
                         </ul>
                     </div>
                     <div class="flex items-center space-x-2">
-						<button onclick="window.stores.character.save()" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">Save</button>
-						<button onclick="window.stores.character.load()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">Load</button>
+						<button onclick="DndSheet.stores.character.save()" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">Save</button>
+						<button onclick="DndSheet.stores.character.load()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">Load</button>
 					</div>
                 </div>
             </div>
@@ -40,13 +40,19 @@
     <div id="message-box" class="message-box"></div>
     <div id="modal-container"></div>
 
+    <script src="js/main.js"></script>
+
     <script src="data/races.js"></script>
     <script src="data/languages.js"></script>
     <script src="data/classes.js"></script>
 
     <script src="js/stores/defaultCharacter.js"></script>
     <script src="js/stores/characterStore.js"></script>
-    <script src="js/stores/actions.js"></script>
+    <script src="js/stores/actions.js"></script> 
+	<script src="js/stores/actions/characterActions.js"></script>
+	<script src="js/stores/actions/inventoryActions.js"></script>
+	<script src="js/stores/actions/abilityActions.js"></script>
+	<script src="js/stores/actions/spellActions.js"></script> 
     <script src="js/components.js"></script>
     
     <script src="js/character-summary-header.js"></script>
@@ -69,8 +75,6 @@
     <script src="js/dashboard-page.js"></script>
     <script src="js/character-editor-page.js"></script>
     <script src="js/inventory-container-page.js"></script>
-
-    <script src="js/main.js"></script>
 
 </body>
 </html>

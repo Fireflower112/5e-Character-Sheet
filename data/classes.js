@@ -1,7 +1,6 @@
 // data/classes.js
-window.dndData = window.dndData || {};
 
-window.dndData.classes = {
+DndSheet.data.classes = {
     "Artificer": {
         name: "Artificer",
         hitDie: 8,

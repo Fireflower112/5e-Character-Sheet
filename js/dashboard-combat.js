@@ -1,13 +1,13 @@
 // js/dashboard-combat.js
-window.DashboardCombatPage = (character) => {
-    const dexMod = window.getAbilityModifier(window.getFinalAbilityScore(character, 'dex'));
-    const strMod = window.getAbilityModifier(window.getFinalAbilityScore(character, 'str'));
-    const totalAC = window.calculateTotalAC(character);
+DndSheet.pages.DashboardCombatPage = (character) => {
+    const dexMod = DndSheet.helpers.getAbilityModifier(DndSheet.helpers.getFinalAbilityScore(character, 'dex'));
+    const strMod = DndSheet.helpers.getAbilityModifier(DndSheet.helpers.getFinalAbilityScore(character, 'str'));
+    const totalAC = DndSheet.helpers.calculateTotalAC(character);
     const totalInitiative = dexMod + (character.initiative?.other || 0);
 
     const renderSavingThrows = () => {
         return ['str', 'dex', 'con', 'int', 'wis', 'cha'].map(ability => {
-            const abilityMod = window.getAbilityModifier(window.getFinalAbilityScore(character, ability));
+            const abilityMod = DndSheet.helpers.getAbilityModifier(DndSheet.helpers.getFinalAbilityScore(character, ability));
             const isProficient = character.savingThrows[ability]?.proficient || false;
             const totalBonus = abilityMod + (isProficient ? character.proficiencyBonus : 0);
             const displayName = ability.charAt(0).toUpperCase() + ability.slice(1);

@@ -1,6 +1,6 @@
 // js/stored-items-page.js
 
-window.StoredItemsPage = (character) => {
+DndSheet.pages.StoredItemsPage = (character) => {
     const containers = Object.values(character.inventory.containers || {});
     const allItems = Object.values(character.inventory.items || {});
 
@@ -69,7 +69,7 @@ window.StoredItemsPage = (character) => {
     `;
 };
 
-window.attachStoredItemsPageHandlers = () => {
+DndSheet.pages.attachStoredItemsPageHandlers = () => {
     const content = document.getElementById('sub-content-area');
     
     content.addEventListener('click', (e) => {
@@ -95,11 +95,11 @@ window.attachStoredItemsPageHandlers = () => {
 
             if (newContainer.name) {
                 // --- THIS LINE IS NOW ACTIVE ---
-                window.stores.characterActions.addContainer(newContainer);
-                window.showMessage('Container added successfully!', 'green');
+                DndSheet.stores.characterActions.addContainer(newContainer);
+                DndSheet.helpers.showMessage('Container added successfully!', 'green');
                 document.getElementById('add-container-form').reset();
             } else {
-                window.showMessage('Please enter a container name.', 'red');
+                DndSheet.helpers.showMessage('Please enter a container name.', 'red');
             }
         };
     }

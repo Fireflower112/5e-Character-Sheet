@@ -1,9 +1,9 @@
 // js/skills-page.js
-window.SkillsPage = (character) => {
+DndSheet.pages.SkillsPage = (character) => {
     const abilityScores = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
 
     const renderSkill = (skillName, skillData) => {
-        const totalBonus = window.calculateSkillBonus(character, skillName, skillData);
+        const totalBonus = DndSheet.helpers.calculateSkillBonus(character, skillName, skillData);
         const formatName = (name) => name.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
 
         return `
@@ -20,8 +20,8 @@ window.SkillsPage = (character) => {
 
     const renderAbilityCard = (ability, allSkills) => {
         const scores = character.abilityScores[ability];
-        const finalScore = window.getFinalAbilityScore(character, ability);
-        const modifier = window.getAbilityModifier(finalScore);
+        const finalScore = DndSheet.helpers.getFinalAbilityScore(character, ability);
+        const modifier = DndSheet.helpers.getAbilityModifier(finalScore);
         const relevantSkills = allSkills.filter(([name, data]) => data.ability === ability);
 
         return `
@@ -65,7 +65,7 @@ window.SkillsPage = (character) => {
     };
     
     const renderSavingThrow = (ability) => {
-        const modifier = window.getAbilityModifier(window.getFinalAbilityScore(character, ability));
+        const modifier = DndSheet.helpers.getAbilityModifier(DndSheet.helpers.getFinalAbilityScore(character, ability));
         const isProficient = character.savingThrows[ability]?.proficient || false;
         const totalBonus = modifier + (isProficient ? character.proficiencyBonus : 0);
 

@@ -1,5 +1,5 @@
 // js/stores/defaultCharacter.js
-window.getInitialState = () => {
+DndSheet.helpers.getInitialState = () => {
     const savedCharacter = localStorage.getItem('pathfinderCharacterSheet');
 
     const defaultState = {
@@ -12,8 +12,10 @@ window.getInitialState = () => {
         experience: { current: 0, toNext: 300 },
         hp: 10,
         maxHp: 10,
-		initiative: { base: 0, other: 0 },
         tempHp: 0,
+        hpRolls: {},      // Will store rolls for level 2+
+        hpOverride: null, // Will store a manual override value
+        initiative: { base: 0, other: 0 },
         proficiencyBonus: 2,
         languages: ['Common'],
         abilityScores: {
@@ -127,7 +129,7 @@ window.getInitialState = () => {
             const finalState = { ...defaultState, ...parsed };
             finalState.abilityScores = { ...defaultState.abilityScores, ...(parsed.abilityScores || {}) };
             finalState.skills = { ...defaultState.skills, ...(parsed.skills || {}) };
-            window.showMessage('Character loaded successfully!', 'green');
+            DndSheet.helpers.showMessage('Character loaded successfully!', 'green');
             return finalState;
         } catch (e) {
             console.error("Failed to parse saved character data:", e);

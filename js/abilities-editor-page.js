@@ -1,6 +1,6 @@
 // js/abilities-editor-page.js
 
-window.AbilitiesEditorPage = (character) => {
+DndSheet.pages.AbilitiesEditorPage = (character) => {
     const skillList = [
         "Acrobatics", "Animal Handling", "Arcana", "Athletics", "Deception", "History", 
         "Insight", "Intimidation", "Investigation", "Medicine", "Nature", "Perception", 
@@ -102,7 +102,7 @@ window.AbilitiesEditorPage = (character) => {
         </div>`;
 };
 
-window.attachAbilitiesEditorHandlers = () => {
+DndSheet.pages.attachAbilitiesEditorHandlers = () => {
     const addAbilityForm = document.getElementById('add-ability-form');
     if (!addAbilityForm) return;
 
@@ -139,13 +139,13 @@ window.attachAbilitiesEditorHandlers = () => {
         };
 
         if (newAbilityData.name) {
-            window.stores.character.addAbility(newAbilityData);
-            window.showMessage('Ability added successfully!', 'green');
+            DndSheet.stores.character.addAbility(newAbilityData);
+            DndSheet.helpers.showMessage('Ability added successfully!', 'green');
             addAbilityForm.reset();
             bonusesList.innerHTML = '';
             abilityBonuses = [];
         } else {
-            window.showMessage('Please enter an ability name.', 'red');
+            DndSheet.helpers.showMessage('Please enter an ability name.', 'red');
         }
     };
 };

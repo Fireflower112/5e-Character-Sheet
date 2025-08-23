@@ -1,5 +1,5 @@
 // js/spells-page.js
-window.SpellsPage = (character) => {
+DndSheet.pages.SpellsPage = (character) => {
     const renderSpellSlots = (spellSlots) => {
         const slots = Array.isArray(spellSlots) ? spellSlots : [];
         const visibleSlots = slots
@@ -52,7 +52,7 @@ window.SpellsPage = (character) => {
                         <div class="flex items-center gap-2"><h4 class="font-semibold text-lg">${spell.name}</h4><span class="text-sm text-gray-500">(Lvl ${spell.level})</span></div>
                         <div class="flex items-center space-x-3">
                             <button data-action="toggle-favorite-spell" data-spell-id="${spell.id}" class="text-gray-400 hover:text-yellow-500 transition-colors" title="Favorite"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 pointer-events-none" viewBox="0 0 20 20" fill="${spell.favorited ? 'currentColor' : 'none'}" stroke="currentColor" style="color: ${spell.favorited ? '#FBBF24' : 'inherit'}"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg></button>
-                            <button onclick="window.stores.character.deleteSpell('${spell.id}')" class="px-3 py-1 bg-red-500 text-white text-sm rounded-md hover:bg-red-600">Delete</button>
+                            <button onclick="DndSheet.stores.character.deleteSpell('${spell.id}')" class="px-3 py-1 bg-red-500 text-white text-sm rounded-md hover:bg-red-600">Delete</button>
                         </div>
                     </div>
                     <div class="text-sm text-gray-600 space-y-1">
@@ -78,7 +78,7 @@ window.SpellsPage = (character) => {
     `;
 };
 
-window.attachSpellsPageHandlers = () => {
+DndSheet.pages.attachSpellsPageHandlers = () => {
     const allSpellsContainer = document.getElementById('all-spells');
     const spellSlotsContainer = document.getElementById('spell-slots-container');
 
@@ -86,7 +86,7 @@ window.attachSpellsPageHandlers = () => {
         allSpellsContainer.addEventListener('click', (e) => {
             const button = e.target.closest('button');
             if (button && button.dataset.action === 'toggle-favorite-spell') {
-                window.stores.character.toggleFavoriteSpell(button.dataset.spellId);
+                DndSheet.stores.character.toggleFavoriteSpell(button.dataset.spellId);
             }
         });
     }
@@ -95,7 +95,7 @@ window.attachSpellsPageHandlers = () => {
         spellSlotsContainer.addEventListener('input', (e) => {
             const { level, type } = e.target.dataset;
             if (level && type === 'used') {
-                window.stores.character.updateSpellSlot(level, type, e.target.value);
+                DndSheet.stores.character.updateSpellSlot(level, type, e.target.value);
             }
         });
     }

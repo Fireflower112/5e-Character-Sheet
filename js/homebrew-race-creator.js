@@ -1,6 +1,6 @@
 // js/homebrew-race-creator.js
 
-window.renderHomebrewRaceModal = (raceToEdit = null) => {
+DndSheet.pages.renderHomebrewRaceModal = (raceToEdit = null) => {
     const abilityScores = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'];
     const renderTrait = (trait = { name: '', description: '' }) => `
         <div class="trait-entry p-2 border rounded bg-gray-50">
@@ -70,7 +70,7 @@ window.renderHomebrewRaceModal = (raceToEdit = null) => {
     `;
 };
 
-window.attachHomebrewRaceModalHandlers = (raceToEdit = null) => {
+DndSheet.pages.attachHomebrewRaceModalHandlers = (raceToEdit = null) => {
     const modalContainer = document.getElementById('modal-container');
     const overlay = document.getElementById('homebrew-modal-overlay');
     const cancelBtn = document.getElementById('cancel-homebrew-btn');
@@ -101,16 +101,16 @@ window.attachHomebrewRaceModalHandlers = (raceToEdit = null) => {
         });
         
         if (!raceData.name) {
-            window.showMessage('Race name is required.', 'red');
+            DndSheet.helpers.showMessage('Race name is required.', 'red');
             return;
         }
 
-        window.stores.character.saveHomebrewRace(raceData);
+        DndSheet.helpers.stores.character.saveHomebrewRace(raceData);
 
         if (!raceToEdit && document.getElementById('add-subrace-toggle').checked) {
             closeModal();
-            modalContainer.innerHTML = window.renderHomebrewSubraceModal(raceData.name);
-            window.attachHomebrewSubraceModalHandlers(raceData.name);
+            modalContainer.innerHTML = DndSheet.helpers.renderHomebrewSubraceModal(raceData.name);
+            DndSheet.helpers.attachHomebrewSubraceModalHandlers(raceData.name);
         } else {
             closeModal();
         }

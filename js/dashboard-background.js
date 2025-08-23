@@ -1,5 +1,5 @@
 // js/dashboard-background.js
-window.DashboardBackgroundPage = (character) => {
+DndSheet.pages.DashboardBackgroundPage = (character) => {
     const feats = Object.values(character.feats || {});
     const abilities = Object.values(character.abilities || {});
 

@@ -1,5 +1,5 @@
 // js/dashboard-page.js
-window.DashboardPage = (character, subPage) => {
+DndSheet.pages.DashboardPage = (character, subPage) => {
     const isCombatActive = subPage === 'combat';
     const isBackgroundActive = subPage === 'background';
     const isSkillsActive = subPage === 'skills';
@@ -8,19 +8,19 @@ window.DashboardPage = (character, subPage) => {
     let subContent = '';
     switch (subPage) {
         case 'skills':
-            subContent = window.DashboardSkillsPage(character);
+            subContent = DndSheet.pages.DashboardSkillsPage(character);
             break;
         case 'spells':
-            subContent = window.SpellsPage(character);
+            subContent = DndSheet.pages.SpellsPage(character);
             break;
         case 'combat':
-            subContent = window.DashboardCombatPage(character);
+            subContent = DndSheet.pages.DashboardCombatPage(character);
             break;
         case 'background':
-            subContent = window.DashboardBackgroundPage(character);
+            subContent = DndSheet.pages.DashboardBackgroundPage(character);
             break;
         default:
-            subContent = window.DashboardSkillsPage(character);
+            subContent = DndSheet.pages.DashboardSkillsPage(character);
     }
     
     return `

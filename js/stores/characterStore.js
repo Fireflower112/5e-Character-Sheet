@@ -1,7 +1,5 @@
 // js/stores/characterStore.js
-window.stores = window.stores || {};
-
-window.stores.character = {
+DndSheet.stores.character = {
     _character: {},
     _subscribers: [],
 
@@ -29,17 +27,17 @@ window.stores.character = {
     save: function() {
         try {
             localStorage.setItem('pathfinderCharacterSheet', JSON.stringify(this._character));
-            window.showMessage('Character saved successfully!', 'green');
+            DndSheet.helpers.showMessage('Character saved successfully!', 'green');
         } catch (e) {
             console.error("Failed to save character:", e);
-            window.showMessage('Error saving character.', 'red');
+            DndSheet.helpers.showMessage('Error saving character.', 'red');
         }
     },
 
     load: function() {
-        this._character = window.getInitialState();
-        window.stores.characterActions.applyRace(this._character.race);
-        window.stores.characterActions._applyClassFeatures();
+        this._character = DndSheet.helpers.getInitialState();
+        DndSheet.stores.characterActions.applyRace();
+        DndSheet.stores.characterActions._applyClassFeatures();
         this._notifySubscribers();
     },
 
@@ -48,19 +46,19 @@ window.stores.character = {
             const homebrewRaces = JSON.parse(localStorage.getItem('homebrewRaces') || '{}');
             homebrewRaces[raceData.name] = raceData;
             localStorage.setItem('homebrewRaces', JSON.stringify(homebrewRaces));
-            window.dndData.races[raceData.name] = raceData;
-            window.showMessage('Homebrew race saved!', 'green');
+            DndSheet.data.races[raceData.name] = raceData;
+            DndSheet.helpers.showMessage('Homebrew race saved!', 'green');
             this._notifySubscribers();
         } catch (e) {
             console.error("Failed to save homebrew race:", e);
-            window.showMessage('Error saving homebrew race.', 'red');
+            DndSheet.helpers.showMessage('Error saving homebrew race.', 'red');
         }
     },
 
     saveHomebrewSubrace: function(baseRaceName, subraceData) {
         try {
             const homebrewRaces = JSON.parse(localStorage.getItem('homebrewRaces') || '{}');
-            const baseRace = homebrewRaces[baseRaceName] || window.dndData.races[baseRaceName];
+            const baseRace = homebrewRaces[baseRaceName] || DndSheet.data.races[baseRaceName];
 
             if (baseRace) {
                 if (!baseRace.subraces) {
@@ -77,15 +75,15 @@ window.stores.character = {
                      localStorage.setItem('homebrewRaces', JSON.stringify(homebrewRaces));
                 }
                 
-                window.dndData.races[baseRaceName] = baseRace;
-                window.showMessage('Homebrew subrace saved!', 'green');
+                DndSheet.data.races[baseRaceName] = baseRace;
+                DndSheet.helpers.showMessage('Homebrew subrace saved!', 'green');
                 this._notifySubscribers();
             } else {
-                 window.showMessage(`Base race "${baseRaceName}" not found.`, 'red');
+                 DndSheet.helpers.showMessage(`Base race "${baseRaceName}" not found.`, 'red');
             }
         } catch (e) {
             console.error("Failed to save homebrew subrace:", e);
-            window.showMessage('Error saving homebrew subrace.', 'red');
+            DndSheet.helpers.showMessage('Error saving homebrew subrace.', 'red');
         }
     },
 
@@ -94,19 +92,19 @@ window.stores.character = {
             const homebrewRaces = JSON.parse(localStorage.getItem('homebrewRaces') || '{}');
             delete homebrewRaces[raceName];
             localStorage.setItem('homebrewRaces', JSON.stringify(homebrewRaces));
-            delete window.dndData.races[raceName];
-            window.showMessage('Homebrew race deleted!', 'green');
+            delete DndSheet.data.races[raceName];
+            DndSheet.helpers.showMessage('Homebrew race deleted!', 'green');
             this._notifySubscribers();
         } catch (e) {
             console.error("Failed to delete homebrew race:", e);
-            window.showMessage('Error deleting homebrew race.', 'red');
+            DndSheet.helpers.showMessage('Error deleting homebrew race.', 'red');
         }
     },
 
     deleteHomebrewSubrace: function(baseRaceName, subraceName) {
         try {
             const homebrewRaces = JSON.parse(localStorage.getItem('homebrewRaces') || '{}');
-            const baseRace = homebrewRaces[baseRaceName] || window.dndData.races[baseRaceName];
+            const baseRace = homebrewRaces[baseRaceName] || DndSheet.data.races[baseRaceName];
 
             if (baseRace && baseRace.subraces) {
                 const subraceIndex = baseRace.subraces.findIndex(s => s.name === subraceName);
@@ -115,14 +113,14 @@ window.stores.character = {
                     if (homebrewRaces[baseRaceName]) {
                         localStorage.setItem('homebrewRaces', JSON.stringify(homebrewRaces));
                     }
-                    window.dndData.races[baseRaceName] = baseRace;
-                    window.showMessage('Homebrew subrace deleted!', 'green');
+                    DndSheet.data.races[baseRaceName] = baseRace;
+                    DndSheet.helpers.showMessage('Homebrew subrace deleted!', 'green');
                     this._notifySubscribers();
                 }
             }
         } catch (e) {
             console.error("Failed to delete homebrew subrace:", e);
-            window.showMessage('Error deleting homebrew subrace.', 'red');
+            DndSheet.helpers.showMessage('Error deleting homebrew subrace.', 'red');
         }
     }
 };

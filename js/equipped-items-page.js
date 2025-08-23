@@ -1,6 +1,6 @@
 // js/equipped-items-page.js
 
-window.EquippedItemsPage = (character) => {
+DndSheet.pages.EquippedItemsPage = (character) => {
     const allItems = Object.values(character.inventory.items || {});
     const equippedWeapons = allItems.filter(item => item.equippedSlot === 'Wielded' || item.itemType === 'weapon' && item.equippedSlot);
     const equippedArmor = allItems.find(item => item.equippedSlot === 'Armor');
@@ -76,7 +76,7 @@ window.EquippedItemsPage = (character) => {
    `;
 };
 
-window.attachEquippedItemsPageHandlers = () => {
+DndSheet.pages.attachEquippedItemsPageHandlers = () => {
     const content = document.getElementById('sub-content-area');
     content.addEventListener('click', (e) => {
         const button = e.target.closest('button[data-action="toggle-accordion"]');
