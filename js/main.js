@@ -4,256 +4,83 @@ const DndSheet = {
     pages: {},
     stores: {},
     data: {},
-    helpers: {}
-};
-
-function loadHomebrewData() {
-    try {
-        // First, load homebrew races
-        const homebrewRaces = JSON.parse(localStorage.getItem('homebrewRaces') || '{}');
-        Object.assign(DndSheet.data.races, homebrewRaces);
-
-        // Second, load homebrew subraces and merge them
-        const homebrewSubraces = JSON.parse(localStorage.getItem('homebrewSubraces') || '{}');
-        for (const baseRaceName in homebrewSubraces) {
-            if (DndSheet.data.races[baseRaceName] && homebrewSubraces[baseRaceName].length > 0) {
-                if (!DndSheet.data.races[baseRaceName].subraces) {
-                    DndSheet.data.races[baseRaceName].subraces = [];
-                }
-                // Merge new subraces, avoiding duplicates
-                homebrewSubraces[baseRaceName].forEach(newSubrace => {
-                    const existingIndex = DndSheet.data.races[baseRaceName].subraces.findIndex(s => s.name === newSubrace.name);
-                    if (existingIndex > -1) {
-                        DndSheet.data.races[baseRaceName].subraces[existingIndex] = newSubrace;
-                    } else {
-                        DndSheet.data.races[baseRaceName].subraces.push(newSubrace);
-                    }
-                });
-            }
-        }
-    } catch (e) {
-        console.error("Failed to load homebrew data:", e);
-    }
-}
-
-DndSheet.helpers.showMessage = (message, color) => {
-    const messageBox = document.getElementById('message-box');
-    if (!messageBox) return;
-    messageBox.textContent = message;
-    messageBox.style.backgroundColor = color;
-    messageBox.classList.add('show');
-    setTimeout(() => {
-        messageBox.classList.remove('show');
-    }, 3000);
+    helpers: {},
+    handlers: {}, // Namespace for our new handlers
+    app: {},      // Namespace for core app logic
 };
 
 document.addEventListener('DOMContentLoaded', () => {
+    
+    // Core application logic (rendering, navigation)
+    DndSheet.app = (function() {
+        const contentArea = document.getElementById('content-area');
+        const summaryHeaderArea = document.getElementById('character-summary-header');
+        
+        let currentPage = localStorage.getItem('currentPage') || 'dashboard';
+        let currentSubPage = localStorage.getItem('currentSubPage') || 'skills';
+
+        function render() {
+            const character = DndSheet.stores.character.get();
+            summaryHeaderArea.innerHTML = DndSheet.pages.renderCharacterSummaryHeader(character);
+            
+            let pageHtml = '';
+            switch (currentPage) {
+                case 'dashboard': pageHtml = DndSheet.pages.DashboardPage(character, currentSubPage); break;
+                case 'character-editor': pageHtml = DndSheet.pages.CharacterEditorPage(character, currentSubPage); break;
+                case 'inventory': pageHtml = DndSheet.pages.InventoryContainerPage(character, currentSubPage); break;
+                case 'homebrew': pageHtml = DndSheet.pages.HomebrewEditorPage(); break;
+                case 'notes': pageHtml = DndSheet.pages.NotesPage(character, currentSubPage); break;
+                default: pageHtml = '<h2>Page Not Found</h2>';
+            }
+            contentArea.innerHTML = pageHtml;
+            updateNavStyles();
+        }
+
+        function updateNavStyles() {
+            document.querySelectorAll('.main-nav-button').forEach(btn => {
+                if (btn.dataset.page === currentPage) {
+                    btn.classList.add('bg-indigo-700', 'text-white');
+                } else {
+                    btn.classList.remove('bg-indigo-700', 'text-white');
+                }
+            });
+        }
+        
+        // Expose public methods
+        return {
+            render,
+            setCurrentPage: (page) => {
+                currentPage = page;
+                localStorage.setItem('currentPage', currentPage);
+                // Set default sub-page for new main page
+                if (currentPage === 'dashboard') currentSubPage = 'skills';
+                else if (currentPage === 'inventory') currentSubPage = 'equipped';
+                else if (currentPage === 'notes') currentSubPage = 'character';
+                else if (currentPage === 'character-editor') currentSubPage = 'basic';
+                else currentSubPage = '';
+                localStorage.setItem('currentSubPage', currentSubPage);
+                render();
+            },
+            setCurrentSubPage: (subpage) => {
+                currentSubPage = subpage;
+                localStorage.setItem('currentSubPage', currentSubPage);
+                render();
+            }
+        };
+    })();
+
+    // Initialize all parts of the application
     loadHomebrewData();
-
-    const contentArea = document.getElementById('content-area');
-    const summaryHeaderArea = document.getElementById('character-summary-header');
-    const mainNavButtons = document.querySelectorAll('.main-nav-button');
+    DndSheet.handlers.initialize();
+    DndSheet.stores.character.subscribe(DndSheet.app.render);
     
-    let currentPage = localStorage.getItem('currentPage') || 'dashboard';
-    let currentSubPage = localStorage.getItem('currentSubPage') || 'skills';
-    let editBonuses = [];
-
-    const renderApp = () => {
-        const character = DndSheet.stores.character.get();
-        summaryHeaderArea.innerHTML = DndSheet.pages.renderCharacterSummaryHeader(character);
-        if (!character || Object.keys(character).length === 0) {
-            contentArea.innerHTML = '<p>Loading character...</p>';
-            return;
-        }
-        let pageHtml = '';
-        switch (currentPage) {
-            case 'dashboard': pageHtml = DndSheet.pages.DashboardPage(character, currentSubPage); break;
-            case 'character-editor': pageHtml = DndSheet.pages.CharacterEditorPage(character, currentSubPage); break;
-            case 'inventory': pageHtml = DndSheet.pages.InventoryContainerPage(character, currentSubPage); break;
-            case 'homebrew': pageHtml = DndSheet.pages.HomebrewEditorPage(); break;
-            case 'notes': pageHtml = DndSheet.pages.NotesPage(character, currentSubPage); break;
-            default: pageHtml = '<h2>Page Not Found</h2>';
-        }
-        contentArea.innerHTML = pageHtml;
-        updateNavStyles();
-        if (currentPage === 'inventory' && currentSubPage === 'all') { DndSheet.pages.attachAllItemsPageHandlers(); }
-        if (currentPage === 'notes') { DndSheet.pages.attachNotesPageHandlers(); }
-        if (currentPage === 'character-editor' && currentSubPage === 'spells') { DndSheet.pages.attachSpellsEditorHandlers(); }
-        if (currentPage === 'dashboard' && currentSubPage === 'spells') { DndSheet.pages.attachSpellsPageHandlers(); }
-        if (currentPage === 'character-editor' && currentSubPage === 'abilities') { DndSheet.pages.attachAbilitiesEditorHandlers(); }
-    };
-    
-    function updateNavStyles() {
-        mainNavButtons.forEach(btn => {
-            if (btn.dataset.page === currentPage) {
-                btn.classList.add('bg-indigo-700', 'text-white');
-                btn.classList.remove('text-gray-300', 'hover:bg-indigo-500', 'hover:text-white');
-            } else {
-                btn.classList.remove('bg-indigo-700', 'text-white');
-                btn.classList.add('text-gray-300', 'hover:bg-indigo-500', 'hover:text-white');
-            }
-        });
-    }
-
-    document.addEventListener('click', (e) => {
-        const actionTarget = e.target.closest('[data-action]');
-        if (!actionTarget) return;
-        const { action, subpage, itemId, raceName, subraceName, index, lang, abilityId, spellId } = actionTarget.dataset;
-
-        switch (action) {
-            case 'open-homebrew-modal':
-                DndSheet.pages.showHomebrewRaceModal();
-                break;
-            case 'open-homebrew-subrace-modal': {
-                const character = DndSheet.stores.character.get();
-                DndSheet.pages.showHomebrewSubraceModal(character.race);
-                break;
-            }
-            case 'toggle-accordion': {
-                const wrapper = actionTarget.closest('div[data-accordion-wrapper]');
-                if (wrapper) {
-                    const details = wrapper.querySelector('.accordion-details');
-                    const icon = wrapper.querySelector('.accordion-icon');
-                    if (details) { details.classList.toggle('hidden'); }
-                    if (icon) { icon.textContent = details.classList.contains('hidden') ? '[+]' : '[-]'; }
-                }
-                break;
-            }
-            case 'sub-tab':
-                if (subpage) {
-                    currentSubPage = subpage;
-                    localStorage.setItem('currentSubPage', currentSubPage);
-                    renderApp();
-                }
-                break;
-            case 'edit-item': {
-                const character = DndSheet.stores.character.get();
-                const item = character.inventory.items[itemId];
-                if (item) {
-                    editBonuses = [...(item.bonuses || [])];
-                    document.getElementById(`item-display-${itemId}`).classList.add('hidden');
-                    const editArea = document.getElementById(`item-edit-area-${itemId}`);
-                    editArea.innerHTML = DndSheet.pages.renderItemEditForm(item);
-                    editArea.classList.remove('hidden');
-                }
-                break;
-            }
-            case 'cancel-item-edit': {
-                document.getElementById(`item-display-${itemId}`).classList.remove('hidden');
-                document.getElementById(`item-edit-area-${itemId}`).classList.add('hidden');
-                break;
-            }
-            case 'save-item-edit': {
-                const editArea = document.getElementById(`item-edit-area-${itemId}`);
-                const updates = { name: editArea.querySelector('.edit-item-name').value, description: editArea.querySelector('.edit-item-description').value, bonuses: editBonuses };
-                DndSheet.stores.characterActions.updateItem(itemId, updates);
-                break;
-            }
-            case 'add-edit-bonus': {
-                const bonusEditArea = document.getElementById(`item-edit-area-${itemId}`);
-                const list = bonusEditArea.querySelector('.edit-bonuses-list');
-                const fieldSelect = bonusEditArea.querySelector('.edit-bonus-field');
-                const field = fieldSelect.value;
-                const label = fieldSelect.options[fieldSelect.selectedIndex].text;
-                const type = bonusEditArea.querySelector('.edit-bonus-type').value;
-                const valueInput = bonusEditArea.querySelector('.edit-bonus-value');
-                const value = parseInt(valueInput.value, 10);
-                if (field && !isNaN(value)) {
-                    const newBonus = { field, value, type };
-                    editBonuses.push(newBonus);
-                    const symbol = type === 'override' ? '=' : (value > 0 ? '+' : '');
-                    const newLi = document.createElement('li');
-                    newLi.className = 'inline-block bg-indigo-100 text-indigo-800 text-sm font-semibold pl-2.5 pr-1 py-0.5 rounded-full';
-                    newLi.innerHTML = `<span>${label}: ${symbol}${value}</span><button type="button" class="ml-2 text-red-500 hover:text-red-700 font-bold">x</button>`;
-                    newLi.querySelector('button').onclick = () => {
-                        const index = editBonuses.findIndex(b => b === newBonus);
-                        if (index > -1) editBonuses.splice(index, 1);
-                        newLi.remove();
-                    };
-                    list.appendChild(newLi);
-                    valueInput.value = '';
-                }
-                break;
-            }
-            case 'remove-edit-bonus': { actionTarget.parentElement.remove(); break; }
-            case 'toggle-favorite': if (itemId) DndSheet.stores.characterActions.toggleFavoriteItem(itemId); break;
-            case 'toggle-favorite-spell': if (spellId) DndSheet.stores.characterActions.toggleFavoriteSpell(spellId); break;
-            case 'delete-item': if (itemId && confirm('Are you sure?')) DndSheet.stores.characterActions.deleteItem(itemId); break;
-            case 'delete-ability': if (abilityId && confirm('Are you sure?')) DndSheet.stores.characterActions.deleteAbility(abilityId); break;
-            case 'add-class': DndSheet.stores.characterActions.addClass(); break;
-            case 'remove-class': DndSheet.stores.characterActions.removeClass(index); break;
-            case 'remove-language': DndSheet.stores.characterActions.removeLanguage(lang); break;
-            case 'edit-homebrew-race': {
-                const homebrewRaces = JSON.parse(localStorage.getItem('homebrewRaces') || '{}');
-                const raceToEdit = homebrewRaces[raceName];
-                if (raceToEdit) {
-                    DndSheet.pages.showHomebrewRaceModal(raceToEdit);
-                }
-                break;
-            }
-            case 'delete-homebrew-race': {
-                if (confirm(`Are you sure you want to delete the "${raceName}" race?`)) {
-                    DndSheet.stores.character.deleteHomebrewRace(raceName);
-                }
-                break;
-            }
-            case 'edit-homebrew-subrace': {
-                const allRaces = {...DndSheet.data.races, ...JSON.parse(localStorage.getItem('homebrewRaces') || '{}')};
-                const baseRace = allRaces[raceName];
-                const subraceToEdit = baseRace?.subraces.find(s => s.name === subraceName);
-                if (subraceToEdit) {
-                    DndSheet.pages.showHomebrewSubraceModal(raceName, subraceToEdit);
-                }
-                break;
-            }
-            case 'delete-homebrew-subrace': {
-                if (confirm(`Are you sure you want to delete the "${subraceName}" subrace?`)) {
-                    DndSheet.stores.character.deleteHomebrewSubrace(raceName, subraceName);
-                }
-                break;
-            }
-        }
-    });
-
-    document.addEventListener('change', (e) => {
-        const target = e.target;
-        const { action, field, subfield, skill, type, save, itemId } = target.dataset;
-
-        if (field === 'race') { DndSheet.stores.characterActions.handleRaceChange(target.value); } 
-        else if (field === 'subrace') { DndSheet.stores.characterActions.applySubrace(target.value); } 
-        else if (action === 'update-class') { DndSheet.stores.characterActions.updateClass(target.dataset.index, target.dataset.field, target.value); } 
-        else if (action === 'update-subclass') { DndSheet.stores.characterActions.updateSubclass(target.dataset.index, target.value); } 
-        else if (action === 'toggle-attunement') { DndSheet.stores.characterActions.toggleAttunement(itemId); } 
-        else if (action === 'assign-to-container') { DndSheet.stores.characterActions.assignItemToContainer(itemId, target.value); } 
-        else if (action === 'equip-weapon') { const slot = target.checked ? 'Wielded' : null; DndSheet.stores.characterActions.equipItemToSlot(itemId, slot); } 
-        else if (action === 'equip-armor') { const slot = target.checked ? 'Armor' : null; DndSheet.stores.characterActions.equipItemToSlot(itemId, slot); } 
-        else if (action === 'equip-shield') { const slot = target.checked ? 'Shield' : null; DndSheet.stores.characterActions.equipItemToSlot(itemId, slot); } 
-        else if (skill && type) { const c = DndSheet.stores.character.get(); const n = { ...c.skills }; n[skill][type] = target.checked; DndSheet.stores.character.set({ skills: n }); } 
-        else if (save) { const c = DndSheet.stores.character.get(); const n = { ...c.savingThrows }; n[save].proficient = target.checked; DndSheet.stores.character.set({ savingThrows: n }); } 
-        else if (target.id === 'language-input') { DndSheet.stores.characterActions.addLanguage(target.value); target.value = ''; }
-        else if (action === 'toggle-hp-override') {
-            const overrideValue = target.checked ? (DndSheet.stores.character.get().maxHp || 0) : null;
-            DndSheet.stores.characterActions.updateCharacterProperty('hpOverride', overrideValue);
-        }
-        else if (field) { DndSheet.stores.characterActions.updateCharacterProperty(field, target.value, subfield); }
-    });
-    
-    document.addEventListener('input', (e) => {});
-
-    mainNavButtons.forEach(button => {
+    // Set up main navigation
+    document.querySelectorAll('.main-nav-button').forEach(button => {
         button.addEventListener('click', () => {
-            currentPage = button.dataset.page;
-            localStorage.setItem('currentPage', currentPage);
-            if (currentPage === 'dashboard') currentSubPage = 'skills';
-            else if (currentPage === 'inventory') currentSubPage = 'equipped';
-            else if (currentPage === 'notes') currentSubPage = 'character';
-            else if (currentPage === 'character-editor') currentSubPage = 'basic';
-            else currentSubPage = ''; 
-            localStorage.setItem('currentSubPage', currentSubPage);
-            renderApp();
+            DndSheet.app.setCurrentPage(button.dataset.page);
         });
     });
 
-    DndSheet.stores.character.subscribe(renderApp);
+    // Initial load
     DndSheet.stores.character.init();
 });

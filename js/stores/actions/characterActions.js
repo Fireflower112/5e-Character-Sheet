@@ -184,6 +184,29 @@
         }
     }
     
+    function applyHpChange(amount) {
+        const character = store.get();
+        let newHp = character.hp;
+        let newTempHp = character.tempHp;
+
+        if (amount < 0) { // Damage
+            const damage = Math.abs(amount);
+            const damageToTempHp = Math.min(newTempHp, damage);
+            newTempHp -= damageToTempHp;
+            
+            const remainingDamage = damage - damageToTempHp;
+            newHp -= remainingDamage;
+
+        } else { // Healing
+            newHp += amount;
+        }
+
+        // Clamp HP to not go below 0 or above max
+        newHp = Math.max(0, Math.min(newHp, character.maxHp));
+
+        store.set({ hp: newHp, tempHp: newTempHp });
+    }
+
     Object.assign(actions, {
         _applyClassFeatures,
         applyRace,
@@ -197,6 +220,7 @@
         addLanguage,
         removeLanguage,
         updateSubclass,
+        applyHpChange, // <-- Add the new action here
     });
 
 })(DndSheet.stores.character, DndSheet.stores.characterActions);
