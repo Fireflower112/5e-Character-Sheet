@@ -38,7 +38,7 @@ DndSheet.pages.renderItemCard = (character, item) => {
     }
 
     return `
-        <div id="item-card-${item.id}" class="bg-white p-4 rounded-lg shadow-sm">
+        <div id="item-card-${item.id}" class="bg-white p-4 rounded-lg shadow-sm" data-accordion-wrapper>
             <div id="item-display-${item.id}">
                  <div class="flex items-start justify-between gap-2">
                     <button data-action="toggle-accordion" class="flex-grow text-left">

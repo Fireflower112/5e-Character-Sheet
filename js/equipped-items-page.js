@@ -32,7 +32,7 @@ DndSheet.pages.EquippedItemsPage = (character) => {
             return `<div class="text-gray-500 italic p-3 bg-white rounded-lg shadow-inner">(no ${title.toLowerCase()} equipped)</div>`;
         }
         return items.map(item => `
-            <div class="bg-white p-3 rounded-lg shadow-inner">
+            <div class="bg-white p-3 rounded-lg shadow-inner" data-accordion-wrapper>
                 <button data-action="toggle-accordion" class="w-full flex justify-between items-center text-left font-semibold text-indigo-700 hover:text-indigo-900">
                     <span>${item.name}</span>
                     <span class="accordion-icon text-gray-400 font-mono text-sm">[+]</span>
@@ -74,17 +74,4 @@ DndSheet.pages.EquippedItemsPage = (character) => {
             </div>
        </div>
    `;
-};
-
-DndSheet.pages.attachEquippedItemsPageHandlers = () => {
-    const content = document.getElementById('sub-content-area');
-    content.addEventListener('click', (e) => {
-        const button = e.target.closest('button[data-action="toggle-accordion"]');
-        if (button) {
-            const details = button.nextElementSibling;
-            const icon = button.querySelector('.accordion-icon');
-            details.classList.toggle('hidden');
-            icon.textContent = details.classList.contains('hidden') ? '[+]' : '[-]';
-        }
-    });
 };

@@ -57,30 +57,25 @@ DndSheet.stores.character = {
 
     saveHomebrewSubrace: function(baseRaceName, subraceData) {
         try {
-            const homebrewRaces = JSON.parse(localStorage.getItem('homebrewRaces') || '{}');
-            const baseRace = homebrewRaces[baseRaceName] || DndSheet.data.races[baseRaceName];
-
-            if (baseRace) {
-                if (!baseRace.subraces) {
-                    baseRace.subraces = [];
-                }
-                const existingSubraceIndex = baseRace.subraces.findIndex(s => s.name === subraceData.name);
-                if (existingSubraceIndex > -1) {
-                    baseRace.subraces[existingSubraceIndex] = subraceData;
-                } else {
-                    baseRace.subraces.push(subraceData);
-                }
-                
-                if (homebrewRaces[baseRaceName]) {
-                     localStorage.setItem('homebrewRaces', JSON.stringify(homebrewRaces));
-                }
-                
-                DndSheet.data.races[baseRaceName] = baseRace;
-                DndSheet.helpers.showMessage('Homebrew subrace saved!', 'green');
-                this._notifySubscribers();
-            } else {
-                 DndSheet.helpers.showMessage(`Base race "${baseRaceName}" not found.`, 'red');
+            const homebrewSubraces = JSON.parse(localStorage.getItem('homebrewSubraces') || '{}');
+            if (!homebrewSubraces[baseRaceName]) {
+                homebrewSubraces[baseRaceName] = [];
             }
+
+            const existingIndex = homebrewSubraces[baseRaceName].findIndex(s => s.name === subraceData.name);
+            if (existingIndex > -1) {
+                homebrewSubraces[baseRaceName][existingIndex] = subraceData;
+            } else {
+                homebrewSubraces[baseRaceName].push(subraceData);
+            }
+
+            localStorage.setItem('homebrewSubraces', JSON.stringify(homebrewSubraces));
+            
+            // Reload all homebrew data to update the UI
+            loadHomebrewData();
+            DndSheet.helpers.showMessage('Homebrew subrace saved!', 'green');
+            this._notifySubscribers();
+
         } catch (e) {
             console.error("Failed to save homebrew subrace:", e);
             DndSheet.helpers.showMessage('Error saving homebrew subrace.', 'red');
@@ -92,7 +87,8 @@ DndSheet.stores.character = {
             const homebrewRaces = JSON.parse(localStorage.getItem('homebrewRaces') || '{}');
             delete homebrewRaces[raceName];
             localStorage.setItem('homebrewRaces', JSON.stringify(homebrewRaces));
-            delete DndSheet.data.races[raceName];
+            // You might need to reload or manually clean DndSheet.data.races here
+            loadHomebrewData();
             DndSheet.helpers.showMessage('Homebrew race deleted!', 'green');
             this._notifySubscribers();
         } catch (e) {
@@ -103,21 +99,18 @@ DndSheet.stores.character = {
 
     deleteHomebrewSubrace: function(baseRaceName, subraceName) {
         try {
-            const homebrewRaces = JSON.parse(localStorage.getItem('homebrewRaces') || '{}');
-            const baseRace = homebrewRaces[baseRaceName] || DndSheet.data.races[baseRaceName];
-
-            if (baseRace && baseRace.subraces) {
-                const subraceIndex = baseRace.subraces.findIndex(s => s.name === subraceName);
-                if (subraceIndex > -1) {
-                    baseRace.subraces.splice(subraceIndex, 1);
-                    if (homebrewRaces[baseRaceName]) {
-                        localStorage.setItem('homebrewRaces', JSON.stringify(homebrewRaces));
-                    }
-                    DndSheet.data.races[baseRaceName] = baseRace;
-                    DndSheet.helpers.showMessage('Homebrew subrace deleted!', 'green');
-                    this._notifySubscribers();
+            const homebrewSubraces = JSON.parse(localStorage.getItem('homebrewSubraces') || '{}');
+            if (homebrewSubraces[baseRaceName]) {
+                homebrewSubraces[baseRaceName] = homebrewSubraces[baseRaceName].filter(s => s.name !== subraceName);
+                if (homebrewSubraces[baseRaceName].length === 0) {
+                    delete homebrewSubraces[baseRaceName];
                 }
+                localStorage.setItem('homebrewSubraces', JSON.stringify(homebrewSubraces));
             }
+            // Reload all homebrew data to update the UI
+            loadHomebrewData();
+            DndSheet.helpers.showMessage('Homebrew subrace deleted!', 'green');
+            this._notifySubscribers();
         } catch (e) {
             console.error("Failed to delete homebrew subrace:", e);
             DndSheet.helpers.showMessage('Error deleting homebrew subrace.', 'red');

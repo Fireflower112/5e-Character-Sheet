@@ -26,7 +26,7 @@ DndSheet.pages.StoredItemsPage = (character) => {
                     <div class="pl-4 border-l-2 border-gray-200 space-y-1">
                         ${itemsInContainer.length > 0
                             ? itemsInContainer.map(item => `
-                                <div>
+                                 <div data-accordion-wrapper>
                                     <button data-action="toggle-accordion" class="w-full flex justify-between items-center text-sm text-gray-800 hover:text-indigo-600">
                                         <span>${item.name} (${item.weight || 0} lbs)</span>
                                         <span class="accordion-icon text-gray-400 font-mono">[+]</span>
