@@ -1,6 +1,6 @@
-// js/homebrew-editor-page.js
+// js/homebrew-race-list-page.js
 
-DndSheet.pages.HomebrewEditorPage = () => {
+DndSheet.pages.HomebrewRaceListPage = () => {
     const homebrewRaces = JSON.parse(localStorage.getItem('homebrewRaces') || '{}');
     const raceEntries = Object.values(homebrewRaces);
 
@@ -35,16 +35,10 @@ DndSheet.pages.HomebrewEditorPage = () => {
             </div>
         `;
     };
+    
+    if (raceEntries.length === 0) {
+        return '<p class="text-gray-500 italic">You haven\'t created any homebrew races yet. Go to the Character Editor to get started!</p>';
+    }
 
-    return `
-        <div>
-            <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">Homebrew Creations</h2>
-            <div class="space-y-4">
-                ${raceEntries.length > 0 
-                    ? raceEntries.map(renderRaceEntry).join('') 
-                    : '<p class="text-gray-500 italic">You haven\'t created any homebrew races yet. Go to the Character Editor to get started!</p>'
-                }
-            </div>
-        </div>
-    `;
+    return `<div class="space-y-4">${raceEntries.map(renderRaceEntry).join('')}</div>`;
 };

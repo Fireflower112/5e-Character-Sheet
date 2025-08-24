@@ -108,7 +108,23 @@ DndSheet.helpers.getInitialState = () => {
 		},
         feats: {},
         abilities: {},
-        notes: { character: '', npcs: '', campaign: '', combat: '' },
+        notes: { 
+            character: {
+                appearance: '',
+                personality: '',
+                backstory: '',
+                allies: '',
+                rivals: '',
+                organizations: '',
+                other: ''
+            }, 
+            npcs: {}, // This is now an object to store NPCs by unique ID
+            campaign: {
+                general: '',      // For existing and future general notes
+                sessionLog: [],   // An array to hold log entries
+            }, 
+            combat: '' 
+        },
         spellcasting: { castingStat: 'int', spellResistance: 0, spellSlots: Array(10).fill({ total: 0, used: 0 }) },
         spells: {
             "default-spell-1": { // ADDED this whole block for testing

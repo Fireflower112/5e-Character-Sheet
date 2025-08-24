@@ -28,8 +28,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 case 'dashboard': pageHtml = DndSheet.pages.DashboardPage(character, currentSubPage); break;
                 case 'character-editor': pageHtml = DndSheet.pages.CharacterEditorPage(character, currentSubPage); break;
                 case 'inventory': pageHtml = DndSheet.pages.InventoryContainerPage(character, currentSubPage); break;
-                case 'homebrew': pageHtml = DndSheet.pages.HomebrewEditorPage(); break;
-                case 'notes': pageHtml = DndSheet.pages.NotesPage(character, currentSubPage); break;
+				case 'homebrew': pageHtml = DndSheet.pages.HomebrewContainerPage(character, currentSubPage); break; // <-- REPLACE THIS LINE
+				case 'notes': pageHtml = DndSheet.pages.NotesPage(character, currentSubPage); break;
                 default: pageHtml = '<h2>Page Not Found</h2>';
             }
             contentArea.innerHTML = pageHtml;
@@ -57,8 +57,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 else if (currentPage === 'inventory') currentSubPage = 'equipped';
                 else if (currentPage === 'notes') currentSubPage = 'character';
                 else if (currentPage === 'character-editor') currentSubPage = 'basic';
+                else if (currentPage === 'homebrew') currentSubPage = 'race'; // <-- ADD THIS LINE
                 else currentSubPage = '';
-                localStorage.setItem('currentSubPage', currentSubPage);
                 render();
             },
             setCurrentSubPage: (subpage) => {

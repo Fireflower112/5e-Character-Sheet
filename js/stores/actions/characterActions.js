@@ -206,6 +206,40 @@
 
         store.set({ hp: newHp, tempHp: newTempHp });
     }
+	
+
+	function addNpc(npcData) {
+        const character = store.get();
+        const newNpc = { ...npcData, id: uuid() };
+        const newNpcs = { ...character.notes.npcs, [newNpc.id]: newNpc };
+        store.set({ notes: { ...character.notes, npcs: newNpcs } });
+    }
+
+    function deleteNpc(npcId) {
+        const character = store.get();
+        const newNpcs = { ...character.notes.npcs };
+        delete newNpcs[npcId];
+        store.set({ notes: { ...character.notes, npcs: newNpcs } });
+    }
+	
+	 function addSessionLogEntry(entryText) {
+        const character = store.get();
+        const newEntry = { 
+            id: uuid(), 
+            date: new Date().toLocaleDateString(), 
+            text: entryText 
+        };
+        const newLog = [...character.notes.campaign.sessionLog, newEntry];
+        const newCampaignNotes = { ...character.notes.campaign, sessionLog: newLog };
+        store.set({ notes: { ...character.notes, campaign: newCampaignNotes } });
+    }
+
+    function deleteSessionLogEntry(entryId) {
+        const character = store.get();
+        const newLog = character.notes.campaign.sessionLog.filter(entry => entry.id !== entryId);
+        const newCampaignNotes = { ...character.notes.campaign, sessionLog: newLog };
+        store.set({ notes: { ...character.notes, campaign: newCampaignNotes } });
+    }
 
     Object.assign(actions, {
         _applyClassFeatures,
@@ -220,7 +254,11 @@
         addLanguage,
         removeLanguage,
         updateSubclass,
-        applyHpChange, // <-- Add the new action here
+        applyHpChange,
+        addNpc,      // <-- Add this
+         deleteNpc,
+        addSessionLogEntry,      // <-- Add this
+        deleteSessionLogEntry,   // <-- Add this
     });
 
 })(DndSheet.stores.character, DndSheet.stores.characterActions);
