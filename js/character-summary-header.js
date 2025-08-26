@@ -4,8 +4,9 @@ DndSheet.pages.renderCharacterSummaryHeader = (character) => {
         return '';
     }
 
+    const isMultiClassed = (character.classes || []).length > 1;
     const classAndLevel = (character.classes || [])
-        .map(c => `${c.name || 'Class'} ${c.level || 1}`)
+        .map(c => isMultiClassed ? `${c.name || 'Class'} ${c.level || 1}` : (c.name || 'Class'))
         .join(' / ');
     
     const totalLevel = (character.classes || []).reduce((sum, cls) => sum + (cls.level || 0), 0);

@@ -32,7 +32,13 @@
         store.set({ abilities: finalAbilities });
     }
 
-    function applyRace() {
+     function _updateProficiencyBonus() {
+        const character = store.get();
+        const totalLevel = (character.classes || []).reduce((sum, cls) => sum + (cls.level || 0), 0);
+        const proficiencyBonus = Math.ceil(1 + totalLevel / 4);
+        store.set({ proficiencyBonus: proficiencyBonus });
+    }
+	function applyRace() {
         const character = store.get();
         const raceData = DndSheet.data.races[character.race];
         if (!raceData) return;
@@ -95,7 +101,6 @@
                 for (let i = 1; i < totalLevel; i++) {
                     const currentLevel = levelMap[i].level;
                     const currentClass = DndSheet.data.classes[levelMap[i].className];
-                    // Use class hit die average if it exists, otherwise calculate it
                     const average = (currentClass?.hitDie / 2) + 1;
                     const roll = parseInt(character.hpRolls?.[currentLevel], 10);
                     newMaxHp += (isNaN(roll) ? average : roll) + conMod;
@@ -116,6 +121,7 @@
         store.set({ classes: newClasses });
         _applyClassFeatures(); 
         recalculateMaxHp();
+		_updateProficiencyBonus(); // <-- ADD THIS LINE
     }
     
     function updateCharacterProperty(field, value, subField) {
@@ -135,8 +141,7 @@
             newCharacterState[field] = newValue;
         }
         store.set(newCharacterState);
-        // CORRECTED LOGIC: Recalculate HP if anything related to constitution changes.
-        if ((field === 'abilityScores' && subField.startsWith('con.')) || field === 'hpRolls' || field === 'hpOverride') {
+        if ((field === 'abilityScores' && subField?.startsWith('con.')) || field === 'hpRolls' || field === 'hpOverride') {
             recalculateMaxHp();
         }
     }
@@ -147,6 +152,7 @@
         newClasses.push({ name: '', level: 1, subclassName: '' });
         store.set({ classes: newClasses });
         recalculateMaxHp();
+		_updateProficiencyBonus(); // <-- ADD THIS LINE
     }
     
     function removeClass(index) {
@@ -157,6 +163,7 @@
             store.set({ classes: newClasses });
             _applyClassFeatures(); 
             recalculateMaxHp();
+			_updateProficiencyBonus(); // <-- ADD THIS LINE
         }
     }
     
@@ -193,52 +200,13 @@
             const damage = Math.abs(amount);
             const damageToTempHp = Math.min(newTempHp, damage);
             newTempHp -= damageToTempHp;
-            
             const remainingDamage = damage - damageToTempHp;
             newHp -= remainingDamage;
-
         } else { // Healing
             newHp += amount;
         }
-
-        // Clamp HP to not go below 0 or above max
         newHp = Math.max(0, Math.min(newHp, character.maxHp));
-
         store.set({ hp: newHp, tempHp: newTempHp });
-    }
-	
-
-	function addNpc(npcData) {
-        const character = store.get();
-        const newNpc = { ...npcData, id: uuid() };
-        const newNpcs = { ...character.notes.npcs, [newNpc.id]: newNpc };
-        store.set({ notes: { ...character.notes, npcs: newNpcs } });
-    }
-
-    function deleteNpc(npcId) {
-        const character = store.get();
-        const newNpcs = { ...character.notes.npcs };
-        delete newNpcs[npcId];
-        store.set({ notes: { ...character.notes, npcs: newNpcs } });
-    }
-	
-	 function addSessionLogEntry(entryText) {
-        const character = store.get();
-        const newEntry = { 
-            id: uuid(), 
-            date: new Date().toLocaleDateString(), 
-            text: entryText 
-        };
-        const newLog = [...character.notes.campaign.sessionLog, newEntry];
-        const newCampaignNotes = { ...character.notes.campaign, sessionLog: newLog };
-        store.set({ notes: { ...character.notes, campaign: newCampaignNotes } });
-    }
-
-    function deleteSessionLogEntry(entryId) {
-        const character = store.get();
-        const newLog = character.notes.campaign.sessionLog.filter(entry => entry.id !== entryId);
-        const newCampaignNotes = { ...character.notes.campaign, sessionLog: newLog };
-        store.set({ notes: { ...character.notes, campaign: newCampaignNotes } });
     }
 
     Object.assign(actions, {
@@ -255,10 +223,6 @@
         removeLanguage,
         updateSubclass,
         applyHpChange,
-        addNpc,      // <-- Add this
-         deleteNpc,
-        addSessionLogEntry,      // <-- Add this
-        deleteSessionLogEntry,   // <-- Add this
     });
 
 })(DndSheet.stores.character, DndSheet.stores.characterActions);

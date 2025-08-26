@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 case 'dashboard': pageHtml = DndSheet.pages.DashboardPage(character, currentSubPage); break;
                 case 'character-editor': pageHtml = DndSheet.pages.CharacterEditorPage(character, currentSubPage); break;
                 case 'inventory': pageHtml = DndSheet.pages.InventoryContainerPage(character, currentSubPage); break;
-				case 'homebrew': pageHtml = DndSheet.pages.HomebrewContainerPage(character, currentSubPage); break; // <-- REPLACE THIS LINE
+				case 'homebrew': pageHtml = DndSheet.pages.HomebrewContainerPage(character, currentSubPage); break;
 				case 'notes': pageHtml = DndSheet.pages.NotesPage(character, currentSubPage); break;
                 default: pageHtml = '<h2>Page Not Found</h2>';
             }
@@ -40,8 +40,10 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.main-nav-button').forEach(btn => {
                 if (btn.dataset.page === currentPage) {
                     btn.classList.add('bg-indigo-700', 'text-white');
+                    btn.classList.remove('text-gray-300', 'hover:bg-indigo-500', 'hover:text-white');
                 } else {
                     btn.classList.remove('bg-indigo-700', 'text-white');
+                    btn.classList.add('text-gray-300', 'hover:bg-indigo-500', 'hover:text-white');
                 }
             });
         }
@@ -57,8 +59,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 else if (currentPage === 'inventory') currentSubPage = 'equipped';
                 else if (currentPage === 'notes') currentSubPage = 'character';
                 else if (currentPage === 'character-editor') currentSubPage = 'basic';
-                else if (currentPage === 'homebrew') currentSubPage = 'race'; // <-- ADD THIS LINE
+                else if (currentPage === 'homebrew') currentSubPage = 'race';
                 else currentSubPage = '';
+                localStorage.setItem('currentSubPage', currentSubPage);
                 render();
             },
             setCurrentSubPage: (subpage) => {

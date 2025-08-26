@@ -19,12 +19,12 @@ DndSheet.helpers.getInitialState = () => {
         proficiencyBonus: 2,
         languages: ['Common'],
         abilityScores: {
-            str: { base: 10, racial: 0, other: 0 },
-            dex: { base: 10, racial: 0, other: 0 },
-            con: { base: 10, racial: 0, other: 0 },
-            int: { base: 10, racial: 0, other: 0 },
-            wis: { base: 10, racial: 0, other: 0 },
-            cha: { base: 10, racial: 0, other: 0 },
+            str: { base: 20, racial: 0, other: 0 },
+            dex: { base: 20, racial: 0, other: 0 },
+            con: { base: 20, racial: 0, other: 0 },
+            int: { base: 20, racial: 0, other: 0 },
+            wis: { base: 20, racial: 0, other: 0 },
+            cha: { base: 20, racial: 0, other: 0 },
         },
         savingThrows: {
             str: { proficient: false }, dex: { proficient: false }, con: { proficient: false },
@@ -120,8 +120,10 @@ DndSheet.helpers.getInitialState = () => {
             }, 
             npcs: {}, // This is now an object to store NPCs by unique ID
             campaign: {
-                general: '',      // For existing and future general notes
-                sessionLog: [],   // An array to hold log entries
+                general: '',      
+                sessionLog: [],
+                locations: {},   // <-- ADD THIS LINE
+				rumors: [],       // <-- ADD THIS LINE
             }, 
             combat: '' 
         },
@@ -151,14 +153,6 @@ DndSheet.helpers.getInitialState = () => {
             console.error("Failed to parse saved character data:", e);
         }
     }
-    
-    // --- START DEBUG: Easy-to-delete randomization feature ---
-    for (const ability in defaultState.abilityScores) {
-        const rolls = [Math.floor(Math.random() * 6) + 1, Math.floor(Math.random() * 6) + 1, Math.floor(Math.random() * 6) + 1, Math.floor(Math.random() * 6) + 1];
-        rolls.sort((a, b) => a - b).shift();
-        defaultState.abilityScores[ability].base = rolls.reduce((sum, roll) => sum + roll, 0);
-    }
-    // --- END DEBUG ---
     
     return defaultState;
 };

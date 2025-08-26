@@ -86,12 +86,10 @@ DndSheet.pages.SkillsPage = (character) => {
         <div class="space-y-6">
             <div>
                 <h2 class="text-2xl font-semibold text-gray-800 mb-2 border-b pb-2">General</h2>
-                <div class="bg-white p-3 rounded-lg shadow-sm max-w-xs">
-                    <div class="flex items-center justify-between">
-                        <label class="font-medium">Proficiency Bonus:</label>
-                        <input type="number" data-field="proficiencyBonus" value="${character.proficiencyBonus}" class="w-20 p-1 border rounded text-center" />
-                    </div>
-                </div>
+				<div class="flex items-center space-x-2">
+					<label class="font-medium">Proficiency Bonus:</label>
+					<span class="font-bold text-xl w-20 p-1 text-center">+${character.proficiencyBonus}</span>
+				</div>
             </div>
             
             <div>

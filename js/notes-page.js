@@ -10,14 +10,14 @@ DndSheet.pages.NotesPage = (character, subPage) => {
     const notes = character.notes || {};
     const charNotes = notes.character || {};
     const npcs = Object.values(notes.npcs || {});
-    const campaignNotes = notes.campaign || { general: '', sessionLog: [] };
+    const campaignNotes = notes.campaign || { general: '', sessionLog: [], locations: {}, rumors: [] };
     const sessionLog = campaignNotes.sessionLog || [];
+    const locations = Object.values(campaignNotes.locations || {});
+    const rumors = campaignNotes.rumors || [];
 
     // Helper function to render the NPC list
     const renderNpcList = () => {
-        if (npcs.length === 0) {
-            return '<p class="text-gray-500 italic text-center p-4">No NPCs added yet. Add one below!</p>';
-        }
+        if (npcs.length === 0) return '<p class="text-gray-500 italic text-center p-4">No NPCs added yet. Add one below!</p>';
         return npcs.map(npc => `
             <div class="bg-gray-100 p-3 rounded-md">
                 <div class="flex justify-between items-center">
@@ -34,10 +34,7 @@ DndSheet.pages.NotesPage = (character, subPage) => {
 
     // Helper function to render the Session Log
     const renderSessionLog = () => {
-        if (sessionLog.length === 0) {
-            return '<p class="text-gray-500 italic text-center p-4">No session notes yet. Add one below!</p>';
-        }
-        // Display logs in reverse chronological order
+        if (sessionLog.length === 0) return '<p class="text-gray-500 italic text-center p-4">No session notes yet. Add one below!</p>';
         return [...sessionLog].reverse().map(entry => `
             <div class="bg-gray-100 p-3 rounded-md">
                 <div class="flex justify-between items-center mb-2">
@@ -49,38 +46,63 @@ DndSheet.pages.NotesPage = (character, subPage) => {
         `).join('');
     };
 
+    // Helper function to render the Location List
+    const renderLocationList = () => {
+        if (locations.length === 0) return '<p class="text-gray-500 italic text-center p-4">No locations added yet.</p>';
+        return locations.map(loc => `
+            <div class="bg-gray-100 p-3 rounded-md">
+                <div class="flex justify-between items-center mb-2">
+                    <h4 class="font-semibold text-indigo-700">${loc.name}</h4>
+                    <button data-action="delete-location" data-location-id="${loc.id}" class="px-3 py-1 bg-red-500 text-white text-xs rounded-md hover:bg-red-600">Delete</button>
+                </div>
+                <div class="space-y-1 text-sm text-gray-800">
+                    <p><strong>Description:</strong> ${loc.description || 'N/A'}</p>
+                    <p><strong>Inhabitants:</strong> ${loc.inhabitants || 'N/A'}</p>
+                    <p><strong>Other Info:</strong> ${loc.other || 'N/A'}</p>
+                </div>
+            </div>
+        `).join('');
+    };
+    
+    // Helper function to render the Rumor List
+    const renderRumorList = () => {
+        if (rumors.length === 0) return '<p class="text-gray-500 italic text-center p-4">No rumors logged yet.</p>';
+        const getStatusBadge = (status) => {
+            switch (status) {
+                case 'True': return `<span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-green-600 bg-green-200">True</span>`;
+                case 'False': return `<span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-red-600 bg-red-200">False</span>`;
+                default: return `<span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-yellow-600 bg-yellow-200">Unverified</span>`;
+            }
+        };
+        return rumors.map(rumor => `
+            <div class="bg-gray-100 p-3 rounded-md">
+                <p class="text-sm text-gray-800 mb-2">${rumor.text}</p>
+                <div class="flex justify-between items-center border-t pt-2">
+                    <div class="flex items-center gap-2">
+                        ${getStatusBadge(rumor.status)}
+                        ${rumor.status === 'Unverified' ? `
+                            <button data-action="update-rumor-status" data-rumor-id="${rumor.id}" data-status="True" class="text-xs text-green-600 hover:underline">Mark True</button>
+                            <button data-action="update-rumor-status" data-rumor-id="${rumor.id}" data-status="False" class="text-xs text-red-600 hover:underline">Mark False</button>
+                        ` : ''}
+                    </div>
+                    <button data-action="delete-rumor" data-rumor-id="${rumor.id}" class="px-3 py-1 bg-red-500 text-white text-xs rounded-md hover:bg-red-600">Delete</button>
+                </div>
+            </div>
+        `).join('');
+    };
+
     let subContent = '';
     // Based on the active sub-page, show the correct content
     switch(subPage) {
         case 'character':
             subContent = `
                 <div class="space-y-6">
-                    <div class="bg-white p-4 rounded-lg shadow-sm">
-                        <label for="note-appearance" class="text-lg font-semibold text-gray-700">Appearance</label>
-                        <p class="text-sm text-gray-500 mb-2">Describe your character's physical appearance, including height, weight, hair and eye color, and any distinguishing marks.</p>
-                        <textarea id="note-appearance" data-field="notes.character.appearance" class="w-full h-32 p-2 border rounded-md">${charNotes.appearance || ''}</textarea>
-                    </div>
-                     <div class="bg-white p-4 rounded-lg shadow-sm">
-                        <label for="note-personality" class="text-lg font-semibold text-gray-700">Personality & Mannerisms</label>
-                        <p class="text-sm text-gray-500 mb-2">What are your character's personality traits? How do they speak and act? Any interesting quirks?</p>
-                        <textarea id="note-personality" data-field="notes.character.personality" class="w-full h-32 p-2 border rounded-md">${charNotes.personality || ''}</textarea>
-                    </div>
-                     <div class="bg-white p-4 rounded-lg shadow-sm">
-                        <label for="note-backstory" class="text-lg font-semibold text-gray-700">Backstory</label>
-                         <p class="text-sm text-gray-500 mb-2">Where does your character come from? What significant events shaped them into who they are today?</p>
-                        <textarea id="note-backstory" data-field="notes.character.backstory" class="w-full h-64 p-2 border rounded-md">${charNotes.backstory || ''}</textarea>
-                    </div>
+                    <div class="bg-white p-4 rounded-lg shadow-sm"><label for="note-appearance" class="text-lg font-semibold text-gray-700">Appearance</label><p class="text-sm text-gray-500 mb-2">Describe your character's physical appearance, including height, weight, hair and eye color, and any distinguishing marks.</p><textarea id="note-appearance" data-field="notes.character.appearance" class="w-full h-32 p-2 border rounded-md">${charNotes.appearance || ''}</textarea></div>
+                    <div class="bg-white p-4 rounded-lg shadow-sm"><label for="note-personality" class="text-lg font-semibold text-gray-700">Personality & Mannerisms</label><p class="text-sm text-gray-500 mb-2">What are your character's personality traits? How do they speak and act? Any interesting quirks?</p><textarea id="note-personality" data-field="notes.character.personality" class="w-full h-32 p-2 border rounded-md">${charNotes.personality || ''}</textarea></div>
+                    <div class="bg-white p-4 rounded-lg shadow-sm"><label for="note-backstory" class="text-lg font-semibold text-gray-700">Backstory</label><p class="text-sm text-gray-500 mb-2">Where does your character come from? What significant events shaped them into who they are today?</p><textarea id="note-backstory" data-field="notes.character.backstory" class="w-full h-64 p-2 border rounded-md">${charNotes.backstory || ''}</textarea></div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="bg-white p-4 rounded-lg shadow-sm">
-                            <label for="note-allies" class="text-lg font-semibold text-gray-700">Allies & Organizations</label>
-                            <p class="text-sm text-gray-500 mb-2">List any friendly NPCs, factions, or guilds your character is associated with.</p>
-                            <textarea id="note-allies" data-field="notes.character.allies" class="w-full h-48 p-2 border rounded-md">${charNotes.allies || ''}</textarea>
-                        </div>
-                        <div class="bg-white p-4 rounded-lg shadow-sm">
-                            <label for="note-rivals" class="text-lg font-semibold text-gray-700">Rivals & Enemies</label>
-                            <p class="text-sm text-gray-500 mb-2">List any rivals, enemies, or hostile organizations.</p>
-                            <textarea id="note-rivals" data-field="notes.character.rivals" class="w-full h-48 p-2 border rounded-md">${charNotes.rivals || ''}</textarea>
-                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow-sm"><label for="note-allies" class="text-lg font-semibold text-gray-700">Allies & Organizations</label><p class="text-sm text-gray-500 mb-2">List any friendly NPCs, factions, or guilds your character is associated with.</p><textarea id="note-allies" data-field="notes.character.allies" class="w-full h-48 p-2 border rounded-md">${charNotes.allies || ''}</textarea></div>
+                        <div class="bg-white p-4 rounded-lg shadow-sm"><label for="note-rivals" class="text-lg font-semibold text-gray-700">Rivals & Enemies</label><p class="text-sm text-gray-500 mb-2">List any rivals, enemies, or hostile organizations.</p><textarea id="note-rivals" data-field="notes.character.rivals" class="w-full h-48 p-2 border rounded-md">${charNotes.rivals || ''}</textarea></div>
                     </div>
                 </div>
             `;
@@ -109,20 +131,47 @@ DndSheet.pages.NotesPage = (character, subPage) => {
             break;
         case 'campaign':
             subContent = `
-                <div class="space-y-6">
-                    <div class="bg-white p-4 rounded-lg shadow-sm">
-                        <h3 class="text-xl font-bold mb-3">Session Log</h3>
-                        <div class="space-y-3 mb-6">${renderSessionLog()}</div>
-                        <div class="border-t pt-4">
-                            <h4 class="text-lg font-semibold mb-2">Add New Session Entry</h4>
-                            <textarea id="session-log-input" placeholder="What happened in this session?" class="w-full h-32 p-2 border rounded-md"></textarea>
-                            <button data-action="add-session-log" class="mt-2 w-full px-4 py-2 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700">Add Entry</button>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="space-y-6">
+                        <div class="bg-white p-4 rounded-lg shadow-sm">
+                            <h3 class="text-xl font-bold mb-3">Session Log</h3>
+                            <div class="space-y-3 mb-6 max-h-96 overflow-y-auto">${renderSessionLog()}</div>
+                            <div class="border-t pt-4">
+                                <h4 class="text-lg font-semibold mb-2">Add New Session Entry</h4>
+                                <textarea id="session-log-input" placeholder="What happened in this session?" class="w-full h-24 p-2 border rounded-md"></textarea>
+                                <button data-action="add-session-log" class="mt-2 w-full px-4 py-2 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700">Add Entry</button>
+                            </div>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow-sm">
+                            <label for="note-campaign-general" class="text-lg font-semibold text-gray-700">General Campaign Notes</label>
+                            <p class="text-sm text-gray-500 mb-2">Use this space for overarching plot points, world details, or other general notes.</p>
+                            <textarea id="note-campaign-general" data-field="notes.campaign.general" class="w-full h-48 p-2 border rounded-md">${campaignNotes.general || ''}</textarea>
                         </div>
                     </div>
-                    <div class="bg-white p-4 rounded-lg shadow-sm">
-                        <label for="note-campaign-general" class="text-lg font-semibold text-gray-700">General Campaign Notes</label>
-                         <p class="text-sm text-gray-500 mb-2">Use this space for overarching plot points, world details, or other general notes.</p>
-                        <textarea id="note-campaign-general" data-field="notes.campaign.general" class="w-full h-48 p-2 border rounded-md">${campaignNotes.general || ''}</textarea>
+                    <div class="space-y-6">
+                        <div class="bg-white p-4 rounded-lg shadow-sm">
+                            <h3 class="text-xl font-bold mb-3">Key Locations</h3>
+                            <div class="space-y-3 mb-6 max-h-96 overflow-y-auto">${renderLocationList()}</div>
+                            <div class="border-t pt-4">
+                                <h4 class="text-lg font-semibold mb-2">Add New Location</h4>
+                                <div class="space-y-3">
+                                    <input type="text" id="location-name" placeholder="Location Name" class="w-full p-2 border rounded-md">
+                                    <textarea id="location-description" placeholder="Description" class="w-full h-20 p-2 border rounded-md"></textarea>
+                                    <textarea id="location-inhabitants" placeholder="Who lives there?" class="w-full h-20 p-2 border rounded-md"></textarea>
+                                    <textarea id="location-other" placeholder="Other Info" class="w-full h-20 p-2 border rounded-md"></textarea>
+                                    <button data-action="add-location" class="w-full px-4 py-2 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700">Add Location</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow-sm">
+                            <h3 class="text-xl font-bold mb-3">Rumors & Mysteries</h3>
+                            <div class="space-y-3 mb-6 max-h-96 overflow-y-auto">${renderRumorList()}</div>
+                            <div class="border-t pt-4">
+                                <h4 class="text-lg font-semibold mb-2">Add New Rumor</h4>
+                                <textarea id="rumor-input" placeholder="What have you heard?" class="w-full h-24 p-2 border rounded-md"></textarea>
+                                <button data-action="add-rumor" class="mt-2 w-full px-4 py-2 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700">Add Rumor</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             `;

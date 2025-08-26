@@ -189,14 +189,15 @@ DndSheet.pages.AllItemsPage = (character) => {
                                 <option value="override">Override (=)</option>
                             </select>
                             <div><label class="block font-medium">Value</label><input type="number" id="add-item-bonus-value" class="w-20 p-1 border rounded" placeholder="+1"></div>
-                            <button type="button" id="add-bonus-btn" class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">Add</button>
+                            <button type="button" data-action="add-item-bonus" class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">Add</button>
                         </div>
                         <ul id="bonuses-list" class="flex flex-wrap gap-2 pt-2"></ul>
                     </div>
-                    <button type="button" id="add-item-btn" class="w-full px-4 py-2 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700">Add Item</button>
+                    <button type="button" data-action="add-item" class="w-full px-4 py-2 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700">Add Item</button>
                 </form>
             </div>
-        </div>`;
+        </div>
+    `;
 };
 
 DndSheet.pages.attachAllItemsPageHandlers = () => {
