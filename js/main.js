@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let currentPage = localStorage.getItem('currentPage') || 'dashboard';
         let currentSubPage = localStorage.getItem('currentSubPage') || 'skills';
 
-        function render() {
+         function render() {
             const character = DndSheet.stores.character.get();
             summaryHeaderArea.innerHTML = DndSheet.pages.renderCharacterSummaryHeader(character);
             
@@ -31,10 +31,15 @@ document.addEventListener('DOMContentLoaded', () => {
 				case 'homebrew': pageHtml = DndSheet.pages.HomebrewContainerPage(character, currentSubPage); break;
 				case 'notes': pageHtml = DndSheet.pages.NotesPage(character, currentSubPage); break;
                 default: pageHtml = '<h2>Page Not Found</h2>';
-            }
+             }
             contentArea.innerHTML = pageHtml;
             updateNavStyles();
-        }
+
+            // ADD THIS BLOCK TO ACTIVATE THE SEARCH BAR
+            if (currentPage === 'inventory' && currentSubPage === 'all') {
+                DndSheet.app.attachItemBrowserSearch();
+            }
+		}
 
         function updateNavStyles() {
             document.querySelectorAll('.main-nav-button').forEach(btn => {

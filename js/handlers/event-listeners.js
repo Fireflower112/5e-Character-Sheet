@@ -11,6 +11,7 @@
             ...DndSheet.handlers.inventoryClickHandlers,
             ...DndSheet.handlers.notesClickHandlers,
             ...DndSheet.handlers.homebrewClickHandlers,
+			...DndSheet.handlers.itemBrowserClickHandlers,
             
             // General application handlers remain here
             'toggle-accordion': (target) => {

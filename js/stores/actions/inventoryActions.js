@@ -7,21 +7,26 @@
             return v.toString(16);
         });
     }
-
-    function addItem(itemData) {
-        const character = store.get();
-        const newItem = { ...itemData, id: uuid() };
-        const newItems = { ...character.inventory.items, [newItem.id]: newItem };
-        store.set({ inventory: { ...character.inventory, items: newItems } });
+    
+    // NEW function for adding items from the browser
+    function addPremadeItem(itemData) {
+        const newItem = {
+            id: uuid(),
+            name: itemData.name,
+            description: itemData.description,
+            rarity: itemData.rarity || 'common',
+            itemType: itemData.properties['Item Type'] || 'other',
+            // You can add more property mappings here later
+        };
+        addItem(newItem); // Use the existing addItem function to save it
     }
 
-    function updateItem(itemId, updates) {
+    // UPDATED to accept a pre-made item object
+    function addItem(itemData) {
         const character = store.get();
-        const newItems = JSON.parse(JSON.stringify(character.inventory.items));
-        if (newItems[itemId]) {
-            newItems[itemId] = { ...newItems[itemId], ...updates };
-            store.set({ inventory: { ...character.inventory, items: newItems } });
-        }
+        const newItem = itemData.id ? itemData : { ...itemData, id: uuid() }; // Assign UUID if it doesn't have one
+        const newItems = { ...character.inventory.items, [newItem.id]: newItem };
+        store.set({ inventory: { ...character.inventory, items: newItems } });
     }
 
     function addContainer(containerData) {
@@ -83,6 +88,7 @@
 
     Object.assign(actions, {
         addItem,
+        addPremadeItem, // <-- Add the new action here
         updateItem,
         addContainer,
         deleteItem,

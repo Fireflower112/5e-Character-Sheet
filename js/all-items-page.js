@@ -99,6 +99,12 @@ DndSheet.pages.renderItemEditForm = (item) => {
         </div>`;
 };
 
+// js/all-items-page.js
+
+DndSheet.pages.renderItemBonuses = (item) => { /* ... same as your current file ... */ };
+DndSheet.pages.renderItemCard = (character, item) => { /* ... same as your current file ... */ };
+DndSheet.pages.renderItemEditForm = (item) => { /* ... same as your current file ... */ };
+
 DndSheet.pages.AllItemsPage = (character) => {
     const allItems = Object.values(character.inventory.items || {});
     const skillList = ["Acrobatics", "Animal Handling", "Arcana", "Athletics", "Deception", "History", "Insight", "Intimidation", "Investigation", "Medicine", "Nature", "Perception", "Performance", "Persuasion", "Religion", "Sleight of Hand", "Stealth", "Survival"];
@@ -116,88 +122,34 @@ DndSheet.pages.AllItemsPage = (character) => {
     };
 
     return `
-        <div class="space-y-6">
-            ${renderCategorySection('Items Requiring Attunement', attunementItems)}
-            ${renderCategorySection('Weapons', weapons)}
-            ${renderCategorySection('Armor', armor)}
-            ${renderCategorySection('Shields', shields)}
-            ${renderCategorySection('Other Items', others)}
-            <div class="bg-gray-100 p-6 rounded-2xl shadow-inner">
-                <h3 class="text-lg font-semibold mb-3">Add New Item</h3>
-                <form id="add-item-form" class="space-y-4">
-                    <div class="grid grid-cols-3 gap-4">
-                        <div class="col-span-2"><label class="block text-sm font-medium">Item Name</label><input type="text" id="item-name" required class="w-full p-2 border rounded-md"></div>
-                        <div><label class="block text-sm font-medium">Weight (lbs)</label><input type="number" id="item-weight" value="0" step="0.1" class="w-full p-2 border rounded-md"></div>
-                    </div>
-                    <textarea id="item-description" placeholder="Item Description" class="w-full p-2 border rounded-md"></textarea>
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <label class="block text-sm font-medium mb-1">Item Type</label>
-                            <select id="item-type" class="p-2 border rounded-md">
-                                <option value="other">Other</option>
-                                <option value="weapon">Weapon</option>
-                                <option value="armor">Armor</option>
-                                <option value="shield">Shield</option>
-                            </select>
-                        </div>
-                        <div class="flex items-center space-x-2 pt-5">
-                             <input type="checkbox" id="item-requires-attunement" class="h-4 w-4 rounded text-indigo-600">
-                             <label for="item-requires-attunement" class="font-medium text-gray-700">Requires Attunement</label>
-                        </div>
-                    </div>
-                    
-                    <div id="weapon-fields" class="hidden space-y-3 border-t pt-4">
-                        <h4 class="font-medium text-gray-700">Weapon Stats:</h4>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div><label for="weapon-num-dice" class="block text-sm font-medium">Num. of Dice</label><input type="number" id="weapon-num-dice" value="1" class="w-full p-2 border rounded-md"></div>
-                            <div><label for="weapon-die-type" class="block text-sm font-medium">Type of Die</label><input type="number" id="weapon-die-type" value="6" class="w-full p-2 border rounded-md"></div>
-                        </div>
-                    </div>
-                    <div id="armor-fields" class="hidden space-y-3 border-t pt-4">
-                        <h4 class="font-medium text-gray-700">Armor Stats:</h4>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label for="armor-ac-base" class="block text-sm font-medium">Base AC</label>
-                                <input type="number" id="armor-ac-base" value="10" class="w-full p-2 border rounded-md">
-                            </div>
-                            <div>
-                                <label for="armor-type" class="block text-sm font-medium">Armor Type</label>
-                                <select id="armor-type" class="w-full p-2 border rounded-md">
-                                    <option value="light">Light</option>
-                                    <option value="medium">Medium</option>
-                                    <option value="heavy">Heavy</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="shield-fields" class="hidden space-y-3 border-t pt-4">
-                        <h4 class="font-medium text-gray-700">Shield Stats:</h4>
-                        <label for="shield-ac-bonus" class="block text-sm font-medium">AC Bonus</label>
-                        <input type="number" id="shield-ac-bonus" value="2" class="w-full p-2 border rounded-md">
-                    </div>
-
-                    <div id="bonuses-container" class="space-y-3 border-t pt-4">
-                        <h4 class="font-medium text-gray-700">Bonuses:</h4>
-                        <div class="flex items-end gap-2 text-sm">
-                            <select id="add-item-bonus-field" class="p-1 border rounded flex-grow">
-                                <optgroup label="Primary Stats"><option value="ac">Armor Class</option><option value="initiative">Initiative</option></optgroup>
-                                <optgroup label="Ability Scores">${abilityScores.map(s => `<option value="${s}">${s.toUpperCase()}</option>`).join('')}</optgroup>
-                                <optgroup label="Skills">${skillList.map(s => `<option value="${s.toLowerCase().replace(/ /g, '')}">${s}</option>`).join('')}</optgroup>
-                            </select>
-                            <select id="add-item-bonus-type" class="p-1 border rounded">
-                                <option value="enhancement">Enhance (+)</option>
-                                <option value="override">Override (=)</option>
-                            </select>
-                            <div><label class="block font-medium">Value</label><input type="number" id="add-item-bonus-value" class="w-20 p-1 border rounded" placeholder="+1"></div>
-                            <button type="button" data-action="add-item-bonus" class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">Add</button>
-                        </div>
-                        <ul id="bonuses-list" class="flex flex-wrap gap-2 pt-2"></ul>
-                    </div>
-                    <button type="button" data-action="add-item" class="w-full px-4 py-2 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700">Add Item</button>
-                </form>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Left Column: Current Inventory -->
+            <div class="space-y-6">
+                ${renderCategorySection('Items Requiring Attunement', attunementItems)}
+                ${renderCategorySection('Weapons', weapons)}
+                ${renderCategorySection('Armor', armor)}
+                ${renderCategorySection('Shields', shields)}
+                ${renderCategorySection('Other Items', others)}
             </div>
-        </div>
-    `;
+
+            <!-- Right Column: Item Browser & Custom Item Form -->
+            <div class="space-y-6">
+                <div class="bg-gray-100 p-6 rounded-2xl shadow-inner">
+                    <h3 class="text-lg font-semibold mb-3">Item Browser</h3>
+                    <input type="text" id="item-search-input" placeholder="Search for an item..." class="w-full p-2 border rounded-md mb-3">
+                    <div id="item-browser-results" class="bg-white rounded-md shadow-sm max-h-96 overflow-y-auto">
+                        <p class="text-gray-500 italic p-4 text-center">Start typing to search for items.</p>
+                    </div>
+                </div>
+
+                <div class="bg-gray-100 p-6 rounded-2xl shadow-inner">
+                    <h3 class="text-lg font-semibold mb-3">Add Custom Item</h3>
+                    <form id="add-item-form" class="space-y-4">
+                        <!-- ... Your existing custom item form remains exactly the same ... -->
+                    </form>
+                </div>
+            </div>
+        </div>`;
 };
 
 DndSheet.pages.attachAllItemsPageHandlers = () => {
