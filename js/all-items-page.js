@@ -1,5 +1,18 @@
 // js/all-items-page.js
 
+// NEW: Helper function to get styling for different rarities
+DndSheet.pages.getRarityInfo = (rarity = 'common') => {
+    const r = rarity.toLowerCase();
+    switch (r) {
+        case 'uncommon': return { text: 'Uncommon', class: 'text-green-700 font-semibold' };
+        case 'rare': return { text: 'Rare', class: 'text-blue-700 font-semibold' };
+        case 'very rare': return { text: 'Very Rare', class: 'text-indigo-700 font-semibold' };
+        case 'legendary': return { text: 'Legendary', class: 'text-amber-700 font-semibold' };
+        case 'artifact': return { text: 'Artifact', class: 'text-red-700 font-semibold' };
+        default: return { text: 'Common', class: 'text-gray-600' };
+    }
+};
+
 DndSheet.pages.renderItemBonuses = (item) => {
     if (!item.bonuses || item.bonuses.length === 0) return '';
     const skillList = ["Acrobatics", "Animal Handling", "Arcana", "Athletics", "Deception", "History", "Insight", "Intimidation", "Investigation", "Medicine", "Nature", "Perception", "Performance", "Persuasion", "Religion", "Sleight of Hand", "Stealth", "Survival"];
@@ -16,6 +29,8 @@ DndSheet.pages.renderItemBonuses = (item) => {
 
 DndSheet.pages.renderItemCard = (character, item) => {
     const containers = Object.values(character.inventory.containers || {});
+    // MODIFIED: Call the new helper function to get rarity text and color
+    const rarityInfo = DndSheet.pages.getRarityInfo(item.rarity);
     
     let equipControl = '';
     if (item.requiresAttunement) {
@@ -43,7 +58,7 @@ DndSheet.pages.renderItemCard = (character, item) => {
                  <div class="flex items-start justify-between gap-2">
                     <button data-action="toggle-accordion" class="flex-grow text-left">
                         <h4 class="font-semibold text-lg hover:text-indigo-600">${item.name}</h4>
-                        <p class="text-xs text-gray-500">Weight: ${item.weight || 0} lbs</p>
+                        <p class="text-xs text-gray-500">Weight: ${item.weight || 0} lbs | <span class="${rarityInfo.class}">${rarityInfo.text}</span></p>
                     </button>
                     <div class="flex items-center space-x-3 flex-shrink-0">
                         ${favoriteButton}
@@ -99,11 +114,6 @@ DndSheet.pages.renderItemEditForm = (item) => {
         </div>`;
 };
 
-// js/all-items-page.js
-
-DndSheet.pages.renderItemBonuses = (item) => { /* ... same as your current file ... */ };
-DndSheet.pages.renderItemCard = (character, item) => { /* ... same as your current file ... */ };
-DndSheet.pages.renderItemEditForm = (item) => { /* ... same as your current file ... */ };
 
 DndSheet.pages.AllItemsPage = (character) => {
     const allItems = Object.values(character.inventory.items || {});
@@ -116,14 +126,20 @@ DndSheet.pages.AllItemsPage = (character) => {
     const shields = remainingItems.filter(i => i.itemType === 'shield');
     const others = remainingItems.filter(i => !['weapon', 'armor', 'shield'].includes(i.itemType));
 
+    // MODIFIED: Changed this function to use the JS-driven accordion system for consistency
     const renderCategorySection = (title, items) => {
         if (items.length === 0) return '';
-        return `<details class="bg-gray-50 p-4 rounded-xl shadow-sm" open><summary class="text-xl font-semibold cursor-pointer">${title}</summary><div class="mt-3 space-y-3">${items.map(item => DndSheet.pages.renderItemCard(character, item)).join('')}</div></details>`;
+        return `
+            <div class="bg-gray-50 p-4 rounded-xl shadow-sm" data-accordion-wrapper>
+                <button class="w-full text-left text-xl font-semibold cursor-pointer" data-action="toggle-accordion">${title}</button>
+                <div class="accordion-details mt-3 space-y-3">
+                    ${items.map(item => DndSheet.pages.renderItemCard(character, item)).join('')}
+                </div>
+            </div>`;
     };
 
     return `
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- Left Column: Current Inventory -->
             <div class="space-y-6">
                 ${renderCategorySection('Items Requiring Attunement', attunementItems)}
                 ${renderCategorySection('Weapons', weapons)}
@@ -132,7 +148,6 @@ DndSheet.pages.AllItemsPage = (character) => {
                 ${renderCategorySection('Other Items', others)}
             </div>
 
-            <!-- Right Column: Item Browser & Custom Item Form -->
             <div class="space-y-6">
                 <div class="bg-gray-100 p-6 rounded-2xl shadow-inner">
                     <h3 class="text-lg font-semibold mb-3">Item Browser</h3>
@@ -144,15 +159,65 @@ DndSheet.pages.AllItemsPage = (character) => {
 
                 <div class="bg-gray-100 p-6 rounded-2xl shadow-inner">
                     <h3 class="text-lg font-semibold mb-3">Add Custom Item</h3>
+                    {/* MODIFIED: The missing form HTML has been restored below */}
                     <form id="add-item-form" class="space-y-4">
-                        <!-- ... Your existing custom item form remains exactly the same ... -->
+                        <div class="grid grid-cols-2 gap-4">
+                           <div><label for="item-name" class="block text-sm font-medium">Item Name</label><input type="text" id="item-name" required class="w-full p-2 border rounded-md"></div>
+                           <div><label for="item-weight" class="block text-sm font-medium">Weight (lbs)</label><input type="number" id="item-weight" value="0" step="0.1" class="w-full p-2 border rounded-md"></div>
+                        </div>
+                        <textarea id="item-description" placeholder="Item Description" class="w-full p-2 border rounded-md"></textarea>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="item-type" class="block text-sm font-medium">Item Type</label>
+                                <select id="item-type" class="w-full p-2 border rounded-md">
+                                    <option value="other">Other</option>
+                                    <option value="weapon">Weapon</option>
+                                    <option value="armor">Armor</option>
+                                    <option value="shield">Shield</option>
+                                </select>
+                            </div>
+                             <div class="flex items-end">
+                                <div class="flex items-center space-x-2">
+                                     <input type="checkbox" id="item-requires-attunement" class="h-4 w-4 rounded">
+                                     <label for="item-requires-attunement" class="font-medium text-gray-700">Requires Attunement?</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="weapon-fields" class="hidden grid grid-cols-2 gap-4 border-t pt-3">
+                            <div><label for="weapon-num-dice" class="block text-sm font-medium">Damage Dice</label><input type="number" id="weapon-num-dice" value="1" class="w-full p-2 border rounded-md"></div>
+                            <div><label for="weapon-die-type" class="block text-sm font-medium">Die Type</label><input type="number" id="weapon-die-type" value="6" class="w-full p-2 border rounded-md"></div>
+                        </div>
+
+                        <div id="armor-fields" class="hidden grid grid-cols-2 gap-4 border-t pt-3">
+                            <div><label for="armor-type" class="block text-sm font-medium">Armor Type</label><select id="armor-type" class="w-full p-2 border rounded-md"><option value="light">Light</option><option value="medium">Medium</option><option value="heavy">Heavy</option></select></div>
+                            <div><label for="armor-ac-base" class="block text-sm font-medium">Base AC</label><input type="number" id="armor-ac-base" value="11" class="w-full p-2 border rounded-md"></div>
+                        </div>
+                        
+                        <div id="shield-fields" class="hidden border-t pt-3">
+                             <div><label for="shield-ac-bonus" class="block text-sm font-medium">AC Bonus</label><input type="number" id="shield-ac-bonus" value="2" class="w-full p-2 border rounded-md"></div>
+                        </div>
+                        
+                        <div class="space-y-2 border-t pt-3">
+                            <h4 class="font-medium text-gray-700 text-sm">Bonuses (Optional):</h4>
+                             <ul id="bonuses-list" class="flex flex-wrap gap-2"></ul>
+                            <div class="flex items-end gap-2 text-sm">
+                                <select id="add-item-bonus-field" class="p-1 border rounded flex-grow"><optgroup label="Primary Stats"><option value="ac">AC</option><option value="initiative">Initiative</option></optgroup><optgroup label="Ability Scores">${abilityScores.map(s=>`<option value="${s}">${s.toUpperCase()}</option>`).join('')}</optgroup><optgroup label="Skills">${skillList.map(s=>`<option value="${s.toLowerCase().replace(/ /g,'')}">${s}</option>`).join('')}</optgroup></select>
+                                <select id="add-item-bonus-type" class="p-1 border rounded"><option value="enhancement">Enhance (+)</option><option value="override">Override (=)</option></select>
+                                <input type="number" id="add-item-bonus-value" class="w-20 p-1 border rounded" placeholder="+1">
+                                <button type="button" data-action="add-item-bonus" class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-xs">Add</button>
+                            </div>
+                        </div>
+                        
+                        <button type="button" data-action="add-item" class="w-full px-4 py-2 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700">Add Custom Item</button>
                     </form>
                 </div>
             </div>
         </div>`;
 };
 
-DndSheet.pages.attachAllItemsPageHandlers = () => {
+DndSheet.pages.attachAllItemsPageHandlers = () => { 
     const addItemForm = document.getElementById('add-item-form');
     if (!addItemForm) return;
 

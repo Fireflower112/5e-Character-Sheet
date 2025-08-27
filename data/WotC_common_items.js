@@ -1,6 +1,7 @@
 // WotC_common_items.js
+DndSheet.rawData = DndSheet.rawData || {};
 
-export const WotC_common_items = [
+DndSheet.rawData.WotC_common_items = [
   {
     "name": "1st Level Spell Scroll",
     "description": "1st Level Spell Scroll Scroll, common A spell scroll bears the words of a single spell, written in a mystical cipher. If the spell is on your class\u2019s spell list, you can read the scroll and cast its spell without providing any material components. Otherwise, the scroll is unintelligible. Casting the spell by reading the scroll requires the spell\u2019s normal casting time. Once the spell is cast, the words on the scroll fade, and it crumbles to dust. If the casting is interrupted, the scroll is not lost. If the spell is on your class\u2019s spell list but of a higher level than you can normally cast, you must make an ability check using your spellcasting ability to determine whether you cast it successfully. The DC equals 10 + the spell\u2019s level. On a success, you cast the spell; on a failure, the spell disappears from the scroll with no other effect. The level of the spell on the scroll determines the spell\u2019s saving throw DC and attack bonus, as well as the scroll\u2019s rarity, as shown in the Spell Scroll table. Spell Scroll Spell Level Rarity Save DC Attack Bonus 1st Common 13 +5",

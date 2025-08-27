@@ -12,11 +12,12 @@
             return;
         }
 
+        // CORRECTED: The invalid comment inside this template literal has been completely removed.
         resultsContainer.innerHTML = searchResults.map(item => `
             <div class="p-2 border-b flex justify-between items-center">
                 <div>
                     <div class="font-semibold">${item.name}</div>
-                    <div class="text-xs text-gray-500">${item.properties['Item Type']} | Rarity: ${item.rarity || 'common'}</div>
+                    <div class="text-xs text-gray-500">${item.properties['Item Type']} | Rarity: ${item.properties['Item Rarity'] || 'common'}</div>
                 </div>
                 <button data-action="add-premade-item" data-item-name="${item.name}" class="px-3 py-1 bg-blue-500 text-white text-xs rounded-md hover:bg-blue-600">Add</button>
             </div>
@@ -25,7 +26,7 @@
 
     const searchItems = () => {
         const query = document.getElementById('item-search-input').value.toLowerCase();
-        const allItems = { ...DndSheet.data.items, ...DndSheet.data.containers };
+        const allItems = DndSheet.data.allItems || {};
         
         if (!query) {
             searchResults = [];
@@ -40,18 +41,15 @@
     DndSheet.handlers.itemBrowserClickHandlers = {
         'add-premade-item': (target) => {
             const itemName = target.dataset.itemName;
-            const allItems = { ...DndSheet.data.items, ...DndSheet.data.containers };
-            const itemData = allItems[itemName];
+            const itemData = DndSheet.data.allItems[itemName];
 
             if (itemData) {
-                // We'll create the 'addPremadeItem' action in the next step
                 DndSheet.stores.characterActions.addPremadeItem(itemData);
                 DndSheet.helpers.showMessage(`${itemName} added to inventory!`, 'green');
             }
         }
     };
 
-    // Attach the search listener when the page loads
     DndSheet.app.attachItemBrowserSearch = () => {
         const searchInput = document.getElementById('item-search-input');
         if (searchInput) {
