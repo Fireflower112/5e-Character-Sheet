@@ -12,7 +12,6 @@
             return;
         }
 
-        // CORRECTED: The invalid comment inside this template literal has been completely removed.
         resultsContainer.innerHTML = searchResults.map(item => `
             <div class="p-2 border-b flex justify-between items-center">
                 <div>
@@ -24,15 +23,24 @@
         `).join('');
     };
 
+    // This function now checks the state of the magic item filter
     const searchItems = () => {
         const query = document.getElementById('item-search-input').value.toLowerCase();
+        const magicFilterCheckbox = document.getElementById('magic-item-filter');
+        const showMagicItems = magicFilterCheckbox.checked;
+
         const allItems = DndSheet.data.allItems || {};
         
         if (!query) {
             searchResults = [];
         } else {
             searchResults = Object.values(allItems)
-                .filter(item => item.name.toLowerCase().includes(query))
+                .filter(item => {
+                    // Item must match both the text query AND the magic filter state
+                    const nameMatch = item.name.toLowerCase().includes(query);
+                    const magicMatch = item.isMagic === showMagicItems;
+                    return nameMatch && magicMatch;
+                })
                 .slice(0, 50); // Limit to 50 results for performance
         }
         renderSearchResults();
@@ -50,10 +58,16 @@
         }
     };
 
+    // This now attaches a listener to the checkbox as well
     DndSheet.app.attachItemBrowserSearch = () => {
         const searchInput = document.getElementById('item-search-input');
+        const magicFilterCheckbox = document.getElementById('magic-item-filter');
+
         if (searchInput) {
             searchInput.addEventListener('input', searchItems);
+        }
+        if (magicFilterCheckbox) {
+            magicFilterCheckbox.addEventListener('change', searchItems);
         }
     };
 

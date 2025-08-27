@@ -11,7 +11,6 @@
     function addPremadeItem(itemData) {
         let weight = 0;
         let description = itemData.description; 
-
         if (itemData.properties && typeof itemData.properties.Weight !== 'undefined') {
             weight = itemData.properties.Weight;
         } else if (typeof description === 'string') {
@@ -23,6 +22,7 @@
             }
         }
 
+        // MODIFIED: Restored the full logic for item type categorization
         let newItemType = 'other';
         const sourceType = itemData.properties['Item Type'] || '';
         const lowerSourceType = sourceType.toLowerCase();
@@ -34,14 +34,11 @@
             newItemType = 'armor';
         }
 
-        // NEW: Logic to determine rarity from properties or description
-        let rarity = 'common'; // Default rarity
+        let rarity = 'common';
         const structuredRarity = itemData.properties['Item Rarity'];
-
         if (structuredRarity && structuredRarity.toLowerCase() !== 'no') {
             rarity = structuredRarity.toLowerCase();
         } else if (typeof description === 'string') {
-            // Use a regex to find the first mention of a rarity keyword in the description
             const rarityRegex = /\b(common|uncommon|rare|very rare|legendary|artifact)\b/i;
             const match = description.match(rarityRegex);
             if (match) {
@@ -49,43 +46,48 @@
             }
         }
 
+        let bonuses = [];
+        const descriptionForParsing = itemData.description || '';
+        if (newItemType === 'shield') {
+            const acMatch = descriptionForParsing.match(/increases your Armor Class by (\d+)/i);
+            if (acMatch) {
+                bonuses.push({ field: 'ac', value: parseInt(acMatch[1], 10), type: 'enhancement' });
+            }
+        }
+        
         const newItem = {
             id: uuid(),
             name: itemData.name,
             description: description,
-            rarity: rarity, // Use the determined rarity
+            rarity: rarity,
             itemType: newItemType,
-            weight: weight
+            weight: weight,
+            bonuses: bonuses
         };
         addItem(newItem);
     }
 	
-	 function addPremadeContainer(containerData) {
+	function addPremadeContainer(containerData) {
         const description = containerData.description || '';
         let capacity = 0;
         let weight = 0;
-
-        // Extract capacity (e.g., "hold up to 30 pounds")
         const capacityMatch = description.match(/(?:holds?|can hold) (?:up to )?(\d+) pounds/i);
         if (capacityMatch) {
             capacity = parseFloat(capacityMatch[1]);
         }
-
-        // Extract weight (e.g., "Weight: 5")
         const weightMatch = description.match(/Weight: (\d+(\.\d+)?)/i);
         if (weightMatch) {
             weight = parseFloat(weightMatch[1]);
         } else if (containerData.properties.Weight) {
             weight = containerData.properties.Weight;
         }
-
         const newContainer = {
             name: containerData.name,
             description: description,
             capacity: capacity,
             weight: weight
         };
-        addContainer(newContainer); // Use the existing addContainer action
+        addContainer(newContainer);
     }
 
     function addItem(itemData) {
@@ -161,10 +163,10 @@
         }
     }
 
-   Object.assign(actions, {
+    Object.assign(actions, {
         addItem,
         addPremadeItem,
-        addPremadeContainer, // Add the new function to the actions
+        addPremadeContainer,
         updateItem,
         addContainer,
         deleteItem,
