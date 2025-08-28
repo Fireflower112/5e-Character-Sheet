@@ -38,6 +38,7 @@ DndSheet.stores.character = {
         this._character = DndSheet.helpers.getInitialState();
         DndSheet.stores.characterActions.applyRace();
         DndSheet.stores.characterActions._applyClassFeatures();
+        DndSheet.stores.characterActions._calculateSpellSlots(); // <-- ADD THIS LINE
         this._notifySubscribers();
     },
 

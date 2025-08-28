@@ -10,7 +10,15 @@
 
     function addSpell(spellData) {
         const character = store.get();
-        const newSpell = { ...spellData, id: uuid(), favorited: false };
+        const newSpell = { 
+            ...spellData, 
+            id: uuid(), 
+            favorited: false,
+            // Add the new damage fields
+            damageNumDice: parseInt(spellData.damageNumDice, 10) || null,
+            damageDieType: parseInt(spellData.damageDieType, 10) || null,
+            damageType: spellData.damageType || ''
+        };
         const newSpells = { ...character.spells, [newSpell.id]: newSpell };
         store.set({ spells: newSpells });
     }
@@ -40,12 +48,42 @@
             store.set({ spellcasting: { ...character.spellcasting, spellSlots: newSlots } });
         }
     }
+	
+	function castSpell(spellId) {
+        const character = store.get();
+        const spell = character.spells[spellId];
+        if (!spell) return;
 
-    Object.assign(actions, {
+        const level = spell.level;
+        if (level === 0) { // Cantrips don't use slots, but we might still track them
+            if (spell.durationValue > 0) {
+                DndSheet.stores.characterActions.addTimer({ name: spell.name, duration: spell.durationValue, unit: spell.durationUnit });
+            }
+            return;
+        }
+
+        const newSlots = JSON.parse(JSON.stringify(character.spellcasting.spellSlots));
+        if (newSlots[level] && newSlots[level].used < newSlots[level].total) {
+            newSlots[level].used += 1;
+            
+            // If the spell has a duration, create a timer for it
+            if (spell.durationValue > 0) {
+                DndSheet.stores.characterActions.addTimer({ name: spell.name, duration: spell.durationValue, unit: spell.durationUnit });
+            }
+
+            store.set({ spellcasting: { ...character.spellcasting, spellSlots: newSlots } });
+        } else {
+            DndSheet.helpers.showMessage(`No level ${level} spell slots remaining.`, 'red');
+        }
+    }
+
+
+   Object.assign(actions, {
         addSpell,
         deleteSpell,
         toggleFavoriteSpell,
-        updateSpellSlot
+        updateSpellSlot,
+        castSpell, // <-- Add the new action
     });
 
 })(DndSheet.stores.character, DndSheet.stores.characterActions);

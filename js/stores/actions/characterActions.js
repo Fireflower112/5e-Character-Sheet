@@ -7,6 +7,43 @@
             return v.toString(16);
         });
     }
+	
+	function _calculateSpellSlots() {
+        const character = store.get();
+        let newSpellSlots = Array(10).fill(null).map(() => ({ total: 0, used: 0 }));
+
+        // NOTE: This version handles single-class spellcasters. Multiclassing is more complex.
+        if (character.classes && character.classes.length === 1) {
+            const charClass = character.classes[0];
+            const classData = DndSheet.data.classes[charClass.name];
+            
+            if (classData && classData.spellSlots) {
+                // Determine which progression to use (e.g., base class or subclass)
+                let progressionTable = classData.spellSlots;
+                
+                // Special handling for third-casters like Eldritch Knight
+                if ((charClass.name === 'Fighter' && charClass.subclassName !== 'Eldritch Knight') ||
+                    (charClass.name === 'Rogue' && charClass.subclassName !== 'Arcane Trickster')) {
+                    progressionTable = {}; // No slots if not the spellcasting subclass
+                }
+
+                const slotsForLevel = progressionTable[charClass.level];
+                if (slotsForLevel) {
+                    slotsForLevel.forEach((numSlots, i) => {
+                        const spellLevel = i + 1;
+                        newSpellSlots[spellLevel].total = numSlots;
+                        // Preserve used slots if possible
+                        if (character.spellcasting.spellSlots[spellLevel]) {
+                           newSpellSlots[spellLevel].used = Math.min(numSlots, character.spellcasting.spellSlots[spellLevel].used);
+                        }
+                    });
+                }
+            }
+        }
+        // If multiclass or no class, slots will be 0 unless manually edited.
+
+        store.set({ spellcasting: { ...character.spellcasting, spellSlots: newSpellSlots } });
+    }
 
     function _applyClassFeatures() {
         const character = store.get();
@@ -121,7 +158,8 @@
         store.set({ classes: newClasses });
         _applyClassFeatures(); 
         recalculateMaxHp();
-		_updateProficiencyBonus(); // <-- ADD THIS LINE
+		_updateProficiencyBonus();
+        _calculateSpellSlots(); // MODIFIED: This line was missing
     }
     
     function updateCharacterProperty(field, value, subField) {
@@ -146,13 +184,14 @@
         }
     }
 
-    function addClass() {
+      function addClass() {
         const character = store.get();
         const newClasses = [...(character.classes || [])];
         newClasses.push({ name: '', level: 1, subclassName: '' });
         store.set({ classes: newClasses });
         recalculateMaxHp();
-		_updateProficiencyBonus(); // <-- ADD THIS LINE
+		_updateProficiencyBonus();
+        _calculateSpellSlots(); // MODIFIED: This line was missing
     }
     
     function removeClass(index) {
@@ -163,7 +202,8 @@
             store.set({ classes: newClasses });
             _applyClassFeatures(); 
             recalculateMaxHp();
-			_updateProficiencyBonus(); // <-- ADD THIS LINE
+			_updateProficiencyBonus();
+            _calculateSpellSlots(); // MODIFIED: This line was missing
         }
     }
     
@@ -211,6 +251,7 @@
 
     Object.assign(actions, {
         _applyClassFeatures,
+        _calculateSpellSlots, // MODIFIED: Added this to the list
         applyRace,
         applySubrace,
         handleRaceChange,

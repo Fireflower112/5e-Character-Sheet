@@ -1,6 +1,22 @@
 // js/handlers/inventory-handlers.js
 
 DndSheet.handlers.inventoryClickHandlers = {
+    // MODIFIED: Added the handler for the custom container button
+    'add-container': () => {
+        const containerData = {
+            name: document.getElementById('container-name').value,
+            description: document.getElementById('container-description').value,
+            capacity: parseFloat(document.getElementById('container-capacity').value) || 0,
+            weight: parseFloat(document.getElementById('container-weight').value) || 0,
+        };
+        if (containerData.name) {
+            DndSheet.stores.characterActions.addContainer(containerData);
+            document.getElementById('add-container-form').reset();
+            DndSheet.helpers.showMessage('Container added!', 'green');
+        } else {
+            DndSheet.helpers.showMessage('Container name is required.', 'red');
+        }
+    },
     'add-item-bonus': (target) => {
         const form = target.closest('#add-item-form');
         const bonusValueInput = form.querySelector('#add-item-bonus-value');

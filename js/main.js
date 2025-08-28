@@ -9,13 +9,9 @@ const DndSheet = {
     app: {},
 };
 
-// Core application logic (rendering, navigation)
-// MODIFIED: This IIFE now runs immediately, creating the app object so other files can access it.
 DndSheet.app = (function() {
-    // These will be assigned once the DOM is ready in the init() function
     let contentArea;
     let summaryHeaderArea;
-    
     let currentPage = localStorage.getItem('currentPage') || 'dashboard';
     let currentSubPage = localStorage.getItem('currentSubPage') || 'skills';
 
@@ -45,9 +41,13 @@ DndSheet.app = (function() {
             if (typeof DndSheet.app.attachContainerBrowserSearch === 'function') {
                 DndSheet.app.attachContainerBrowserSearch();
             }
-            // MODIFIED: This now also attaches the handler for the custom container form
             if (typeof DndSheet.pages.attachStoredItemsPageHandlers === 'function') {
                 DndSheet.pages.attachStoredItemsPageHandlers();
+            }
+        }
+        if (currentPage === 'character-editor' && currentSubPage === 'spells') {
+            if (typeof DndSheet.pages.attachSpellsEditorHandlers === 'function') {
+                DndSheet.pages.attachSpellsEditorHandlers();
             }
         }
     }
@@ -64,13 +64,11 @@ DndSheet.app = (function() {
         });
     }
     
-    // Expose public methods
     return {
         render,
         setCurrentPage: (page) => {
             currentPage = page;
             localStorage.setItem('currentPage', currentPage);
-            // Set default sub-page for new main page
             if (currentPage === 'dashboard') currentSubPage = 'skills';
             else if (currentPage === 'inventory') currentSubPage = 'equipped';
             else if (currentPage === 'notes') currentSubPage = 'character';
@@ -85,7 +83,6 @@ DndSheet.app = (function() {
             localStorage.setItem('currentSubPage', currentSubPage);
             render();
         },
-        // ADDED: An init function to handle setup once the DOM is loaded
         init: function() {
             contentArea = document.getElementById('content-area');
             summaryHeaderArea = document.getElementById('character-summary-header');
@@ -105,7 +102,6 @@ DndSheet.app = (function() {
     };
 })();
 
-// MODIFIED: The DOMContentLoaded listener now just calls the app's init function.
 document.addEventListener('DOMContentLoaded', () => {
     DndSheet.app.init();
 });

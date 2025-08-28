@@ -13,7 +13,37 @@
             ...DndSheet.handlers.homebrewClickHandlers,
 			...DndSheet.handlers.itemBrowserClickHandlers,
 			...DndSheet.handlers.containerBrowserClickHandlers,
+            ...DndSheet.handlers.trackerClickHandlers,
             
+            // NEW: Add handlers for the new spell buttons
+           'cast-spell': (target) => DndSheet.stores.characterActions.castSpell(target.dataset.spellId),
+            'delete-spell': (target) => DndSheet.stores.characterActions.deleteSpell(target.dataset.spellId),
+
+            // NEW: Handler for adding a custom spell
+            'add-spell': () => {
+                const form = document.getElementById('add-spell-form');
+                const newSpell = {
+                    name: form.querySelector('#spell-name').value,
+                    description: form.querySelector('#spell-description').value,
+                    level: parseInt(form.querySelector('#spell-level').value, 10),
+                    school: form.querySelector('#spell-school').value,
+                    castingTime: form.querySelector('#spell-casting-time').value,
+                    durationValue: parseInt(form.querySelector('#spell-duration-value').value, 10),
+                    durationUnit: form.querySelector('#spell-duration-unit').value,
+                    damageNumDice: form.querySelector('#spell-damage-num-dice').value,
+                    damageDieType: form.querySelector('#spell-damage-die-type').value,
+                    damageType: form.querySelector('#spell-damage-type').value,
+                };
+
+                if (newSpell.name && !isNaN(newSpell.level)) {
+                    DndSheet.stores.characterActions.addSpell(newSpell);
+                    DndSheet.helpers.showMessage('Spell added successfully!', 'green');
+                    form.reset();
+                } else {
+                    DndSheet.helpers.showMessage('Please enter a spell name and level.', 'red');
+                }
+            },
+			
             // General application handlers remain here
             'toggle-accordion': (target) => {
                 const wrapper = target.closest('div[data-accordion-wrapper]');

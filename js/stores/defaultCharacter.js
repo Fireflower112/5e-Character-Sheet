@@ -129,15 +129,19 @@ DndSheet.helpers.getInitialState = () => {
         },
         spellcasting: { castingStat: 'int', spellResistance: 0, spellSlots: Array(10).fill({ total: 0, used: 0 }) },
         spells: {
-            "default-spell-1": { // ADDED this whole block for testing
+            "default-spell-1": {
                 id: "default-spell-1",
                 name: "Magic Missile",
                 level: 1,
                 school: "Evocation",
                 favorited: true,
-                description: "You create three magical darts."
+                description: "You create three magical darts.",
+                // ADDED these two lines
+                durationValue: 0,
+                durationUnit: 'Instantaneous',
             }
         },
+	    activeTimers: [],
         equippedItems: {},
     };
 
