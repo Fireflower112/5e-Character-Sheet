@@ -50,13 +50,19 @@ DndSheet.pages.DashboardCombatPage = (character) => {
                 damageHtml = `<p class="text-sm text-gray-600"><strong>Damage:</strong> ${spell.damageNumDice}d${spell.damageDieType} ${spell.damageType || ''}</p>`;
             }
 
-            return `
-             <div class="bg-white p-3 rounded-lg shadow-inner">
-                <h5 class="font-semibold text-indigo-700">${spell.name} (Lvl ${spell.level})</h5>
-                ${damageHtml}
-                ${spell.description ? `<p class="text-xs text-gray-500 mt-1 truncate">${spell.description}</p>` : ''}
-            </div>
-        `;
+        return `
+ <div class="bg-white p-3 rounded-lg shadow-inner flex items-center justify-between">
+    <div class="flex-grow">
+        <h5 class="font-semibold text-indigo-700">${spell.name} (${spell.level === 0 ? 'Cantrip' : `Lvl ${spell.level}`})</h5>
+        ${damageHtml}
+        ${spell.description ? `<p class="text-xs text-gray-500 mt-1 truncate">${spell.description}</p>` : ''}
+    </div>
+    <div class="flex items-center">
+        <button data-action="cast-spell" data-spell-id="${spell.id}" class="bg-indigo-500 text-white text-xs px-2 py-1 rounded hover:bg-indigo-600">Cast</button>
+        <button data-action="toggle-favorite-spell" data-spell-id="${spell.id}" class="text-yellow-500 text-2xl pl-3 pr-1">${spell.favorited ? '★' : '☆'}</button>
+    </div>
+ </div>
+`;
         }).join('');
     };
 
@@ -65,8 +71,9 @@ DndSheet.pages.DashboardCombatPage = (character) => {
         const timerListHtml = timers.length > 0 ? timers.map(timer => `
             <div class="flex items-center justify-between bg-white p-2 rounded-md shadow-inner">
                 <div class="flex-grow">
-                    <div class="font-semibold">${timer.name}</div>
-                </div>
+				<div class="font-semibold">${timer.name}</div>
+				${timer.description ? `<div class="text-xs text-gray-500 italic">${timer.description}</div>` : ''}
+			</div>
                 <div class="flex items-center gap-3">
                     <span class="text-lg font-semibold text-gray-700">${timer.duration} ${timer.unit}</span>
                     <button data-action="decrement-timer" data-timer-id="${timer.id}" data-timer-unit="${timer.unit}" class="px-2 font-bold text-lg bg-gray-200 rounded hover:bg-gray-300">-</button>

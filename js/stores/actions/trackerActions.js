@@ -17,6 +17,7 @@
             unit: timerData.unit,
         };
         const newTimers = [...character.activeTimers, newTimer];
+		const timer = { id: uuid(), name, description, duration, unit };
         store.set({ activeTimers: newTimers });
     }
 

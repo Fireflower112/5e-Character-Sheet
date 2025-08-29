@@ -14,6 +14,7 @@
             
             'cast-spell': (target) => DndSheet.stores.characterActions.castSpell(target.dataset.spellId),
             'delete-spell': (target) => DndSheet.stores.characterActions.deleteSpell(target.dataset.spellId),
+			'toggle-favorite-spell': (target) => DndSheet.stores.characterActions.toggleFavoriteSpell(target.dataset.spellId),
 
             // MODIFIED: Restored the missing handler for adding a custom spell
             'add-spell': () => {
@@ -91,7 +92,7 @@
        const contentArea = document.getElementById('content-area');
         if (!contentArea) return;
 
-        contentArea.addEventListener('click', (e) => {
+        document.addEventListener('click', (e) => {
         // Check for the simple "add spell" buttons on the editor page first
         if (e.target.matches('.add-spell-btn')) {
             const level = e.target.dataset.level;
@@ -108,7 +109,7 @@
         if (handler) handler(target);
     });
 
-        contentArea.addEventListener('change', (e) => {
+        document.addEventListener('change', (e) => {
              const target = e.target.closest('[data-field], [data-action], [data-skill], [data-save]');
             if (!target) return;
             const { action, field, subfield, skill, type, save } = target.dataset;

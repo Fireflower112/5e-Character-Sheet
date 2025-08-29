@@ -88,7 +88,7 @@
         const level = spell.level;
         if (level === 0) {
             if (spell.durationValue > 0) {
-                DndSheet.stores.characterActions.addTimer({ name: spell.name, duration: spell.durationValue, unit: spell.durationUnit });
+                DndSheet.stores.characterActions.addTimer({ name: spell.name, description: spell.description, duration: spell.durationValue, unit: spell.durationUnit });
             }
             return;
         }
