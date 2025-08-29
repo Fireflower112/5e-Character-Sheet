@@ -24,7 +24,7 @@ DndSheet.pages.DashboardCombatPage = (character) => {
         const favWeapons = allItems.filter(item => item.itemType === 'weapon' && item.favorited);
 
         if (favWeapons.length === 0) {
-            return '<p class="text-gray-500 italic text-center p-4">No favorited weapons. You can favorite a weapon from the Inventory -> All Items tab.</p>';
+            return '<p class="text-gray-500 italic text-center p-4">No favorited weapons.</p>';
         }
 
         return favWeapons.map(item => `
@@ -41,7 +41,7 @@ DndSheet.pages.DashboardCombatPage = (character) => {
         const favSpells = allSpells.filter(spell => spell.favorited);
 
         if (favSpells.length === 0) {
-            return '<p class="text-gray-500 italic text-center p-4">No favorited spells. You can favorite a spell from the Spells tab.</p>';
+            return '<p class="text-gray-500 italic text-center p-4">No favorited spells.</p>';
         }
 
         return favSpells.map(spell => {
@@ -108,22 +108,18 @@ DndSheet.pages.DashboardCombatPage = (character) => {
                 <p class="text-sm text-gray-500 mt-2">Current / Max</p>
            </div>
         </div>
-
         <div class="text-center">
             <button data-action="next-turn" class="px-8 py-3 bg-green-600 text-white font-bold text-lg rounded-lg shadow-md hover:bg-green-700 transition-colors">
                 Next Turn
             </button>
         </div>
-
         ${renderTracker()}
-
         <div class="bg-gray-50 p-4 rounded-2xl shadow-sm">
             <h3 class="text-xl font-semibold mb-3 text-center">Saving Throws</h3>
             <div class="flex flex-wrap gap-2 text-center justify-center">
                 ${renderSavingThrows()}
             </div>
         </div>
-
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="bg-gray-50 p-4 rounded-2xl shadow-sm">
                 <h3 class="text-xl font-semibold mb-3">Favorited Weapons</h3>

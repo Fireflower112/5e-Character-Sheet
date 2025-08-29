@@ -16,10 +16,15 @@ DndSheet.stores.character = {
         this.load();
     },
 
-    subscribe: function(callback) {
+     subscribe: function(callback) {
         this._subscribers.push(callback);
     },
-    
+
+    /* ADD THIS FUNCTION */
+    update: function() {
+        this._notifySubscribers();
+    },
+
     _notifySubscribers: function() {
         this._subscribers.forEach(callback => callback());
     },

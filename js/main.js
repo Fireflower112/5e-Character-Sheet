@@ -49,6 +49,9 @@ DndSheet.app = (function() {
             if (typeof DndSheet.pages.attachSpellsEditorHandlers === 'function') {
                 DndSheet.pages.attachSpellsEditorHandlers();
             }
+            if (typeof DndSheet.app.attachSpellBrowserSearch === 'function') {
+                DndSheet.app.attachSpellBrowserSearch();
+            }
         }
     }
 

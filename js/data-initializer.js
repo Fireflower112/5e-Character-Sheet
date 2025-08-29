@@ -23,7 +23,7 @@
             }
         }
     };
-     initializeAppData();
+    initializeAppData();
 
     DndSheet.data.allContainers = processItemArray(DndSheet.rawData.WotC_containers);
     
@@ -39,7 +39,7 @@
         ...homebrewContainers
     };
 
-    // MODIFIED: This now processes all available spell lists
+    // MODIFIED: This block was missing. It processes all spell lists.
     const createSpellMap = (spellArray) => {
         return (spellArray || []).reduce((acc, spell) => {
             if (spell && spell.name && !acc[spell.name]) {
@@ -54,12 +54,10 @@
     const rangerSpells = createSpellMap(DndSheet.rawData.ranger_spells);
     const druidSpells = createSpellMap(DndSheet.rawData.druid_spells);
 
-    // Merge all spell lists into a single object
     DndSheet.data.allSpells = {
         ...bardSpells,
         ...clericSpells,
         ...rangerSpells,
         ...druidSpells
     };
-
 })();

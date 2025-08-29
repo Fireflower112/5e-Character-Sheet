@@ -8,19 +8,50 @@
         });
     }
 
+    function addNewBlankSpell(level) {
+        const spellData = {
+            name: 'New Spell',
+            description: '',
+            level: parseInt(level, 10) || 0,
+            school: 'Abjuration',
+            castingTime: '1 Action',
+            durationUnit: 'Instantaneous'
+        };
+        addSpell(spellData);
+    }
+
     function addSpell(spellData) {
         const character = store.get();
         const newSpell = { 
             ...spellData, 
             id: uuid(), 
             favorited: false,
-            // Add the new damage fields
+            durationEffect: spellData.durationEffect || '',
             damageNumDice: parseInt(spellData.damageNumDice, 10) || null,
             damageDieType: parseInt(spellData.damageDieType, 10) || null,
             damageType: spellData.damageType || ''
         };
         const newSpells = { ...character.spells, [newSpell.id]: newSpell };
         store.set({ spells: newSpells });
+    }
+
+    function addPremadeSpell(spellData) {
+        const newSpell = {
+            name: spellData.name,
+            description: spellData.description,
+            level: spellData.properties.Level,
+            school: spellData.properties.School,
+        };
+        const durationStr = spellData.properties.Duration || 'Instantaneous';
+        const durationMatch = durationStr.match(/(\d+)\s*(round|minute|hour)/i);
+        if (durationMatch) {
+            newSpell.durationValue = parseInt(durationMatch[1], 10);
+            newSpell.durationUnit = durationMatch[2].charAt(0).toUpperCase() + durationMatch[2].slice(1) + 's';
+        } else {
+            newSpell.durationValue = 0;
+            newSpell.durationUnit = 'Instantaneous';
+        }
+        addSpell(newSpell);
     }
 
     function deleteSpell(spellId) {
@@ -48,14 +79,14 @@
             store.set({ spellcasting: { ...character.spellcasting, spellSlots: newSlots } });
         }
     }
-	
-	function castSpell(spellId) {
+
+    function castSpell(spellId) {
         const character = store.get();
         const spell = character.spells[spellId];
         if (!spell) return;
 
         const level = spell.level;
-        if (level === 0) { // Cantrips don't use slots, but we might still track them
+        if (level === 0) {
             if (spell.durationValue > 0) {
                 DndSheet.stores.characterActions.addTimer({ name: spell.name, duration: spell.durationValue, unit: spell.durationUnit });
             }
@@ -66,7 +97,6 @@
         if (newSlots[level] && newSlots[level].used < newSlots[level].total) {
             newSlots[level].used += 1;
             
-            // If the spell has a duration, create a timer for it
             if (spell.durationValue > 0) {
                 DndSheet.stores.characterActions.addTimer({ name: spell.name, duration: spell.durationValue, unit: spell.durationUnit });
             }
@@ -77,13 +107,14 @@
         }
     }
 
-
-   Object.assign(actions, {
+    Object.assign(actions, {
         addSpell,
+        addNewBlankSpell,
+        addPremadeSpell,
         deleteSpell,
         toggleFavoriteSpell,
         updateSpellSlot,
-        castSpell, // <-- Add the new action
+        castSpell,
     });
-
+    
 })(DndSheet.stores.character, DndSheet.stores.characterActions);
