@@ -1,156 +1,48 @@
 // js/handlers/event-listeners.js
-
 (function() {
     const initialize = () => {
         const clickHandlers = {
-            ...DndSheet.handlers.inventoryClickHandlers,
-            ...DndSheet.handlers.notesClickHandlers,
-            ...DndSheet.handlers.homebrewClickHandlers,
-            ...DndSheet.handlers.itemBrowserClickHandlers,
-            ...DndSheet.handlers.containerBrowserClickHandlers,
-            ...DndSheet.handlers.trackerClickHandlers,
-            ...DndSheet.handlers.spellBrowserClickHandlers,
-
-            'cast-spell': (target) => DndSheet.stores.characterActions.castSpell(target.dataset.spellId),
-            'delete-spell': (target) => DndSheet.stores.characterActions.deleteSpell(target.dataset.spellId),
-            'toggle-favorite-spell': (target) => DndSheet.stores.characterActions.toggleFavoriteSpell(target.dataset.spellId),
-
-            'add-spell': () => {
-                const form = document.getElementById('add-spell-form');
-                const newSpell = {
-                    name: form.querySelector('#spell-name').value,
-                    description: form.querySelector('#spell-description').value,
-                    level: parseInt(form.querySelector('#spell-level').value, 10),
-                    school: form.querySelector('#spell-school').value,
-                    castingTime: form.querySelector('#spell-casting-time').value,
-                    durationValue: parseInt(form.querySelector('#spell-duration-value').value, 10),
-                    durationUnit: form.querySelector('#spell-duration-unit').value,
-                    durationEffect: form.querySelector('#spell-duration-effect').value,
-                    damageNumDice: form.querySelector('#spell-damage-num-dice').value,
-                    damageDieType: form.querySelector('#spell-damage-die-type').value,
-                    damageType: form.querySelector('#spell-damage-type').value,
-                };
-
-                if (newSpell.name && !isNaN(newSpell.level)) {
-                    DndSheet.stores.characterActions.addSpell(newSpell);
-                    DndSheet.helpers.showMessage('Spell added successfully!', 'green');
-                    form.reset();
-                } else {
-                    DndSheet.helpers.showMessage('Please enter a spell name and level.', 'red');
-                }
-            },
-            'toggle-accordion': (target) => {
-                const wrapper = target.closest('div[data-accordion-wrapper]');
-                if (wrapper) {
-                    const details = wrapper.querySelector('.accordion-details');
-                    if (details) details.classList.toggle('hidden');
-                }
-            },
+            'save-character': () => DndSheet.stores.character.save(),
+            'load-character': () => DndSheet.stores.character.load(),
             'sub-tab': (target) => DndSheet.app.setCurrentSubPage(target.dataset.subpage),
-            'add-class': () => DndSheet.stores.characterActions.addClass(),
-            'remove-class': (target) => DndSheet.stores.characterActions.removeClass(target.dataset.index),
-            'apply-healing': () => {
-                const input = document.getElementById('hp-change-input');
-                const amount = parseInt(input.value, 10);
-                if (!isNaN(amount)) {
-                    DndSheet.stores.characterActions.applyHpChange(amount);
-                    input.value = '';
-                }
-            },
-            'apply-damage': () => {
-                const input = document.getElementById('hp-change-input');
-                const amount = parseInt(input.value, 10);
-                if (!isNaN(amount)) {
-                    DndSheet.stores.characterActions.applyHpChange(-amount);
-                    input.value = '';
-                }
-            },
-            'toggle-hp-override': (target) => {
-                const overrideValueInput = document.getElementById('hp-override-value');
-                if (target.checked) {
-                    overrideValueInput.classList.remove('hidden');
-                } else {
-                    overrideValueInput.classList.add('hidden');
-                    DndSheet.stores.characterActions.updateCharacterProperty('hpOverride', null);
-                }
-            },
-            'toggle-dc-override': (target) => {
-                const overrideValueInput = document.getElementById('dc-override-value');
-                const isChecked = target.checked;
-                overrideValueInput.classList.toggle('hidden', !isChecked);
-                if (!isChecked) {
-                    DndSheet.stores.characterActions.updateCharacterProperty('spellcasting', null, 'dcOverride');
-                }
-            },
-            'toggle-attack-override': (target) => {
-                const overrideValueInput = document.getElementById('attack-override-value');
-                const isChecked = target.checked;
-                overrideValueInput.classList.toggle('hidden', !isChecked);
-                if (!isChecked) {
-                    DndSheet.stores.characterActions.updateCharacterProperty('spellcasting', null, 'attackBonusOverride');
-                }
-            },
+            ...DndSheet.handlers.characterEditorClickHandlers,
+            ...DndSheet.handlers.dashboardClickHandlers,
+            ...DndSheet.handlers.inventoryClickHandlers,
+            // ... (add other click handlers here)
         };
 
         const changeHandlers = {
-            'update-class': (target) => {
-                const { index, field } = target.dataset;
-                DndSheet.stores.characterActions.updateClass(index, field, target.value);
-            },
-            'update-subclass': (target) => {
-                const { index } = target.dataset;
-                DndSheet.stores.characterActions.updateSubclass(index, target.value);
-            },
+            ...DndSheet.handlers.characterEditorChangeHandlers,
+            // ... (add other change handlers here)
         };
 
-        document.addEventListener('click', (e) => {
-    const target = e.target.closest('[data-action]');
-    if (!target) return;
-
-    const action = target.dataset.action;
-
-    // ADD THIS BLOCK to handle main navigation
-    if (action.startsWith('nav-')) {
-        const pageName = action.substring(4); // Turns "nav-character-editor" into "character-editor"
-        DndSheet.app.setCurrentPage(pageName);
-        return; // We're done, no need to check other handlers
-    }
-    // END OF BLOCK TO ADD
-
-    // This is your existing logic for all other actions
-    const handler = clickHandlers[action];
-    if (handler) {
-        handler(target);
-    }
-});
-
-        document.addEventListener('change', (e) => {
-            const target = e.target.closest('[data-field], [data-action], [data-skill], [data-save]');
+        document.body.addEventListener('click', (event) => {
+            const target = event.target.closest('[data-action]');
             if (!target) return;
-            const { action, field, subfield, skill, type, save } = target.dataset;
-            const handler = changeHandlers[action] || changeHandlers[field];
-            if (handler) {
-                handler(target);
-            } else if (target.id === 'item-type') {
-                const selectedType = target.value;
-                const itemFields = {
-                    weapon: document.getElementById('weapon-fields'),
-                    armor: document.getElementById('armor-fields'),
-                    shield: document.getElementById('shield-fields'),
-                };
-                Object.values(itemFields).forEach(field => field?.classList.add('hidden'));
-                if (itemFields[selectedType]) {
-                    itemFields[selectedType].classList.remove('hidden');
+            const action = target.dataset.action;
+            if (action.startsWith('nav-')) {
+                DndSheet.app.setCurrentPage(action.substring(4));
+            } else if (clickHandlers[action]) {
+                clickHandlers[action](target);
+            }
+        });
+
+        document.body.addEventListener('change', (event) => {
+            const target = event.target.closest('[data-field], [data-action]');
+            if (!target) return;
+            const { action, field, subfield } = target.dataset;
+            if (changeHandlers[action]) {
+                changeHandlers[action](target);
+            } else if (field) {
+                let char = DndSheet.stores.character.get();
+                const value = target.type === 'checkbox' ? target.checked : target.value;
+                char = DndSheet.stores.characterActions.updateCharacterProperty(char, { field, value, subfield });
+                if (field === 'hpRolls' || field === 'hpOverride' || subfield?.includes('con.')) {
+                    char = DndSheet.stores.characterActions.recalculateMaxHp(char);
                 }
-            } else if (skill && type) { 
-                const c = DndSheet.stores.character.get(); const n = { ...c.skills }; n[skill][type] = target.checked; DndSheet.stores.character.set({ skills: n }); 
-            } else if (save) { 
-                const c = DndSheet.stores.character.get(); const n = { ...c.savingThrows }; n[save].proficient = target.checked; DndSheet.stores.character.set({ savingThrows: n }); 
-            } else if (field) { 
-                DndSheet.stores.characterActions.updateCharacterProperty(field, target.value, subfield);
+                DndSheet.stores.character.set(char);
             }
         });
     };
-
     DndSheet.handlers.initialize = initialize;
 })();

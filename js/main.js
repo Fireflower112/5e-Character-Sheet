@@ -81,7 +81,7 @@ DndSheet.app = (function() {
 			contentArea = document.getElementById('content-area');
 			summaryHeaderArea = document.getElementById('character-summary-header');
 
-			// loadHomebrewData(); // Temporarily disabled to fix the crash
+			loadHomebrewData();
 			DndSheet.handlers.initialize();
 			DndSheet.stores.character.subscribe(DndSheet.app.render);
 
