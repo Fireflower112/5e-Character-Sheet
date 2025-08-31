@@ -1,8 +1,21 @@
 // js/spells-editor-page.js
+
 DndSheet.pages.SpellsEditorPage = (character) => {
     const castingStats = [ { key: 'int', label: 'Intelligence' }, { key: 'wis', label: 'Wisdom' }, { key: 'cha', label: 'Charisma' }];
     const spellSchools = ["Abjuration", "Conjuration", "Divination", "Enchantment", "Evocation", "Illusion", "Necromancy", "Transmutation"];
     const castingTimes = ['1 Action', '1 Bonus Action', '1 Reaction', '1 Minute', '10 Minutes', '1 Hour'];
+
+    // --- NEW: Calculation Logic ---
+    const spellcastingAbilityKey = character.spellcasting.castingStat || 'int';
+    const abilityMod = DndSheet.helpers.getAbilityModifier(DndSheet.helpers.getFinalAbilityScore(character, spellcastingAbilityKey));
+    const profBonus = character.proficiencyBonus || 2;
+
+    const calculatedDC = 8 + profBonus + abilityMod;
+    const calculatedAttack = profBonus + abilityMod;
+
+    const spellSaveDC = character.spellcasting.dcOverride !== null ? character.spellcasting.dcOverride : calculatedDC;
+    const spellAttackBonus = character.spellcasting.attackBonusOverride !== null ? character.spellcasting.attackBonusOverride : calculatedAttack;
+    // --- END: Calculation Logic ---
 
     const renderSpellsList = (spells) => {
     const spellArray = Object.values(spells).sort((a, b) => a.level - b.level || a.name.localeCompare(b.name));
@@ -49,23 +62,32 @@ DndSheet.pages.SpellsEditorPage = (character) => {
                 <div class="bg-gray-50 p-6 rounded-2xl shadow-sm">
                     <h3 class="text-xl font-semibold mb-3">Spellcasting Stats</h3>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div><label for="casting-stat" class="block text-sm font-medium">Casting Ability</label><select id="casting-stat" data-field="spellcasting" data-subfield="castingStat" class="w-full p-2 border rounded-md">${castingStats.map(s => `<option value="${s.key}" ${character.spellcasting.castingStat === s.key ? 'selected' : ''}>${s.label}</option>`).join('')}</select></div>
-                        <div><label class="block text-sm font-medium">Spell Save DC</label><input type="number" class="w-full p-2 border rounded-md bg-gray-200" value="0" readonly></div>
-                        <div><label class="block text-sm font-medium">Spell Attack Bonus</label><input type="number" class="w-full p-2 border rounded-md bg-gray-200" value="0" readonly></div>
-                    </div>
-                </div>
-                <div class="bg-gray-50 p-6 rounded-2xl shadow-sm">
-                     <h3 class="text-xl font-semibold mb-3">Spell Slots (Manual Override)</h3>
-                     <div class="grid grid-cols-3 md:grid-cols-5 gap-4">
-                        ${(character.spellcasting.spellSlots || []).filter((s, i) => i > 0).map((slot, index) => {
-                            const level = index + 1;
-                            return `
-                                <div class="text-center">
-                                    <label class="font-bold">Lvl ${level}</label>
-                                    <input type="number" data-action="update-spell-slot-total" data-level="${level}" class="w-full p-2 border rounded-md text-center mt-1" value="${slot.total}">
+                        <div>
+                            <label for="casting-stat" class="block text-sm font-medium">Casting Ability</label>
+                            <select id="casting-stat" data-field="spellcasting" data-subfield="castingStat" class="w-full p-2 border rounded-md">${castingStats.map(s => `<option value="${s.key}" ${character.spellcasting.castingStat === s.key ? 'selected' : ''}>${s.label}</option>`).join('')}</select>
+                        </div>
+                        <div>
+                            <div class="flex items-center justify-between">
+                                <label class="block text-sm font-medium">Spell Save DC</label>
+                                <div class="text-xs">
+                                    <input type="checkbox" id="dc-override-checkbox" data-action="toggle-dc-override" ${character.spellcasting.dcOverride !== null ? 'checked' : ''}>
+                                    <label for="dc-override-checkbox">Override</label>
                                 </div>
-                            `;
-                        }).join('')}
+                            </div>
+                            <input type="number" class="w-full p-2 border rounded-md bg-gray-200" value="${spellSaveDC}" readonly>
+                            <input type="number" id="dc-override-value" data-field="spellcasting" data-subfield="dcOverride" class="w-full p-2 border rounded-md mt-1 ${character.spellcasting.dcOverride === null ? 'hidden' : ''}" value="${character.spellcasting.dcOverride || calculatedDC}">
+                        </div>
+                        <div>
+                            <div class="flex items-center justify-between">
+                                <label class="block text-sm font-medium">Spell Attack Bonus</label>
+                                <div class="text-xs">
+                                    <input type="checkbox" id="attack-override-checkbox" data-action="toggle-attack-override" ${character.spellcasting.attackBonusOverride !== null ? 'checked' : ''}>
+                                    <label for="attack-override-checkbox">Override</label>
+                                </div>
+                            </div>
+                            <input type="number" class="w-full p-2 border rounded-md bg-gray-200" value="${spellAttackBonus}" readonly>
+                            <input type="number" id="attack-override-value" data-field="spellcasting" data-subfield="attackBonusOverride" class="w-full p-2 border rounded-md mt-1 ${character.spellcasting.attackBonusOverride === null ? 'hidden' : ''}" value="${character.spellcasting.attackBonusOverride || calculatedAttack}">
+                        </div>
                     </div>
                 </div>
 

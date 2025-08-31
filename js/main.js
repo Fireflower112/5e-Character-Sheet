@@ -1,14 +1,5 @@
 // js/main.js
 
-const DndSheet = {
-    pages: {},
-    stores: {},
-    data: {},
-    helpers: {},
-    handlers: {},
-    app: {},
-};
-
 DndSheet.app = (function() {
     let contentArea;
     let summaryHeaderArea;
@@ -87,21 +78,15 @@ DndSheet.app = (function() {
             render();
         },
         init: function() {
-            contentArea = document.getElementById('content-area');
-            summaryHeaderArea = document.getElementById('character-summary-header');
+			contentArea = document.getElementById('content-area');
+			summaryHeaderArea = document.getElementById('character-summary-header');
 
-            loadHomebrewData();
-            DndSheet.handlers.initialize();
-            DndSheet.stores.character.subscribe(DndSheet.app.render);
-            
-            document.querySelectorAll('.main-nav-button').forEach(button => {
-                button.addEventListener('click', () => {
-                    DndSheet.app.setCurrentPage(button.dataset.page);
-                });
-            });
+			// loadHomebrewData(); // Temporarily disabled to fix the crash
+			DndSheet.handlers.initialize();
+			DndSheet.stores.character.subscribe(DndSheet.app.render);
 
-            DndSheet.stores.character.init();
-        }
+			DndSheet.stores.character.init();
+		}
     };
 })();
 

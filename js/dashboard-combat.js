@@ -68,21 +68,28 @@ DndSheet.pages.DashboardCombatPage = (character) => {
 
     const renderTracker = () => {
         const timers = character.activeTimers || [];
-        const timerListHtml = timers.length > 0 ? timers.map(timer => `
-            <div class="flex items-center justify-between bg-white p-2 rounded-md shadow-inner">
-                <div class="flex-grow">
-				<div class="font-semibold">${timer.name}</div>
-				${timer.description ? `<div class="text-xs text-gray-500 italic">${timer.description}</div>` : ''}
-			</div>
-                <div class="flex items-center gap-3">
-                    <span class="text-lg font-semibold text-gray-700">${timer.duration} ${timer.unit}</span>
-                    <button data-action="decrement-timer" data-timer-id="${timer.id}" data-timer-unit="${timer.unit}" class="px-2 font-bold text-lg bg-gray-200 rounded hover:bg-gray-300">-</button>
-                    <button data-action="delete-timer" data-timer-id="${timer.id}" class="text-red-500 font-bold hover:text-red-700">✕</button>
-                </div>
+		const timerListHtml = timers.length > 0 ? timers.map(timer => `
+    <div class="bg-white rounded-md shadow-inner" data-accordion-wrapper>
+        <div data-action="toggle-accordion" class="flex items-center justify-between p-2 cursor-pointer hover:bg-gray-100 rounded-md">
+            <div class="flex items-center">
+                <span class="font-semibold">${timer.name}</span>
+                <svg class="w-4 h-4 text-gray-400 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
             </div>
-        `).join('') : '<p class="text-gray-500 italic p-4 text-center">No active effects.</p>';
+            <div class="flex items-center gap-3">
+                <span class="text-lg font-semibold text-gray-700">${timer.duration} ${timer.unit}</span>
+                <button data-action="decrement-timer" data-timer-id="${timer.id}" data-timer-unit="${timer.unit}" class="px-2 font-bold text-lg bg-gray-200 rounded hover:bg-gray-300">-</button>
+                <button data-action="delete-timer" data-timer-id="${timer.id}" class="text-red-500 font-bold hover:text-red-700">✕</button>
+            </div>
+        </div>
+        ${timer.description ? `
+        <div class="accordion-details hidden p-3 border-t border-gray-200">
+            <p class="text-sm text-gray-600">${timer.description}</p>
+        </div>
+        ` : ''}
+    </div>
+`).join('') : '<p class="text-gray-500 italic p-4 text-center">No active effects.</p>';
 
-        return `
+		return `
             <div class="bg-gray-50 p-4 rounded-2xl shadow-sm">
                 <h3 class="text-xl font-semibold mb-3">Temporary Effects & Timers</h3>
                 <div class="space-y-2 mb-4">${timerListHtml}</div>

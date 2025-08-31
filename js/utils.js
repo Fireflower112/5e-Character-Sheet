@@ -25,14 +25,3 @@ function loadHomebrewData() {
         console.error("Failed to load homebrew data:", e);
     }
 }
-
-DndSheet.helpers.showMessage = (message, color) => {
-    const messageBox = document.getElementById('message-box');
-    if (!messageBox) return;
-    messageBox.textContent = message;
-    messageBox.style.backgroundColor = color;
-    messageBox.classList.add('show');
-    setTimeout(() => {
-        messageBox.classList.remove('show');
-    }, 3000);
-};

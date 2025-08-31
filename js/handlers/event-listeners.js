@@ -2,21 +2,19 @@
 
 (function() {
     const initialize = () => {
-        DndSheet.app.editBonuses = [];
         const clickHandlers = {
             ...DndSheet.handlers.inventoryClickHandlers,
             ...DndSheet.handlers.notesClickHandlers,
             ...DndSheet.handlers.homebrewClickHandlers,
-			...DndSheet.handlers.itemBrowserClickHandlers,
-			...DndSheet.handlers.containerBrowserClickHandlers,
+            ...DndSheet.handlers.itemBrowserClickHandlers,
+            ...DndSheet.handlers.containerBrowserClickHandlers,
             ...DndSheet.handlers.trackerClickHandlers,
             ...DndSheet.handlers.spellBrowserClickHandlers,
-            
+
             'cast-spell': (target) => DndSheet.stores.characterActions.castSpell(target.dataset.spellId),
             'delete-spell': (target) => DndSheet.stores.characterActions.deleteSpell(target.dataset.spellId),
-			'toggle-favorite-spell': (target) => DndSheet.stores.characterActions.toggleFavoriteSpell(target.dataset.spellId),
+            'toggle-favorite-spell': (target) => DndSheet.stores.characterActions.toggleFavoriteSpell(target.dataset.spellId),
 
-            // MODIFIED: Restored the missing handler for adding a custom spell
             'add-spell': () => {
                 const form = document.getElementById('add-spell-form');
                 const newSpell = {
@@ -76,6 +74,22 @@
                     DndSheet.stores.characterActions.updateCharacterProperty('hpOverride', null);
                 }
             },
+            'toggle-dc-override': (target) => {
+                const overrideValueInput = document.getElementById('dc-override-value');
+                const isChecked = target.checked;
+                overrideValueInput.classList.toggle('hidden', !isChecked);
+                if (!isChecked) {
+                    DndSheet.stores.characterActions.updateCharacterProperty('spellcasting', null, 'dcOverride');
+                }
+            },
+            'toggle-attack-override': (target) => {
+                const overrideValueInput = document.getElementById('attack-override-value');
+                const isChecked = target.checked;
+                overrideValueInput.classList.toggle('hidden', !isChecked);
+                if (!isChecked) {
+                    DndSheet.stores.characterActions.updateCharacterProperty('spellcasting', null, 'attackBonusOverride');
+                }
+            },
         };
 
         const changeHandlers = {
@@ -88,29 +102,30 @@
                 DndSheet.stores.characterActions.updateSubclass(index, target.value);
             },
         };
-        
-       const contentArea = document.getElementById('content-area');
-        if (!contentArea) return;
 
         document.addEventListener('click', (e) => {
-        // Check for the simple "add spell" buttons on the editor page first
-        if (e.target.matches('.add-spell-btn')) {
-            const level = e.target.dataset.level;
-            if (level) {
-                DndSheet.actions.spells.addSpell(parseInt(level, 10));
-                return; // Exit after handling
-            }
-        }
+    const target = e.target.closest('[data-action]');
+    if (!target) return;
 
-        // Original logic for all other data-action buttons
-        const target = e.target.closest('[data-action]');
-        if (!target) return;
-        const handler = clickHandlers[target.dataset.action];
-        if (handler) handler(target);
-    });
+    const action = target.dataset.action;
+
+    // ADD THIS BLOCK to handle main navigation
+    if (action.startsWith('nav-')) {
+        const pageName = action.substring(4); // Turns "nav-character-editor" into "character-editor"
+        DndSheet.app.setCurrentPage(pageName);
+        return; // We're done, no need to check other handlers
+    }
+    // END OF BLOCK TO ADD
+
+    // This is your existing logic for all other actions
+    const handler = clickHandlers[action];
+    if (handler) {
+        handler(target);
+    }
+});
 
         document.addEventListener('change', (e) => {
-             const target = e.target.closest('[data-field], [data-action], [data-skill], [data-save]');
+            const target = e.target.closest('[data-field], [data-action], [data-skill], [data-save]');
             if (!target) return;
             const { action, field, subfield, skill, type, save } = target.dataset;
             const handler = changeHandlers[action] || changeHandlers[field];

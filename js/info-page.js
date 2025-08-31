@@ -156,3 +156,38 @@ DndSheet.pages.InfoPage = (character) => {
         </div>
     `;
 };
+
+// Add this function inside js/info-page.js
+
+function renderSubraceDetails(raceName, subraceName) {
+    const raceData = DndSheet.data.races[raceName];
+    if (!raceData || !raceData.subraces || !subraceName) {
+        return '';
+    }
+
+    const subraceData = raceData.subraces.find(sr => sr.name === subraceName);
+    if (!subraceData) {
+        return '';
+    }
+
+    let html = `<h4 class="text-lg font-semibold text-gray-700 mt-4 border-t pt-4">Subrace Traits (${subraceData.name})</h4>`;
+    html += '<ul class="list-disc list-inside mt-2 space-y-2 text-gray-600">';
+
+    // Display Ability Score Increase for the subrace
+    if (subraceData.abilityScoreIncrease) {
+        const asi = Object.entries(subraceData.abilityScoreIncrease)
+            .map(([abil, val]) => `${abil.toUpperCase()} +${val}`)
+            .join(', ');
+        html += `<li><strong>Ability Score Increase:</strong> ${asi}</li>`;
+    }
+
+    // Display subrace-specific traits
+    if (subraceData.traits) {
+        subraceData.traits.forEach(trait => {
+            html += `<li><strong>${trait.name}:</strong> ${trait.description}</li>`;
+        });
+    }
+
+    html += '</ul>';
+    return html;
+};

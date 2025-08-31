@@ -16,11 +16,10 @@ DndSheet.stores.character = {
         this.load();
     },
 
-     subscribe: function(callback) {
+    subscribe: function(callback) {
         this._subscribers.push(callback);
     },
 
-    /* ADD THIS FUNCTION */
     update: function() {
         this._notifySubscribers();
     },
@@ -39,11 +38,24 @@ DndSheet.stores.character = {
         }
     },
 
-    load: function() {
-        this._character = DndSheet.helpers.getInitialState();
-        DndSheet.stores.characterActions.applyRace();
-        DndSheet.stores.characterActions._applyClassFeatures();
-        DndSheet.stores.characterActions._calculateSpellSlots(); // <-- ADD THIS LINE
+     load: function() {
+        const savedCharacterJSON = localStorage.getItem('pathfinderCharacterSheet');
+        
+        if (savedCharacterJSON && savedCharacterJSON !== 'undefined' && savedCharacterJSON !== 'null') {
+            try {
+                this._character = JSON.parse(savedCharacterJSON);
+            } catch (e) {
+                this._character = JSON.parse(JSON.stringify(DndSheet.stores.defaultCharacter));
+            }
+        } else {
+            this._character = JSON.parse(JSON.stringify(DndSheet.stores.defaultCharacter));
+        }
+
+        // --- Recalculate derived stats using the new one-way data flow ---
+        this._character = DndSheet.stores.characterActions.applyRace(this._character);
+        this._character = DndSheet.stores.characterActions._applyClassFeatures(this._character);
+        this._character = DndSheet.stores.characterActions._calculateSpellSlots(this._character);
+        
         this._notifySubscribers();
     },
 
@@ -77,8 +89,12 @@ DndSheet.stores.character = {
 
             localStorage.setItem('homebrewSubraces', JSON.stringify(homebrewSubraces));
             
-            // Reload all homebrew data to update the UI
-            loadHomebrewData();
+            // This function needs to be defined globally or passed in to be used here
+            // For now, let's assume it exists on DndSheet.app
+            if(typeof DndSheet.app.loadHomebrewData === 'function') {
+                DndSheet.app.loadHomebrewData();
+            }
+
             DndSheet.helpers.showMessage('Homebrew subrace saved!', 'green');
             this._notifySubscribers();
 
@@ -93,8 +109,11 @@ DndSheet.stores.character = {
             const homebrewRaces = JSON.parse(localStorage.getItem('homebrewRaces') || '{}');
             delete homebrewRaces[raceName];
             localStorage.setItem('homebrewRaces', JSON.stringify(homebrewRaces));
-            // You might need to reload or manually clean DndSheet.data.races here
-            loadHomebrewData();
+            
+            if(typeof DndSheet.app.loadHomebrewData === 'function') {
+                DndSheet.app.loadHomebrewData();
+            }
+
             DndSheet.helpers.showMessage('Homebrew race deleted!', 'green');
             this._notifySubscribers();
         } catch (e) {
@@ -113,8 +132,11 @@ DndSheet.stores.character = {
                 }
                 localStorage.setItem('homebrewSubraces', JSON.stringify(homebrewSubraces));
             }
-            // Reload all homebrew data to update the UI
-            loadHomebrewData();
+            
+            if(typeof DndSheet.app.loadHomebrewData === 'function') {
+                DndSheet.app.loadHomebrewData();
+            }
+            
             DndSheet.helpers.showMessage('Homebrew subrace deleted!', 'green');
             this._notifySubscribers();
         } catch (e) {

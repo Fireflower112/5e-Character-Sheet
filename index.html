@@ -11,25 +11,25 @@
 
     <div id="app-container" class="min-h-screen flex flex-col">
         <nav class="bg-indigo-600 shadow-lg">
-            <div class="max-w-7xl mx-auto px-4">
-                <div class="flex justify-between items-center h-16">
-                    <div class="flex items-center space-x-8">
-                        <h1 class="text-white text-2xl font-bold">D&D 5e Sheet</h1>
-                        <ul class="flex items-baseline space-x-4">
-                            <li><button data-page="dashboard" class="main-nav-button text-gray-300 hover:bg-indigo-500 hover:text-white px-3 py-2 rounded-md font-medium">Dashboard</button></li>
-                            <li><button data-page="character-editor" class="main-nav-button text-gray-300 hover:bg-indigo-500 hover:text-white px-3 py-2 rounded-md font-medium">Character Editor</button></li>
-                            <li><button data-page="inventory" class="main-nav-button text-gray-300 hover:bg-indigo-500 hover:text-white px-3 py-2 rounded-md font-medium">Inventory</button></li>
-                            <li><button data-page="homebrew" class="main-nav-button text-gray-300 hover:bg-indigo-500 hover:text-white px-3 py-2 rounded-md font-medium">Homebrew</button></li>
-                            <li><button data-page="notes" class="main-nav-button text-gray-300 hover:bg-indigo-500 hover:text-white px-3 py-2 rounded-md font-medium">Notes</button></li>
-                        </ul>
-                    </div>
-                    <div class="flex items-center space-x-2">
-						<button onclick="DndSheet.stores.character.save()" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">Save</button>
-						<button onclick="DndSheet.stores.character.load()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">Load</button>
-					</div>
-                </div>
+    <div class="max-w-7xl mx-auto px-4">
+        <div class="flex justify-between items-center h-16">
+            <div class="flex items-center space-x-8">
+                <h1 class="text-white text-2xl font-bold">D&D 5e Sheet</h1>
+                <ul class="flex items-baseline space-x-4">
+                    <li><button data-action="nav-dashboard" class="main-nav-button text-gray-300 hover:bg-indigo-500 hover:text-white px-3 py-2 rounded-md font-medium">Dashboard</button></li>
+                    <li><button data-action="nav-character-editor" class="main-nav-button text-gray-300 hover:bg-indigo-500 hover:text-white px-3 py-2 rounded-md font-medium">Character Editor</button></li>
+                    <li><button data-action="nav-inventory" class="main-nav-button text-gray-300 hover:bg-indigo-500 hover:text-white px-3 py-2 rounded-md font-medium">Inventory</button></li>
+                    <li><button data-action="nav-notes" class="main-nav-button text-gray-300 hover:bg-indigo-500 hover:text-white px-3 py-2 rounded-md font-medium">Notes</button></li>
+                    <li><button data-action="nav-homebrew" class="main-nav-button text-gray-300 hover:bg-indigo-500 hover:text-white px-3 py-2 rounded-md font-medium">Homebrew</button></li>
+                    </ul>
             </div>
-        </nav>
+            <div class="flex items-center space-x-2">
+                <button data-action="save-character" class="px-4 py-2 bg-green-500 text-white font-semibold rounded-md hover:bg-green-600">Save</button>
+                <button data-action="load-character" class="px-4 py-2 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600">Load</button>
+            </div>
+        </div>
+    </div>
+</nav>
 
         <main class="flex-1 p-8">
             <div id="character-summary-header"></div>
@@ -39,65 +39,80 @@
 
     <div id="message-box" class="message-box"></div>
     <div id="modal-container"></div>
-
-    <script src="js/main.js"></script>
-    <script src="js/utils.js"></script>
-
-    <script src="data/races.js"></script>
-    <script src="data/languages.js"></script>
-    <script src="data/classes.js"></script>
-	<script src="data/spell_slots.js"></script> 
-	<script src="data/bard_spells.js"></script>
-	<script src="data/cleric_spells.js"></script> 
-	<script src="data/ranger_spells.js"></script> 
-	<script src="data/druid_spells.js"></script> 
-	<script src="data/WotC_basic_items.js"></script>
-	<script src="data/WotC_common_items.js"></script> 
-	<script src="data/WotC_containers.js"></script> 
-    
-    <script src="js/data-initializer.js"></script>
-
-    <script src="js/stores/defaultCharacter.js"></script>
-    <script src="js/stores/characterStore.js"></script>
-    <script src="js/stores/actions.js"></script> 
-	<script src="js/stores/actions/characterActions.js"></script>
-	<script src="js/stores/actions/inventoryActions.js"></script>
-	<script src="js/stores/actions/abilityActions.js"></script>
-	<script src="js/stores/actions/spellActions.js"></script> 
-	<script src="js/stores/actions/notes-actions.js"></script>
-	<script src="js/stores/actions/trackerActions.js"></script> 
-    
-    <script src="js/components.js"></script>
-    <script src="js/character-summary-header.js"></script>
-    <script src="js/homebrew-race-creator.js"></script>
-    <script src="js/homebrew-subrace-creator.js"></script>
-    <script src="js/dashboard-combat.js"></script>
-    <script src="js/dashboard-background.js"></script>
-    <script src="js/dashboard-skills.js"></script>
-    <script src="js/info-page.js"></script>
-    <script src="js/skills-page.js"></script>
-    <script src="js/abilities-editor-page.js"></script>
-    <script src="js/spells-page.js"></script>
-    <script src="js/spells-editor-page.js"></script>
-    <script src="js/notes-page.js"></script>
-    <script src="js/equipped-items-page.js"></script> 
-    <script src="js/stored-items-page.js"></script>
-    <script src="js/all-items-page.js"></script>
-    <script src="js/homebrew-container-page.js"></script>
-    <script src="js/homebrew-race-list-page.js"></script>
-    <script src="js/homebrew-subrace-list-page.js"></script>
-    <script src="js/dashboard-page.js"></script>
-    <script src="js/character-editor-page.js"></script>
-    <script src="js/inventory-container-page.js"></script>
 	
-	<script src="js/handlers/inventory-handlers.js"></script>
-    <script src="js/handlers/notes-handlers.js"></script>
-    <script src="js/handlers/homebrew-handlers.js"></script>
-	<script src="js/handlers/item-browser-handlers.js"></script>
-	<script src="js/handlers/container-browser-handlers.js"></script>
-	<script src="js/handlers/spell-browser-handlers.js"></script>
-	<script src="js/handlers/tracker-handlers.js"></script>
-    <script src="js/handlers/event-listeners.js"></script>
+<script>
+    const DndSheet = {
+        pages: {},
+        stores: {},
+        data: {},
+        rawData: {},
+        helpers: {},
+        handlers: {},
+        components: {},
+        app: {},
+    };
+</script>
+
+<script src="js/utils.js"></script>
+<script src="js/helpers.js"></script>
+
+<script src="data/spell_slots.js"></script>
+<script src="data/classes.js"></script>
+<script src="data/races.js"></script>
+<script src="data/languages.js"></script>
+<script src="data/bard_spells.js"></script>
+<script src="data/cleric_spells.js"></script>
+<script src="data/druid_spells.js"></script>
+<script src="data/ranger_spells.js"></script>
+<script src="data/WotC_basic_items.js"></script>
+<script src="data/WotC_common_items.js"></script>
+<script src="data/WotC_containers.js"></script>
+<script src="js/data-initializer.js"></script>
+
+<script src="js/stores/defaultCharacter.js"></script>
+
+<script src="js/stores/actions/characterActions.js"></script>
+<script src="js/stores/actions/inventoryActions.js"></script>
+<script src="js/stores/actions/abilityActions.js"></script>
+<script src="js/stores/actions/spellActions.js"></script>
+<script src="js/stores/actions/notes-actions.js"></script>
+<script src="js/stores/actions/trackerActions.js"></script>
+
+<script src="js/components.js"></script>
+<script src="js/character-summary-header.js"></script>
+<script src="js/homebrew-race-creator.js"></script>
+<script src="js/homebrew-subrace-creator.js"></script>
+<script src="js/dashboard-combat.js"></script>
+<script src="js/dashboard-background.js"></script>
+<script src="js/dashboard-skills.js"></script>
+<script src="js/info-page.js"></script>
+<script src="js/skills-page.js"></script>
+<script src="js/abilities-editor-page.js"></script>
+<script src="js/spells-page.js"></script>
+<script src="js/spells-editor-page.js"></script>
+<script src="js/notes-page.js"></script>
+<script src="js/equipped-items-page.js"></script>
+<script src="js/stored-items-page.js"></script>
+<script src="js/all-items-page.js"></script>
+<script src="js/homebrew-container-page.js"></script>
+<script src="js/homebrew-race-list-page.js"></script>
+<script src="js/homebrew-subrace-list-page.js"></script>
+<script src="js/dashboard-page.js"></script>
+<script src="js/character-editor-page.js"></script>
+<script src="js/inventory-container-page.js"></script>
+
+<script src="js/handlers/inventory-handlers.js"></script>
+<script src="js/handlers/notes-handlers.js"></script>
+<script src="js/handlers/homebrew-handlers.js"></script>
+<script src="js/handlers/item-browser-handlers.js"></script>
+<script src="js/handlers/container-browser-handlers.js"></script>
+<script src="js/handlers/spell-browser-handlers.js"></script>
+<script src="js/handlers/tracker-handlers.js"></script>
+
+<script src="js/handlers/event-listeners.js"></script>
+
+<script src="js/stores/characterStore.js"></script>
+<script src="js/main.js"></script>
 
 </body>
 </html>
