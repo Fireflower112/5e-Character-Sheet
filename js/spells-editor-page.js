@@ -4,38 +4,50 @@ DndSheet.pages.SpellsEditorPage = (character) => {
     const spellSchools = ["Abjuration", "Conjuration", "Divination", "Enchantment", "Evocation", "Illusion", "Necromancy", "Transmutation"];
     const castingTimes = ['1 Action', '1 Bonus Action', '1 Reaction', '1 Minute', '10 Minutes', '1 Hour'];
 
-    const renderSpellsList = (spells) => {
-    const spellArray = Object.values(spells).sort((a, b) => a.level - b.level || a.name.localeCompare(b.name));
+    // Find and replace this function in js/spells-editor-page.js
+
+const renderSpellsList = (spells) => {
+    const spellArray = Object.values(spells).sort((a, b) => (a.level || a.properties?.Level) - (b.level || b.properties?.Level) || a.name.localeCompare(b.name));
     if (spellArray.length === 0) return '<p class="text-gray-500 italic">No spells learned yet.</p>';
 
     return spellArray.map(spell => {
+        // Use the new 'properties' object if it exists, otherwise fall back to the old structure for custom spells.
+        const props = spell.properties || spell;
+
+        // --- Build the new detailed display ---
         let damageHtml = '';
-        if (spell.damageNumDice && spell.damageDieType) {
-            damageHtml = `<p><strong>Damage:</strong> ${spell.damageNumDice}d${spell.damageDieType} ${spell.damageType || ''}</p>`;
+        if (props.Damage && props['Damage Type']) {
+            damageHtml = `<p><strong>Damage:</strong> ${props.Damage} ${props['Damage Type']}</p>`;
         }
 
-        const durationDisplay = spell.durationValue ? `${spell.durationValue} ${spell.durationUnit}` : (spell.durationUnit || 'N/A');
+        const isConcentration = spell.trackerInfo?.requiresConcentration || props.Concentration === 'Yes';
 
         return `
             <div class="bg-white rounded-md shadow-sm" data-accordion-wrapper>
                 <div data-action="toggle-accordion" class="p-3 flex justify-between items-center cursor-pointer hover:bg-gray-50 rounded-md">
                     <div>
                         <span class="font-semibold">${spell.name}</span>
-                        <span class="text-sm text-gray-500">(${spell.level === 0 ? 'Cantrip' : `Lvl ${spell.level}`})</span>
+                        <span class="text-sm text-gray-500">(${props.Level === 0 ? 'Cantrip' : `Lvl ${props.Level}`})</span>
                     </div>
                     <div class="flex items-center gap-2">
                         <button data-action="delete-spell" data-spell-id="${spell.id}" class="px-3 py-1 bg-red-500 text-white text-xs rounded-md hover:bg-red-600">Delete</button>
-                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                     </div>
                 </div>
 
                 <div class="accordion-details hidden p-3 border-t border-gray-200">
                     <p class="text-gray-700 mb-2">${spell.description || 'No description.'}</p>
+                    
                     <div class="text-sm text-gray-600 grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-1">
-                        <p><strong>School:</strong> ${spell.school || 'N/A'}</p>
-                        <p><strong>Casting Time:</strong> ${spell.castingTime || 'N/A'}</p>
-                        <p><strong>Duration:</strong> ${durationDisplay}</p>
+                        <p><strong>School:</strong> ${props.School || 'N/A'}</p>
+                        <p><strong>Casting Time:</strong> ${props['Casting Time'] || 'N/A'}</p>
+                        <p><strong>Range:</strong> ${props.Range || 'N/A'}</p>
+                        <p><strong>Duration:</strong> ${props.Duration || 'N/A'}</p>
                         ${damageHtml}
+                        <div class="flex items-center">
+                            <input type="checkbox" ${isConcentration ? 'checked' : ''} disabled class="h-4 w-4 rounded text-indigo-600 mr-2">
+                            <label>Requires Concentration</label>
+                        </div>
                     </div>
                 </div>
             </div>

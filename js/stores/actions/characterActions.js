@@ -7,64 +7,6 @@
             return v.toString(16);
         });
     }
-	
-	function _calculateSpellSlots() {
-        const character = store.get();
-        const currentSlots = character.spellcasting.spellSlots || [];
-        let newSpellSlots = Array(10).fill(null).map((_, i) => ({ 
-            total: 0, 
-            used: currentSlots[i]?.used || 0 
-        }));
-
-        if (character.classes && character.classes.length > 0) {
-            // NOTE: This handles single-class casters. Multiclassing is more complex.
-            const mainClass = character.classes[0];
-            const classData = DndSheet.data.classes[mainClass.name];
-            
-            if (classData && classData.spellSlots) {
-                const progressionTable = classData.spellSlots;
-                const progression = progressionTable[mainClass.level];
-                
-                if (progression) {
-                    progression.forEach((slots, i) => {
-                        newSpellSlots[i + 1].total = slots;
-                    });
-                }
-            }
-        }
-        store.set({ spellcasting: { ...character.spellcasting, spellSlots: newSpellSlots } });
-    }
-
-    function _applyClassFeatures() {
-        const character = store.get();
-        if (!character.classes) return;
-        const currentAbilities = Object.values(character.abilities || {});
-        const nonClassAbilities = currentAbilities.filter(ability => ability.source !== 'Class Feature');
-        const newClassFeatures = [];
-        character.classes.forEach(charClass => {
-            const classData = DndSheet.data.classes[charClass.name];
-            if (!classData || !classData.features) return;
-            for (let level = 1; level <= charClass.level; level++) {
-                if (classData.features[level]) {
-                    classData.features[level].forEach(feature => {
-                        newClassFeatures.push({ ...feature, id: uuid(), source: 'Class Feature', type: 'Class' });
-                    });
-                }
-            }
-        });
-        const finalAbilities = {};
-        [...nonClassAbilities, ...newClassFeatures].forEach(ability => {
-            finalAbilities[ability.id] = ability;
-        });
-        store.set({ abilities: finalAbilities });
-    }
-
-    function _updateProficiencyBonus() {
-        const character = store.get();
-        const totalLevel = (character.classes || []).reduce((sum, cls) => sum + (cls.level || 0), 0);
-        const proficiencyBonus = Math.ceil(1 + totalLevel / 4);
-        store.set({ proficiencyBonus: proficiencyBonus });
-    }
 
 	function applyRace() {
         const character = store.get();
@@ -137,38 +79,6 @@
         }
         store.set({ maxHp: newMaxHp });
     }
-
-    // MODIFIED: Merged the two conflicting functions into one correct version.
-    function updateClass(index, field, value) {
-        const character = store.get();
-        if (!character.classes?.[index]) return;
-
-        const newClasses = JSON.parse(JSON.stringify(character.classes));
-        
-        // If the level was changed, make sure it's a number
-        if (field === 'level') {
-            value = parseInt(value, 10) || 1;
-        }
-
-        newClasses[index][field] = value;
-        
-        // If the class NAME was changed, we need to update other properties
-        if (field === 'name') {
-            const classData = DndSheet.data.classes[value];
-            if (classData) {
-                newClasses[index].hitDie = classData.hitDie;
-                newClasses[index].subclassName = ''; // Reset subclass
-            }
-        }
-
-        store.set({ classes: newClasses });
-        
-        // Recalculate all relevant character stats
-        _calculateSpellSlots();
-        _applyClassFeatures(); 
-        recalculateMaxHp();
-        _updateProficiencyBonus();
-    }
     
     function updateCharacterProperty(field, value, subField) {
         const character = store.get();
@@ -191,29 +101,6 @@
             recalculateMaxHp();
         }
     }
-
-    function addClass() {
-        const character = store.get();
-        const newClasses = [...(character.classes || [])];
-        newClasses.push({ name: '', level: 1, subclassName: '' });
-        store.set({ classes: newClasses });
-        recalculateMaxHp();
-        _updateProficiencyBonus();
-        _calculateSpellSlots();
-    }
-    
-    function removeClass(index) {
-        const character = store.get();
-        if (character.classes?.[index]) {
-            const newClasses = [...character.classes];
-            newClasses.splice(index, 1);
-            store.set({ classes: newClasses });
-            _applyClassFeatures(); 
-            recalculateMaxHp();
-            _updateProficiencyBonus();
-            _calculateSpellSlots();
-        }
-    }
     
     function addLanguage(language) {
         const character = store.get();
@@ -228,15 +115,6 @@
         const character = store.get();
         const newLanguages = character.languages.filter(l => l !== language);
         store.set({ languages: newLanguages });
-    }
-
-    function updateSubclass(index, subclassName) {
-        const character = store.get();
-        if (character.classes?.[index]) {
-            const newClasses = JSON.parse(JSON.stringify(character.classes));
-            newClasses[index].subclassName = subclassName;
-            store.set({ classes: newClasses });
-        }
     }
     
     function applyHpChange(amount) {
@@ -275,21 +153,15 @@
 }
 
     Object.assign(actions, {
-        _applyClassFeatures,
-        _calculateSpellSlots,
         applyRace,
         applySubrace,
         handleRaceChange,
         recalculateMaxHp,
-		longRest,
-        updateClass,
+        longRest,
         updateCharacterProperty,
-        addClass,
-        removeClass,
         addLanguage,
         removeLanguage,
-        updateSubclass,
-        applyHpChange,
+        applyHpChange
     });
 
 })(DndSheet.stores.character, DndSheet.stores.characterActions);

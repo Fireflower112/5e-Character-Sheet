@@ -1,6 +1,7 @@
 // js/data-initializer.js
 
 (function() {
+    // --- This section for ITEMS and CONTAINERS remains UNCHANGED ---
     const processItemArray = (itemArray) => {
         if (!Array.isArray(itemArray)) return {};
         return itemArray.reduce((acc, item) => {
@@ -29,7 +30,6 @@
     const basicItems = processItemArray(DndSheet.rawData.WotC_basic_items);
     const commonMagicItems = processItemArray(DndSheet.rawData.WotC_common_items);
     const containerItems = processItemArray(DndSheet.rawData.WotC_containers);
-    // Note: homebrewContainers was being loaded from rawData but your file assigned to DndSheet.data
     const homebrewContainers = processItemArray(DndSheet.data.homebrew_containers); 
 
     DndSheet.data.allItems = {
@@ -39,12 +39,27 @@
         ...homebrewContainers
     };
     
-    // This now correctly processes the single allSpells array
-    DndSheet.spells = (DndSheet.data.allSpells || []).reduce((acc, spell) => {
-        if (spell && spell.name) {
-            acc[spell.name] = spell;
-        }
-        return acc;
-    }, {});
+    // --- MODIFIED: This entire section for SPELLS is new ---
+    const createSpellMap = (spellArray) => {
+        if (!Array.isArray(spellArray)) return {};
+        return spellArray.reduce((acc, spell) => {
+            if (spell && spell.name) {
+                acc[spell.name] = spell;
+            }
+            return acc;
+        }, {});
+    };
+
+    // Create a map from your original all_spells.js file
+    const oldSpellsMap = createSpellMap(DndSheet.data.allSpells);
+
+    // Create a map from your new formatted_spells.js file
+    const newSpellsMap = createSpellMap(DndSheet.data.formattedSpells);
+
+    // Merge them, with the NEW formatted spells overwriting the OLD ones
+    DndSheet.spells = {
+        ...oldSpellsMap,
+        ...newSpellsMap
+    };
 
 })();

@@ -1,10 +1,22 @@
 // js/handlers/character-editor-handlers.js
+
+DndSheet.handlers.characterEditorClickHandlers = {
+    'add-class': () => {
+        DndSheet.stores.characterActions.addClass();
+    },
+    'remove-class': (target) => {
+        const index = target.dataset.index;
+        if (index !== undefined && confirm('Are you sure you want to remove this class?')) {
+            DndSheet.stores.characterActions.removeClass(index);
+        }
+    }
+};
+
 DndSheet.handlers.characterEditorChangeHandlers = {
     'update-class': (target) => {
         const index = target.dataset.index;
         const field = target.dataset.field;
         const value = target.value;
-
         if (index !== undefined && field) {
             DndSheet.stores.characterActions.updateClass(index, field, value);
         }
@@ -19,7 +31,6 @@ DndSheet.handlers.characterEditorChangeHandlers = {
         const newSubraceName = target.value;
         DndSheet.stores.characterActions.applySubrace(newSubraceName);
     },
-    // MODIFIED: Added this handler for the subclass dropdown
     'update-subclass': (target) => {
         const index = target.dataset.index;
         const subclassName = target.value;

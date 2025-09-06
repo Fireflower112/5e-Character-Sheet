@@ -14,7 +14,8 @@ DndSheet.handlers.initialize = function() {
         DndSheet.handlers.homebrewClickHandlers,
         DndSheet.handlers.trackerClickHandlers,
         DndSheet.handlers.spellClickHandlers,
-        DndSheet.handlers.headerClickHandlers // <-- This was missing
+        DndSheet.handlers.headerClickHandlers,
+		DndSheet.handlers.characterEditorClickHandlers
     ];
 
     // A list of all objects that contain change handlers
