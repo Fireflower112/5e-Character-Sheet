@@ -1,4 +1,5 @@
 // js/dashboard-combat.js
+
 DndSheet.pages.DashboardCombatPage = (character) => {
     const dexMod = DndSheet.helpers.getAbilityModifier(DndSheet.helpers.getFinalAbilityScore(character, 'dex'));
     const totalAC = DndSheet.helpers.calculateTotalAC(character);
@@ -8,7 +9,7 @@ DndSheet.pages.DashboardCombatPage = (character) => {
         return ['str', 'dex', 'con', 'int', 'wis', 'cha'].map(ability => {
             const abilityMod = DndSheet.helpers.getAbilityModifier(DndSheet.helpers.getFinalAbilityScore(character, ability));
             const isProficient = character.savingThrows[ability]?.proficient || false;
-            const totalBonus = abilityMod + (isProficient ? character.proficiencyBonus : 0);
+            const totalBonus = abilityMod + (isProficient ? (character.proficiencyBonus || 0) : 0);
             const displayName = ability.charAt(0).toUpperCase() + ability.slice(1);
 
             return `
@@ -51,66 +52,85 @@ DndSheet.pages.DashboardCombatPage = (character) => {
             }
 
         return `
- <div class="bg-white p-3 rounded-lg shadow-inner flex items-center justify-between">
-    <div class="flex-grow">
-        <h5 class="font-semibold text-indigo-700">${spell.name} (${spell.level === 0 ? 'Cantrip' : `Lvl ${spell.level}`})</h5>
-        ${damageHtml}
-        ${spell.description ? `<p class="text-xs text-gray-500 mt-1 truncate">${spell.description}</p>` : ''}
-    </div>
-    <div class="flex items-center">
-        <button data-action="cast-spell" data-spell-id="${spell.id}" class="bg-indigo-500 text-white text-xs px-2 py-1 rounded hover:bg-indigo-600">Cast</button>
-        <button data-action="toggle-favorite-spell" data-spell-id="${spell.id}" class="text-yellow-500 text-2xl pl-3 pr-1">${spell.favorited ? '★' : '☆'}</button>
-    </div>
- </div>
-`;
+            <div class="bg-white p-3 rounded-lg shadow-inner flex items-center justify-between">
+                <div class="flex-grow">
+                    <h5 class="font-semibold text-indigo-700">${spell.name} (${spell.level === 0 ? 'Cantrip' : `Lvl ${spell.level}`})</h5>
+                    ${damageHtml}
+                    ${spell.description ? `<p class="text-xs text-gray-500 mt-1">${spell.description}</p>` : ''}
+                </div>
+                <div class="flex items-center">
+                    <button data-action="cast-spell" data-spell-id="${spell.id}" class="bg-indigo-500 text-white text-xs px-2 py-1 rounded hover:bg-indigo-600">Cast</button>
+                    <button data-action="toggle-favorite-spell" data-spell-id="${spell.id}" class="text-yellow-500 text-2xl pl-3 pr-1">${spell.favorited ? '★' : '☆'}</button>
+                </div>
+            </div>
+        `;
         }).join('');
     };
 
     const renderTracker = () => {
-        const timers = character.activeTimers || [];
-        const timerListHtml = timers.length > 0 ? timers.map(timer => `
-            <div class="flex items-center justify-between bg-white p-2 rounded-md shadow-inner">
-                <div class="flex-grow">
-				<div class="font-semibold">${timer.name}</div>
-				${timer.description ? `<div class="text-xs text-gray-500 italic">${timer.description}</div>` : ''}
-			</div>
-                <div class="flex items-center gap-3">
-                    <span class="text-lg font-semibold text-gray-700">${timer.duration} ${timer.unit}</span>
-                    <button data-action="decrement-timer" data-timer-id="${timer.id}" data-timer-unit="${timer.unit}" class="px-2 font-bold text-lg bg-gray-200 rounded hover:bg-gray-300">-</button>
-                    <button data-action="delete-timer" data-timer-id="${timer.id}" class="text-red-500 font-bold hover:text-red-700">✕</button>
-                </div>
+    const timers = character.activeTimers || [];
+    const timerListHtml = timers.length > 0 ? timers.map(timer => `
+        <div class="flex items-center justify-between bg-white p-2 rounded-md shadow-inner">
+            <div class="flex-grow">
+                <div class="font-semibold">${timer.name}</div>
+                ${timer.description ? `<div class="text-xs text-gray-500 italic">${timer.description}</div>` : ''}
             </div>
-        `).join('') : '<p class="text-gray-500 italic p-4 text-center">No active effects.</p>';
+            <div class="flex items-center gap-3">
+                <span class="text-lg font-semibold text-gray-700">${timer.duration} ${timer.unit}</span>
+                <button data-action="decrement-timer" data-timer-id="${timer.id}" data-timer-unit="${timer.unit}" class="px-2 font-bold text-lg bg-gray-200 rounded hover:bg-gray-300">-</button>
+                <button data-action="delete-timer" data-timer-id="${timer.id}" class="text-red-500 font-bold hover:text-red-700">✕</button>
+            </div>
+        </div>
+    `).join('') : '<p class="text-gray-500 italic p-4 text-center">No active effects.</p>';
 
-        return `
-            <div class="bg-gray-50 p-4 rounded-2xl shadow-sm">
-                <h3 class="text-xl font-semibold mb-3">Temporary Effects & Timers</h3>
-                <div class="space-y-2 mb-4">${timerListHtml}</div>
-                <div class="border-t pt-3 flex items-end gap-2">
-                    <div class="flex-grow"><label for="timer-name" class="text-xs font-medium">Effect Name</label><input type="text" id="timer-name" class="w-full p-1 border rounded-md"></div>
-                    <div><label for="timer-duration" class="text-xs font-medium">#</label><input type="number" id="timer-duration" class="w-20 p-1 border rounded-md"></div>
-                    <div><label for="timer-unit" class="text-xs font-medium">Unit</label><select id="timer-unit" class="w-full p-1 border rounded-md"><option>Rounds</option><option>Minutes</option><option>Hours</option></select></div>
-                    <button data-action="add-timer" class="px-4 py-1 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700">Add</button>
+    return `
+        <div class="bg-gray-50 p-4 rounded-2xl shadow-sm">
+            <h3 class="text-xl font-semibold mb-3">Temporary Effects & Timers</h3>
+            <div class="space-y-2 mb-4">${timerListHtml}</div>
+            <div class="border-t pt-3 space-y-2">
+                <div class="flex items-end gap-2">
+                    <div class="flex-grow">
+                        <label for="timer-name" class="text-xs font-medium">Effect Name</label>
+                        <input type="text" id="timer-name" class="w-full p-1 border rounded-md">
+                    </div>
+                    <div>
+                        <label for="timer-duration" class="text-xs font-medium">#</label>
+                        <input type="number" id="timer-duration" class="w-20 p-1 border rounded-md">
+                    </div>
+                    <div>
+                        <label for="timer-unit" class="text-xs font-medium">Unit</label>
+                        <select id="timer-unit" class="w-full p-1 border rounded-md">
+                            <option>Rounds</option>
+                            <option>Minutes</option>
+                            <option>Hours</option>
+                        </select>
+                    </div>
+                    <button data-action="add-timer" class="px-4 py-1 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700 self-end">Add</button>
+                </div>
+                <div>
+                    <label for="timer-description" class="text-xs font-medium">Description (Optional)</label>
+                    <input type="text" id="timer-description" placeholder="e.g., Disadvantage on attack rolls" class="w-full p-1 border rounded-md">
                 </div>
             </div>
-        `;
-    };
+        </div>
+    `;
+};
 
     return `
     <div class="flex flex-col gap-6">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
            <div class="bg-gray-50 p-4 rounded-2xl shadow-sm">
                 <h3 class="text-lg font-semibold text-gray-500 uppercase">Armor Class</h3>
-                <p class="text-7xl font-bold text-gray-800">${totalAC}</p>
+                <p class="text-7xl font-bold text-gray-800">${totalAC || 0}</p>
            </div>
            <div class="bg-gray-50 p-4 rounded-2xl shadow-sm">
                 <h3 class="text-lg font-semibold text-gray-500 uppercase">Initiative</h3>
-                <p class="text-7xl font-bold text-gray-800">${totalInitiative >= 0 ? '+' : ''}${totalInitiative}</p>
+                <p class="text-7xl font-bold text-gray-800">${totalInitiative >= 0 ? '+' : ''}${totalInitiative || 0}</p>
            </div>
            <div class="bg-gray-50 p-4 rounded-2xl shadow-sm">
                 <h3 class="text-lg font-semibold text-gray-500 uppercase">Health</h3>
                 <div class="text-5xl font-bold text-gray-800 flex items-center justify-center gap-2">
-                    <span>${character.hp}</span> / <span>${character.maxHp}</span>
+                    <span>${character.hp || 0}</span> / <span>${character.maxHp || 0}</span>
                 </div>
                 <p class="text-sm text-gray-500 mt-2">Current / Max</p>
            </div>

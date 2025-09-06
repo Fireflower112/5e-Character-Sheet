@@ -15,6 +15,15 @@ DndSheet.app = (function() {
     let currentPage = localStorage.getItem('currentPage') || 'dashboard';
     let currentSubPage = localStorage.getItem('currentSubPage') || 'skills';
 
+    function attachSubNavListeners() {
+        document.querySelectorAll('[data-subpage]').forEach(button => {
+            button.addEventListener('click', () => {
+                const subpage = button.dataset.subpage;
+                DndSheet.app.setCurrentSubPage(subpage);
+            });
+        });
+    }
+
     function render() {
         const character = DndSheet.stores.character.get();
         summaryHeaderArea.innerHTML = DndSheet.pages.renderCharacterSummaryHeader(character);
@@ -30,6 +39,9 @@ DndSheet.app = (function() {
         }
         contentArea.innerHTML = pageHtml;
         updateNavStyles();
+        
+        // MODIFIED: Added this function call to attach listeners to the new sub-nav buttons after they are rendered.
+        attachSubNavListeners();
 
         // Activate search bars and other dynamic handlers based on the current page
         if (currentPage === 'inventory' && currentSubPage === 'all') {
@@ -72,6 +84,7 @@ DndSheet.app = (function() {
         setCurrentPage: (page) => {
             currentPage = page;
             localStorage.setItem('currentPage', currentPage);
+            // Set default subpage when changing main page
             if (currentPage === 'dashboard') currentSubPage = 'skills';
             else if (currentPage === 'inventory') currentSubPage = 'equipped';
             else if (currentPage === 'notes') currentSubPage = 'character';
@@ -90,7 +103,6 @@ DndSheet.app = (function() {
             contentArea = document.getElementById('content-area');
             summaryHeaderArea = document.getElementById('character-summary-header');
 
-            loadHomebrewData();
             DndSheet.handlers.initialize();
             DndSheet.stores.character.subscribe(DndSheet.app.render);
             
@@ -100,7 +112,7 @@ DndSheet.app = (function() {
                 });
             });
 
-            DndSheet.stores.character.init();
+            DndSheet.stores.character.init(); // This will trigger the first render
         }
     };
 })();

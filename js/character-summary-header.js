@@ -47,7 +47,10 @@ DndSheet.pages.renderCharacterSummaryHeader = (character) => {
                     <div class="flex items-center justify-around">
                         <div>
                             <div class="text-xs font-semibold text-gray-500 uppercase">Current HP</div>
-                            <div class="font-bold text-lg text-gray-800">${character.hp} / ${character.maxHp}</div>
+                            <div class="font-bold text-lg text-gray-800 flex items-center justify-center">
+                                <input type="number" data-field="hp" value="${character.hp || 0}" class="w-16 p-0 bg-transparent border-0 text-right focus:ring-0">
+                                <span> / ${character.maxHp || 0}</span>
+                            </div>
                         </div>
                         <div>
                             <div class="text-xs font-semibold text-gray-500 uppercase">Temp HP</div>

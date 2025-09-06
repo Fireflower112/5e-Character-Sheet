@@ -9,17 +9,17 @@
     }
 
     function addTimer(timerData) {
-        const character = store.get();
-        const newTimer = {
-            id: uuid(),
-            name: timerData.name,
-            duration: parseInt(timerData.duration, 10) || 0,
-            unit: timerData.unit,
-        };
-        const newTimers = [...character.activeTimers, newTimer];
-		const timer = { id: uuid(), name, description, duration, unit };
-        store.set({ activeTimers: newTimers });
-    }
+    const character = store.get();
+    const newTimer = {
+        id: uuid(),
+        name: timerData.name,
+        description: timerData.description || '', // MODIFIED: Correctly handles the description
+        duration: parseInt(timerData.duration, 10) || 0,
+        unit: timerData.unit,
+    };
+    const newTimers = [...character.activeTimers, newTimer];
+    store.set({ activeTimers: newTimers });
+	}
 
     function deleteTimer(timerId) {
         const character = store.get();
@@ -32,7 +32,6 @@
         const newTimers = character.activeTimers.map(timer => {
             if (timer.id === timerId) {
                 let newDuration = timer.duration + amount;
-                // MODIFIED: Add rounding for floating point numbers
                 if (amount % 1 !== 0) {
                     newDuration = parseFloat(newDuration.toFixed(1));
                 }
@@ -43,7 +42,7 @@
         store.set({ activeTimers: newTimers });
     }
 
-     function nextTurn() {
+    function nextTurn() {
         const character = store.get();
         let didUpdate = false;
         const expiredTimers = [];
@@ -56,11 +55,8 @@
                     expiredTimers.push(timer.name);
                 }
                 return { ...timer, duration: newDuration };
-            } 
-            // ADDED: New logic for minute-based timers
-            else if (timer.unit === 'Minutes' && timer.duration > 0) {
+            } else if (timer.unit === 'Minutes' && timer.duration > 0) {
                 didUpdate = true;
-                // Subtract 0.1 minutes (6 seconds) and round to one decimal place
                 const newDuration = parseFloat((timer.duration - 0.1).toFixed(1));
                 if (newDuration <= 0) {
                     expiredTimers.push(timer.name);
@@ -68,7 +64,7 @@
                 return { ...timer, duration: newDuration };
             }
             return timer;
-        });
+        }).filter(timer => timer.duration > 0); // Remove expired timers
 
         if (didUpdate) {
             store.set({ activeTimers: newTimers });

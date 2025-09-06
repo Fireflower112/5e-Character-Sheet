@@ -10,38 +10,28 @@
 	
 	function _calculateSpellSlots() {
         const character = store.get();
-        let newSpellSlots = Array(10).fill(null).map(() => ({ total: 0, used: 0 }));
+        const currentSlots = character.spellcasting.spellSlots || [];
+        let newSpellSlots = Array(10).fill(null).map((_, i) => ({ 
+            total: 0, 
+            used: currentSlots[i]?.used || 0 
+        }));
 
-        // NOTE: This version handles single-class spellcasters. Multiclassing is more complex.
-        if (character.classes && character.classes.length === 1) {
-            const charClass = character.classes[0];
-            const classData = DndSheet.data.classes[charClass.name];
+        if (character.classes && character.classes.length > 0) {
+            // NOTE: This handles single-class casters. Multiclassing is more complex.
+            const mainClass = character.classes[0];
+            const classData = DndSheet.data.classes[mainClass.name];
             
             if (classData && classData.spellSlots) {
-                // Determine which progression to use (e.g., base class or subclass)
-                let progressionTable = classData.spellSlots;
+                const progressionTable = classData.spellSlots;
+                const progression = progressionTable[mainClass.level];
                 
-                // Special handling for third-casters like Eldritch Knight
-                if ((charClass.name === 'Fighter' && charClass.subclassName !== 'Eldritch Knight') ||
-                    (charClass.name === 'Rogue' && charClass.subclassName !== 'Arcane Trickster')) {
-                    progressionTable = {}; // No slots if not the spellcasting subclass
-                }
-
-                const slotsForLevel = progressionTable[charClass.level];
-                if (slotsForLevel) {
-                    slotsForLevel.forEach((numSlots, i) => {
-                        const spellLevel = i + 1;
-                        newSpellSlots[spellLevel].total = numSlots;
-                        // Preserve used slots if possible
-                        if (character.spellcasting.spellSlots[spellLevel]) {
-                           newSpellSlots[spellLevel].used = Math.min(numSlots, character.spellcasting.spellSlots[spellLevel].used);
-                        }
+                if (progression) {
+                    progression.forEach((slots, i) => {
+                        newSpellSlots[i + 1].total = slots;
                     });
                 }
             }
         }
-        // If multiclass or no class, slots will be 0 unless manually edited.
-
         store.set({ spellcasting: { ...character.spellcasting, spellSlots: newSpellSlots } });
     }
 
@@ -69,12 +59,13 @@
         store.set({ abilities: finalAbilities });
     }
 
-     function _updateProficiencyBonus() {
+    function _updateProficiencyBonus() {
         const character = store.get();
         const totalLevel = (character.classes || []).reduce((sum, cls) => sum + (cls.level || 0), 0);
         const proficiencyBonus = Math.ceil(1 + totalLevel / 4);
         store.set({ proficiencyBonus: proficiencyBonus });
     }
+
 	function applyRace() {
         const character = store.get();
         const raceData = DndSheet.data.races[character.race];
@@ -147,19 +138,36 @@
         store.set({ maxHp: newMaxHp });
     }
 
+    // MODIFIED: Merged the two conflicting functions into one correct version.
     function updateClass(index, field, value) {
         const character = store.get();
         if (!character.classes?.[index]) return;
+
         const newClasses = JSON.parse(JSON.stringify(character.classes));
-        const isLevel = field === 'level';
-        const parsedValue = isLevel ? parseInt(value, 10) : value;
-        newClasses[index][field] = isLevel ? (isNaN(parsedValue) ? 1 : parsedValue) : value;
-        if (field === 'name') newClasses[index].subclassName = '';
+        
+        // If the level was changed, make sure it's a number
+        if (field === 'level') {
+            value = parseInt(value, 10) || 1;
+        }
+
+        newClasses[index][field] = value;
+        
+        // If the class NAME was changed, we need to update other properties
+        if (field === 'name') {
+            const classData = DndSheet.data.classes[value];
+            if (classData) {
+                newClasses[index].hitDie = classData.hitDie;
+                newClasses[index].subclassName = ''; // Reset subclass
+            }
+        }
+
         store.set({ classes: newClasses });
+        
+        // Recalculate all relevant character stats
+        _calculateSpellSlots();
         _applyClassFeatures(); 
         recalculateMaxHp();
-		_updateProficiencyBonus();
-        _calculateSpellSlots(); // MODIFIED: This line was missing
+        _updateProficiencyBonus();
     }
     
     function updateCharacterProperty(field, value, subField) {
@@ -184,14 +192,14 @@
         }
     }
 
-      function addClass() {
+    function addClass() {
         const character = store.get();
         const newClasses = [...(character.classes || [])];
         newClasses.push({ name: '', level: 1, subclassName: '' });
         store.set({ classes: newClasses });
         recalculateMaxHp();
-		_updateProficiencyBonus();
-        _calculateSpellSlots(); // MODIFIED: This line was missing
+        _updateProficiencyBonus();
+        _calculateSpellSlots();
     }
     
     function removeClass(index) {
@@ -202,8 +210,8 @@
             store.set({ classes: newClasses });
             _applyClassFeatures(); 
             recalculateMaxHp();
-			_updateProficiencyBonus();
-            _calculateSpellSlots(); // MODIFIED: This line was missing
+            _updateProficiencyBonus();
+            _calculateSpellSlots();
         }
     }
     
@@ -248,14 +256,32 @@
         newHp = Math.max(0, Math.min(newHp, character.maxHp));
         store.set({ hp: newHp, tempHp: newTempHp });
     }
+	
+	function longRest() {
+    const character = store.get();
+    const currentSlots = character.spellcasting.spellSlots || [];
+    
+    // Reset 'used' slots to 0 for all levels
+    const restedSlots = currentSlots.map(slot => ({ ...slot, used: 0 }));
+    
+    // MODIFIED: Also set current HP to max HP and clear temp HP
+    store.set({ 
+        hp: character.maxHp, 
+        tempHp: 0,
+        spellcasting: { ...character.spellcasting, spellSlots: restedSlots } 
+    });
+
+    DndSheet.helpers.showMessage('You are fully rested. HP and spell slots have been restored!', 'green');
+}
 
     Object.assign(actions, {
         _applyClassFeatures,
-        _calculateSpellSlots, // MODIFIED: Added this to the list
+        _calculateSpellSlots,
         applyRace,
         applySubrace,
         handleRaceChange,
         recalculateMaxHp,
+		longRest,
         updateClass,
         updateCharacterProperty,
         addClass,

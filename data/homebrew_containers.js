@@ -1,6 +1,6 @@
 //homebrewContainers.js
-
-export const homebrewContainers = [
+DndSheet.rawData = DndSheet.rawData || {};
+DndSheet.rawData.homebrew_containers = [
   {
     "name": "Armorum Satchel",
     "description": "This specially crafted satchel allows the user to carry an additional 15 pounds of equipment.",

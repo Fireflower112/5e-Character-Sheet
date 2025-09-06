@@ -1,11 +1,10 @@
 // js/data-initializer.js
 
 (function() {
-    // MODIFIED: This function was missing. It processes item arrays.
     const processItemArray = (itemArray) => {
         if (!Array.isArray(itemArray)) return {};
         return itemArray.reduce((acc, item) => {
-            if (item && item.name && !acc[item.name]) {
+            if (item && item.name && !acc[item.name] && item.properties) {
                 const rarity = (item.properties['Item Rarity'] || '').toLowerCase();
                 const isMagic = !['standard', 'none', ''].includes(rarity);
                 acc[item.name] = { ...item, isMagic: isMagic };
@@ -30,7 +29,8 @@
     const basicItems = processItemArray(DndSheet.rawData.WotC_basic_items);
     const commonMagicItems = processItemArray(DndSheet.rawData.WotC_common_items);
     const containerItems = processItemArray(DndSheet.rawData.WotC_containers);
-    const homebrewContainers = processItemArray(DndSheet.rawData.homebrewContainers);
+    // Note: homebrewContainers was being loaded from rawData but your file assigned to DndSheet.data
+    const homebrewContainers = processItemArray(DndSheet.data.homebrew_containers); 
 
     DndSheet.data.allItems = {
         ...basicItems,
@@ -38,26 +38,13 @@
         ...containerItems,
         ...homebrewContainers
     };
+    
+    // This now correctly processes the single allSpells array
+    DndSheet.spells = (DndSheet.data.allSpells || []).reduce((acc, spell) => {
+        if (spell && spell.name) {
+            acc[spell.name] = spell;
+        }
+        return acc;
+    }, {});
 
-    // MODIFIED: This block was missing. It processes all spell lists.
-    const createSpellMap = (spellArray) => {
-        return (spellArray || []).reduce((acc, spell) => {
-            if (spell && spell.name && !acc[spell.name]) {
-                acc[spell.name] = spell;
-            }
-            return acc;
-        }, {});
-    };
-
-    const bardSpells = createSpellMap(DndSheet.rawData.bard_spells);
-    const clericSpells = createSpellMap(DndSheet.rawData.cleric_spells);
-    const rangerSpells = createSpellMap(DndSheet.rawData.ranger_spells);
-    const druidSpells = createSpellMap(DndSheet.rawData.druid_spells);
-
-    DndSheet.data.allSpells = {
-        ...bardSpells,
-        ...clericSpells,
-        ...rangerSpells,
-        ...druidSpells
-    };
 })();

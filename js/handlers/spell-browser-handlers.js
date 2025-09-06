@@ -25,13 +25,24 @@
 
     const searchSpells = () => {
         const query = document.getElementById('spell-search-input').value.toLowerCase();
-        const allSpells = DndSheet.data.allSpells || {};
         
-        if (!query) {
+        // MODIFIED: Get the character's current class to filter the spell list.
+        const character = DndSheet.stores.character.get();
+        // Assuming single class for now. Gets the first class name.
+        const characterClass = character.classes && character.classes.length > 0 ? character.classes[0].name : null;
+
+        const allSpells = DndSheet.data.allSpells || [];
+        
+        if (!query || !characterClass) {
             searchResults = [];
         } else {
-            searchResults = Object.values(allSpells)
-                .filter(spell => spell.name.toLowerCase().includes(query))
+            searchResults = allSpells
+                .filter(spell => {
+                    const nameMatch = spell.name.toLowerCase().includes(query);
+                    // MODIFIED: Also check if the spell's class list includes the character's class.
+                    const classMatch = spell.properties.Classes && spell.properties.Classes.includes(characterClass);
+                    return nameMatch && classMatch;
+                })
                 .slice(0, 50);
         }
         renderSearchResults();
@@ -40,11 +51,15 @@
     DndSheet.handlers.spellBrowserClickHandlers = {
         'add-premade-spell': (target) => {
             const spellName = target.dataset.spellName;
-            const spellData = DndSheet.data.allSpells[spellName];
+            // MODIFIED: Look in DndSheet.spells (the map) instead of DndSheet.data.allSpells (the array).
+            const spellData = DndSheet.spells[spellName];
 
             if (spellData) {
                 DndSheet.stores.characterActions.addPremadeSpell(spellData);
                 DndSheet.helpers.showMessage(`${spellName} added to your spellbook!`, 'green');
+            } else {
+                console.error("Could not find spell data for:", spellName);
+                DndSheet.helpers.showMessage(`Error adding ${spellName}.`, 'red');
             }
         }
     };
@@ -53,6 +68,8 @@
         const searchInput = document.getElementById('spell-search-input');
         if (searchInput) {
             searchInput.addEventListener('input', searchSpells);
+            // Also run a search immediately in case there's already text in the box
+            searchSpells();
         }
     };
 

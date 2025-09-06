@@ -4258,4 +4258,4 @@ in a direction you choose, even if the water has to flow over obstacles, up wall
     "publisher": "Wizards of the Coast",
     "book": "Free Basic Rules (2024)"
   }
-]
+];

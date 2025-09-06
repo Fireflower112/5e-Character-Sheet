@@ -2,24 +2,29 @@
 
 DndSheet.handlers.trackerClickHandlers = {
     'add-timer': () => {
-        const nameInput = document.getElementById('timer-name');
-        const durationInput = document.getElementById('timer-duration');
-        const unitSelect = document.getElementById('timer-unit');
+    const nameInput = document.getElementById('timer-name');
+    const durationInput = document.getElementById('timer-duration');
+    const unitSelect = document.getElementById('timer-unit');
+    // MODIFIED: Get the new description input
+    const descriptionInput = document.getElementById('timer-description');
 
-        if (nameInput.value && durationInput.value) {
-            const timerData = {
-                name: nameInput.value,
-                duration: durationInput.value,
-                unit: unitSelect.value,
-            };
-            DndSheet.stores.characterActions.addTimer(timerData);
-            // Clear the form
-            nameInput.value = '';
-            durationInput.value = '';
-        } else {
-            DndSheet.helpers.showMessage('Timer needs a name and duration.', 'red');
-        }
-    },
+    if (nameInput.value && durationInput.value) {
+        const timerData = {
+            name: nameInput.value,
+            // MODIFIED: Include the description in the data
+            description: descriptionInput.value,
+            duration: durationInput.value,
+            unit: unitSelect.value,
+        };
+        DndSheet.stores.characterActions.addTimer(timerData);
+        // Clear the form
+        nameInput.value = '';
+        durationInput.value = '';
+        descriptionInput.value = ''; // MODIFIED: Clear the description field
+    } else {
+        DndSheet.helpers.showMessage('Timer needs a name and duration.', 'red');
+    }
+},
     'delete-timer': (target) => {
         const timerId = target.dataset.timerId;
         if (timerId) {

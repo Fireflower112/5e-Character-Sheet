@@ -90,8 +90,8 @@ DndSheet.pages.InfoPage = (character) => {
 
                 <div class="flex items-center space-x-2">
                     <label for="race" class="font-medium text-gray-700">Race:</label>
-                    <select id="race" data-field="race" class="flex-1 p-2 bg-white border rounded-md">
-                        <option value="">-- Select a Race --</option>
+                    <select id="race" data-field="race" data-action="change-race" class="flex-1 p-2 bg-white border rounded-md">
+					<option value="">-- Select a Race --</option>
                         ${raceNames.map(name => {
                             const displayName = homebrewRaceNames.includes(name) ? `${name} (HB)` : name;
                             return `<option value="${name}" ${character.race === name ? 'selected' : ''}>${displayName}</option>`;
@@ -102,8 +102,8 @@ DndSheet.pages.InfoPage = (character) => {
                 <div class="flex items-center space-x-2">
                     <div class="flex-1 flex items-center space-x-2">
                         <label for="subrace" class="font-medium text-gray-700">Subrace:</label>
-                        <select id="subrace" data-field="subrace" class="flex-1 p-2 bg-white border rounded-md" ${subraces.length === 0 ? 'disabled' : ''}>
-                            <option value="">-- None --</option>
+                        <select id="subrace" data-field="subrace" data-action="change-subrace" class="flex-1 p-2 bg-white border rounded-md" ${subraces.length === 0 ? 'disabled' : ''}>
+						<option value="">-- None --</option>
                             ${subraces.map(sub => `<option value="${sub.name}" ${character.subrace === sub.name ? 'selected' : ''}>${sub.name}</option>`).join('')}
                         </select>
                     </div>

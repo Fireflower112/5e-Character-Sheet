@@ -1,6 +1,6 @@
 // data/languages.js
 
-DndSheet.data.languages = {
+DndSheet.data.languages = [
     "Abyssal",
     "Aquan",
     "Auran",
