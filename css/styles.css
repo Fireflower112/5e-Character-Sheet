@@ -1,5 +1,6 @@
 /* Custom styles from the original HTML file */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
 body {
     font-family: 'Inter', sans-serif;
 }
@@ -53,4 +54,71 @@ input[type=number] {
     max-width: 600px;
     max-height: 90vh;
     overflow-y: auto;
+}
+
+/* MODIFIED: Converted from @apply to standard CSS */
+.nav-dropdown-button {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+    color: #c7d2fe; /* text-indigo-200 */
+    border-radius: 0.25rem;
+}
+.nav-dropdown-button:hover {
+    background-color: #4338ca; /* hover:bg-indigo-700 */
+}
+@media (min-width: 768px) {
+    .nav-dropdown-button {
+        padding: 0;
+        width: auto;
+        border-width: 0;
+    }
+    .nav-dropdown-button:hover {
+        background-color: transparent;
+        color: white;
+    }
+}
+
+.nav-dropdown-menu {
+    z-index: 10;
+    display: none; /* This is the 'hidden' class */
+    font-weight: 400;
+    background-color: white;
+    border-bottom-width: 1px;
+    border-color: #f3f4f6; /* divide-gray-100 */
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    width: 11rem; /* w-44 */
+    position: absolute; /* Added for correct positioning */
+}
+
+/* This is a special class that Flowbite's JS looks for to show the menu */
+[data-popper-reference-hidden] + .nav-dropdown-menu {
+    visibility: hidden;
+    pointer-events: none;
+}
+[data-popper-escaped] + .nav-dropdown-menu {
+    opacity: 0;
+    transform: scale(0.95);
+}
+[data-popper-placement] + .nav-dropdown-menu {
+    display: block; /* Overrides the 'hidden' class */
+}
+
+.nav-dropdown-item {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+}
+.nav-dropdown-item:hover {
+    background-color: #f3f4f6; /* hover:bg-gray-100 */
 }

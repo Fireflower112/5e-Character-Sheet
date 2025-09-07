@@ -1,10 +1,7 @@
 // js/spells-editor-page.js
 DndSheet.pages.SpellsEditorPage = (character) => {
     const castingStats = [ { key: 'int', label: 'Intelligence' }, { key: 'wis', label: 'Wisdom' }, { key: 'cha', label: 'Charisma' }];
-    const spellSchools = ["Abjuration", "Conjuration", "Divination", "Enchantment", "Evocation", "Illusion", "Necromancy", "Transmutation"];
-    const castingTimes = ['1 Action', '1 Bonus Action', '1 Reaction', '1 Minute', '10 Minutes', '1 Hour'];
 
-    // Find and replace this function in js/spells-editor-page.js
 
 const renderSpellsList = (spells) => {
     const spellArray = Object.values(spells).sort((a, b) => (a.level || a.properties?.Level) - (b.level || b.properties?.Level) || a.name.localeCompare(b.name));
@@ -55,7 +52,7 @@ const renderSpellsList = (spells) => {
     }).join('');
 };
 
-    return `
+ return `
         <div>
             <div class="space-y-6">
                 <div class="bg-gray-50 p-6 rounded-2xl shadow-sm">
@@ -67,20 +64,19 @@ const renderSpellsList = (spells) => {
                     </div>
                 </div>
                 <div class="bg-gray-50 p-6 rounded-2xl shadow-sm">
-                     <h3 class="text-xl font-semibold mb-3">Spell Slots (Manual Override)</h3>
-                     <div class="grid grid-cols-3 md:grid-cols-5 gap-4">
-                        ${(character.spellcasting.spellSlots || []).filter((s, i) => i > 0).map((slot, index) => {
-                            const level = index + 1;
-                            return `
-                                <div class="text-center">
-                                    <label class="font-bold">Lvl ${level}</label>
-                                    <input type="number" data-action="update-spell-slot-total" data-level="${level}" class="w-full p-2 border rounded-md text-center mt-1" value="${slot.total}">
-                                </div>
-                            `;
-                        }).join('')}
+                       <h3 class="text-xl font-semibold mb-3">Spell Slots (Manual Override)</h3>
+                       <div class="grid grid-cols-3 md:grid-cols-5 gap-4">
+                            ${(character.spellcasting.spellSlots || []).filter((s, i) => i > 0).map((slot, index) => {
+                                const level = index + 1;
+                                return `
+                                    <div class="text-center">
+                                        <label class="font-bold">Lvl ${level}</label>
+                                        <input type="number" data-action="update-spell-slot-total" data-level="${level}" class="w-full p-2 border rounded-md text-center mt-1" value="${slot.total}">
+                                    </div>
+                                `;
+                            }).join('')}
                     </div>
                 </div>
-
                 <div class="bg-gray-100 p-6 rounded-2xl shadow-inner">
                     <h3 class="text-lg font-semibold mb-3">Spell Browser</h3>
                     <input type="text" id="spell-search-input" placeholder="Search for a spell..." class="w-full p-2 border rounded-md mb-3">
@@ -89,55 +85,8 @@ const renderSpellsList = (spells) => {
                     </div>
                 </div>
 
-                <div class="bg-gray-100 p-6 rounded-2xl shadow-inner">
-                    <h3 class="text-lg font-semibold mb-3">Add Custom Spell</h3>
-                    <form id="add-spell-form" class="space-y-4">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div><label for="spell-name" class="block text-sm font-medium">Spell Name</label><input type="text" id="spell-name" required class="w-full p-2 border rounded-md"></div>
-                            <div><label for="spell-level" class="block text-sm font-medium">Level</label><input type="number" id="spell-level" required class="w-full p-2 border rounded-md" min="0" max="9" value="0"></div>
-                        </div>
-                        <textarea id="spell-description" placeholder="Spell Description" class="w-full p-2 border rounded-md"></textarea>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 border-t pt-4">
-                            <div><label for="spell-school" class="block text-sm font-medium">School</label><select id="spell-school" class="w-full p-2 border rounded-md">${spellSchools.map(s => `<option value="${s}">${s}</option>`).join('')}</select></div>
-                            <div><label for="spell-casting-time" class="block text-sm font-medium">Casting Time</label><select id="spell-casting-time" class="w-full p-2 border rounded-md">${castingTimes.map(t => `<option value="${t}">${t}</option>`).join('')}</select></div>
-                            <div><label for="spell-duration-value" class="block text-sm font-medium">Duration Value</label><input type="number" id="spell-duration-value" value="0" class="w-full p-2 border rounded-md"></div>
-                            <div><label for="spell-duration-unit" class="block text-sm font-medium">Duration Unit</label><select id="spell-duration-unit" class="w-full p-2 border rounded-md"><option>Instantaneous</option><option>Rounds</option><option>Minutes</option><option>Hours</option></select></div>
-                        </div>
-                        <div class="border-t pt-4">
-                            <label for="spell-duration-effect" class="block text-sm font-medium">Duration Effect</label>
-                            <input type="text" id="spell-duration-effect" placeholder="e.g., Target is grappled" class="w-full p-2 border rounded-md">
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 border-t pt-4">
-    <div>
-        <label for="spell-damage-num-dice" class="block text-sm font-medium">Damage Dice #</label>
-        <input type="number" id="spell-damage-num-dice" class="w-full p-2 border rounded-md">
-    </div>
-    <div>
-        <label for="spell-damage-die-type" class="block text-sm font-medium">Damage Die Type</label>
-        <input type="text" id="spell-damage-die-type" placeholder="e.g., d8" class="w-full p-2 border rounded-md">
-    </div>
-    <div>
-        <label for="spell-damage-type" class="block text-sm font-medium">Damage Type</label>
-        <select id="spell-damage-type" class="w-full p-2 border rounded-md bg-white">
-            <option value="">None</option>
-            <option value="Acid">Acid</option>
-            <option value="Bludgeoning">Bludgeoning</option>
-            <option value="Cold">Cold</option>
-            <option value="Fire">Fire</option>
-            <option value="Force">Force</option>
-            <option value="Lightning">Lightning</option>
-            <option value="Necrotic">Necrotic</option>
-            <option value="Piercing">Piercing</option>
-            <option value="Poison">Poison</option>
-            <option value="Psychic">Psychic</option>
-            <option value="Radiant">Radiant</option>
-            <option value="Slashing">Slashing</option>
-            <option value="Thunder">Thunder</option>
-        </select>
-    </div>
-</div>
-                        <button type="button" id="add-spell-btn" data-action="add-spell" class="w-full px-4 py-2 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700">Add Spell</button>
-                    </form>
+                <div class="bg-gray-100 p-6 rounded-2xl shadow-inner text-center">
+                     <button data-action="open-homebrew-spell-modal" class="w-full py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700">Create Homebrew Spell</button>
                 </div>
 
                 <div class="bg-gray-50 p-6 rounded-2xl shadow-sm">
@@ -147,8 +96,4 @@ const renderSpellsList = (spells) => {
             </div>
         </div>
     `;
-};
-
-DndSheet.pages.attachSpellsEditorHandlers = () => {
-    // This is now called from main.js
 };

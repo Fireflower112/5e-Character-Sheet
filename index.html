@@ -10,26 +10,78 @@
 <body class="bg-gray-100">
 
     <div id="app-container" class="min-h-screen flex flex-col">
-        <nav class="bg-indigo-600 shadow-lg">
-            <div class="max-w-7xl mx-auto px-4">
-                <div class="flex justify-between items-center h-16">
-                    <div class="flex items-center space-x-8">
-                        <h1 class="text-white text-2xl font-bold">D&D 5e Sheet</h1>
-                        <ul class="flex items-baseline space-x-4">
-                            <li><button data-page="dashboard" class="main-nav-button text-gray-300 hover:bg-indigo-500 hover:text-white px-3 py-2 rounded-md font-medium">Dashboard</button></li>
-                            <li><button data-page="character-editor" class="main-nav-button text-gray-300 hover:bg-indigo-500 hover:text-white px-3 py-2 rounded-md font-medium">Character Editor</button></li>
-                            <li><button data-page="inventory" class="main-nav-button text-gray-300 hover:bg-indigo-500 hover:text-white px-3 py-2 rounded-md font-medium">Inventory</button></li>
-                            <li><button data-page="homebrew" class="main-nav-button text-gray-300 hover:bg-indigo-500 hover:text-white px-3 py-2 rounded-md font-medium">Homebrew</button></li>
-                            <li><button data-page="notes" class="main-nav-button text-gray-300 hover:bg-indigo-500 hover:text-white px-3 py-2 rounded-md font-medium">Notes</button></li>
+        <nav class="bg-indigo-600 border-b border-indigo-700 shadow-lg">
+    <div class="max-w-7xl flex flex-wrap items-center justify-between mx-auto p-4">
+        <span class="self-center text-2xl font-bold whitespace-nowrap text-white">D&D 5e Sheet</span>
+        
+        <button data-collapse-toggle="navbar-dropdowns" type="button" class="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-indigo-200 rounded-lg md:hidden hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" aria-controls="navbar-dropdowns" aria-expanded="false">
+            <span class="sr-only">Open main menu</span>
+            <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 17 14"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 1h15M1 7h15M1 13h15"/></svg>
+        </button>
+
+        <div class="hidden w-full md:block md:w-auto" id="navbar-dropdowns">
+            <ul class="font-medium flex flex-col p-4 md:p-0 mt-4 border border-indigo-700 rounded-lg bg-indigo-600 md:flex-row md:space-x-8 rtl:space-x-reverse md:mt-0 md:border-0 md:bg-indigo-600">
+                
+                <li>
+                    <button id="dashboardDropdownLink" data-dropdown-toggle="dashboardDropdown" class="nav-dropdown-button">Dashboard <svg class="w-2.5 h-2.5 ms-2.5" aria-hidden="true" fill="none" viewBox="0 0 10 6"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/></svg></button>
+                    <div id="dashboardDropdown" class="nav-dropdown-menu">
+                        <ul class="py-2 text-sm text-gray-700">
+                            <li><button data-page="dashboard" data-subpage="skills" class="nav-dropdown-item">Skills</button></li>
+                            <li><button data-page="dashboard" data-subpage="combat" class="nav-dropdown-item">Combat</button></li>
+                            <li><button data-page="dashboard" data-subpage="background" class="nav-dropdown-item">Feats & Abilities</button></li>
                         </ul>
                     </div>
-                    <div class="flex items-center space-x-2">
-						<button onclick="DndSheet.stores.character.save()" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">Save</button>
-						<button onclick="DndSheet.stores.character.load()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">Load</button>
-					</div>
-                </div>
-            </div>
-        </nav>
+                </li>
+
+                <li>
+                    <button id="editorDropdownLink" data-dropdown-toggle="editorDropdown" class="nav-dropdown-button">Character Editor <svg class="w-2.5 h-2.5 ms-2.5" aria-hidden="true" fill="none" viewBox="0 0 10 6"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/></svg></button>
+                    <div id="editorDropdown" class="nav-dropdown-menu">
+                        <ul class="py-2 text-sm text-gray-700">
+                            <li><button data-page="character-editor" data-subpage="basic" class="nav-dropdown-item">Basic Info</button></li>
+                            <li><button data-page="character-editor" data-subpage="skills" class="nav-dropdown-item">Skills</button></li>
+                            <li><button data-page="character-editor" data-subpage="abilities" class="nav-dropdown-item">Abilities</button></li>
+                            <li><button data-page="character-editor" data-subpage="spells" class="nav-dropdown-item">Spells</button></li>
+                        </ul>
+                    </div>
+                </li>
+
+                <li>
+                    <button id="inventoryDropdownLink" data-dropdown-toggle="inventoryDropdown" class="nav-dropdown-button">Inventory <svg class="w-2.5 h-2.5 ms-2.5" aria-hidden="true" fill="none" viewBox="0 0 10 6"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/></svg></button>
+                    <div id="inventoryDropdown" class="nav-dropdown-menu">
+                        <ul class="py-2 text-sm text-gray-700">
+                            <li><button data-page="inventory" data-subpage="equipped" class="nav-dropdown-item">Equipped & Currency</button></li>
+                            <li><button data-page="inventory" data-subpage="stored" class="nav-dropdown-item">Stored Items</button></li>
+                            <li><button data-page="inventory" data-subpage="all" class="nav-dropdown-item">All Items</button></li>
+                        </ul>
+                    </div>
+                </li>
+                
+                <li>
+                    <button id="homebrewDropdownLink" data-dropdown-toggle="homebrewDropdown" class="nav-dropdown-button">Homebrew <svg class="w-2.5 h-2.5 ms-2.5" aria-hidden="true" fill="none" viewBox="0 0 10 6"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/></svg></button>
+                    <div id="homebrewDropdown" class="nav-dropdown-menu">
+                        <ul class="py-2 text-sm text-gray-700">
+                            <li><button data-page="homebrew" data-subpage="race" class="nav-dropdown-item">Race</button></li>
+                            <li><button data-page="homebrew" data-subpage="subrace" class="nav-dropdown-item">Subrace</button></li>
+                            <li><button data-page="homebrew" data-subpage="spells" class="nav-dropdown-item">Spells</button></li>
+                        </ul>
+                    </div>
+                </li>
+
+                <li>
+                    <button id="notesDropdownLink" data-dropdown-toggle="notesDropdown" class="nav-dropdown-button">Notes <svg class="w-2.5 h-2.5 ms-2.5" aria-hidden="true" fill="none" viewBox="0 0 10 6"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/></svg></button>
+                    <div id="notesDropdown" class="nav-dropdown-menu">
+                        <ul class="py-2 text-sm text-gray-700">
+                            <li><button data-page="notes" data-subpage="character" class="nav-dropdown-item">Character</button></li>
+                            <li><button data-page="notes" data-subpage="npcs" class="nav-dropdown-item">NPCs</button></li>
+                            <li><button data-page="notes" data-subpage="campaign" class="nav-dropdown-item">Campaign</button></li>
+                            <li><button data-page="notes" data-subpage="combat" class="nav-dropdown-item">Combat</button></li>
+                        </ul>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
 
         <main class="flex-1 p-8">
             <div id="character-summary-header"></div>
@@ -71,6 +123,7 @@
     <script src="js/character-summary-header.js"></script>
     <script src="js/homebrew-race-creator.js"></script>
     <script src="js/homebrew-subrace-creator.js"></script>
+	<script src="js/homebrew-spell-creator.js"></script>
     <script src="js/dashboard-combat.js"></script>
     <script src="js/dashboard-background.js"></script>
     <script src="js/dashboard-skills.js"></script>
@@ -86,6 +139,7 @@
     <script src="js/homebrew-container-page.js"></script>
     <script src="js/homebrew-race-list-page.js"></script>
     <script src="js/homebrew-subrace-list-page.js"></script>
+	<script src="js/homebrew-spell-list-page.js"></script>
     <script src="js/dashboard-page.js"></script>
     <script src="js/character-editor-page.js"></script>
     <script src="js/inventory-container-page.js"></script>
@@ -102,5 +156,6 @@
 	<script src="js/handlers/character-editor-handlers.js"></script> 
     <script src="js/handlers/event-handler.js"></script>
 
+	 <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js"></script>
 </body>
 </html>

@@ -26,9 +26,7 @@
     const searchSpells = () => {
         const query = document.getElementById('spell-search-input').value.toLowerCase();
         
-        // MODIFIED: Get the character's current class to filter the spell list.
         const character = DndSheet.stores.character.get();
-        // Assuming single class for now. Gets the first class name.
         const characterClass = character.classes && character.classes.length > 0 ? character.classes[0].name : null;
 
         const allSpells = DndSheet.data.allSpells || [];
@@ -39,8 +37,11 @@
             searchResults = allSpells
                 .filter(spell => {
                     const nameMatch = spell.name.toLowerCase().includes(query);
-                    // MODIFIED: Also check if the spell's class list includes the character's class.
-                    const classMatch = spell.properties.Classes && spell.properties.Classes.includes(characterClass);
+                    
+                    // MODIFIED: This now allows spells with a blank class list to appear for everyone.
+                    const spellClasses = spell.properties.Classes || '';
+                    const classMatch = spellClasses === '' || spellClasses.toLowerCase().includes(characterClass.toLowerCase());
+
                     return nameMatch && classMatch;
                 })
                 .slice(0, 50);
@@ -51,7 +52,6 @@
     DndSheet.handlers.spellBrowserClickHandlers = {
         'add-premade-spell': (target) => {
             const spellName = target.dataset.spellName;
-            // MODIFIED: Look in DndSheet.spells (the map) instead of DndSheet.data.allSpells (the array).
             const spellData = DndSheet.spells[spellName];
 
             if (spellData) {
@@ -68,7 +68,6 @@
         const searchInput = document.getElementById('spell-search-input');
         if (searchInput) {
             searchInput.addEventListener('input', searchSpells);
-            // Also run a search immediately in case there's already text in the box
             searchSpells();
         }
     };

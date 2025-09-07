@@ -6,6 +6,10 @@ DndSheet.handlers.homebrewClickHandlers = {
         const character = DndSheet.stores.character.get();
         DndSheet.pages.showHomebrewSubraceModal(character.race);
     },
+    // MODIFIED: Added this handler for the new spell modal button
+    'open-homebrew-spell-modal': () => {
+        DndSheet.pages.showHomebrewSpellModal();
+    },
     'delete-homebrew-race': (target) => {
         const { raceName } = target.dataset;
         if (confirm(`Are you sure you want to delete the "${raceName}" race?`)) {
@@ -35,6 +39,21 @@ DndSheet.handlers.homebrewClickHandlers = {
             DndSheet.pages.showHomebrewSubraceModal(raceName, subraceToEdit);
         }
     },
+		// Add these two new handlers inside the homebrewClickHandlers object
+	'edit-homebrew-spell': (target) => {
+		const spellName = target.dataset.spellName;
+		const homebrewSpells = JSON.parse(localStorage.getItem('homebrewSpells') || '{}');
+		const spellToEdit = homebrewSpells[spellName];
+		if (spellToEdit) {
+			DndSheet.pages.showHomebrewSpellModal(spellToEdit);
+		}
+	},
+	'delete-homebrew-spell': (target) => {
+		const spellName = target.dataset.spellName;
+		if (confirm(`Are you sure you want to delete "${spellName}"?`)) {
+			DndSheet.stores.character.deleteHomebrewSpell(spellName);
+		}
+	},
 };
 
 // No homebrew-specific change handlers yet

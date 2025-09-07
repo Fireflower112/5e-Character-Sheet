@@ -16,11 +16,10 @@ DndSheet.stores.character = {
         this.load();
     },
 
-     subscribe: function(callback) {
+    subscribe: function(callback) {
         this._subscribers.push(callback);
     },
 
-    /* ADD THIS FUNCTION */
     update: function() {
         this._notifySubscribers();
     },
@@ -43,7 +42,7 @@ DndSheet.stores.character = {
         this._character = DndSheet.helpers.getInitialState();
         DndSheet.stores.characterActions.applyRace();
         DndSheet.stores.characterActions._applyClassFeatures();
-        DndSheet.stores.characterActions._calculateSpellSlots(); // <-- ADD THIS LINE
+        DndSheet.stores.characterActions._calculateSpellSlots();
         this._notifySubscribers();
     },
 
@@ -120,6 +119,35 @@ DndSheet.stores.character = {
         } catch (e) {
             console.error("Failed to delete homebrew subrace:", e);
             DndSheet.helpers.showMessage('Error deleting homebrew subrace.', 'red');
+        }
+    },
+	
+	saveHomebrewSpell: function(spellData) {
+        try {
+            const homebrewSpells = JSON.parse(localStorage.getItem('homebrewSpells') || '{}');
+            homebrewSpells[spellData.name] = spellData;
+            localStorage.setItem('homebrewSpells', JSON.stringify(homebrewSpells));
+            DndSheet.helpers.showMessage('Homebrew spell saved!', 'green');
+            
+            loadHomebrewData(); 
+            this._notifySubscribers();
+        } catch (e) {
+            console.error("Failed to save homebrew spell:", e);
+            DndSheet.helpers.showMessage('Error saving homebrew spell.', 'red');
+        }
+    },
+    
+    // MODIFIED: Moved this function inside the main object and added a comma.
+    deleteHomebrewSpell: function(spellName) {
+        try {
+            const homebrewSpells = JSON.parse(localStorage.getItem('homebrewSpells') || '{}');
+            delete homebrewSpells[spellName];
+            localStorage.setItem('homebrewSpells', JSON.stringify(homebrewSpells));
+            loadHomebrewData();
+            DndSheet.helpers.showMessage('Homebrew spell deleted!', 'green');
+            this._notifySubscribers();
+        } catch (e) {
+            console.error("Failed to delete homebrew spell:", e);
         }
     }
 };
